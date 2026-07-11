@@ -1,0 +1,6 @@
+@Steward.Server_HostAddress = http://localhost:5042
+
+GET {{Steward.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
