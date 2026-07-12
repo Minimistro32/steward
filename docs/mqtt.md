@@ -314,17 +314,3 @@ steward/agents/coldturkey-pc/response
 ```
 
 This allows Steward.Server to communicate with any registered agent without requiring prior knowledge of every agent ID.
-
-## Agent Lifecycle
-
-Agents use MQTT Last Will and Testament (LWT) to communicate connection status.
-
-When an agent connects, it publishes an online status message. If the agent disconnects unexpectedly, the MQTT broker automatically publishes an offline status message on its behalf.
-
-This allows Steward.Server to track agent availability without periodic polling.
-
-Example topic:
-
-```
-steward/agents/{agentId}/status
-```
