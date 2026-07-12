@@ -1,6 +1,5 @@
 using MQTTnet;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging;
 
 namespace Steward.Server.Mqtt;
 
@@ -41,15 +40,7 @@ public class MqttConnectionService : BackgroundService
             options.Host,
             options.Port);
 
-        await mqttClient.PublishStringAsync(
-            "steward/server/status",
-            "online",
-            cancellationToken: stoppingToken);
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            await Task.Delay(1000, stoppingToken);
-        }
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
     public override async Task StopAsync(
