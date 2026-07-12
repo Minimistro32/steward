@@ -1,7 +1,7 @@
 # MQTT
 ## Network
 * The broker, a containerized `eclipse-mosquitto` (orange), negotiates the connection between various clients.
-* One client, the Steward.Server (yellow), is the source of truth, command, and control. 
+* One client, the Steward.Server (yellow), is the source of truth, command, and control.
 * All other clients are agents (blue), and effectuate the commands of the server.
 
 ```mermaid
@@ -22,25 +22,28 @@ class B,C,E blue
 
 ## Conversations
 1. Server Initialization
-    - Server connects to broker
-    - Server subscribes to agent topics
-    - Server begins the `Refresh Agents` flow
-1. Refresh Agents
-    - Server sends a call to refresh 
-    - Agents respond with the `Agent Registration` flow
-    - Server stores each agent and its resources
-1. Agent Registration
-    - Agent announces itself
-        - Including an advertisement of its manageable resources
-1. Policy Execution
-    - Server sends command
-    - Agent acknowledges request
-    - Agent reports completion
+    * Server connects to broker
+    * Server subscribes to agent topics
+    * Server begins the `Refresh Agents` flow
+2. Refresh Agents
+    * Server sends a request for agents to announce themselves
+    * Agents respond with the `Agent Registration` flow
+    * Server stores each agent and its resources
+3. Agent Registration
+    * Agent announces itself
+        * Including an advertisement of its manageable resources
+4. Agent Lifecycle
+    * Agent publishes online/offline status
+    * MQTT Last Will and Testament handles unexpected disconnects
+5. Policy Execution
+    * Server sends command
+    * Agent acknowledges request
+    * Agent reports completion
 
 ### Server Initialization
 When Steward.Server starts, it establishes communication with MQTT and begins discovery.
 
-The server does not know what agents exist. It asks. The `+` wildcard means all agent responses are received (esp32, pihole, etc).
+The server does not assume it knows what agents are currently connected. It subscribes to registration and response topics, then requests agents to announce themselves.
 
 ```mermaid
 sequenceDiagram
@@ -50,25 +53,34 @@ sequenceDiagram
     S->>M: Connect
     S->>M: Subscribe steward/agents/register
     S->>M: Subscribe steward/agents/+/response
+    S->>M: Subscribe steward/agents/+/status
     S->>M: Publish refresh request
 ```
 
 #### Topics
+
 `steward/agents/register`
 
-``steward/agents/+/response``
+`steward/agents/+/response`
 
-``steward/agents/refresh``
+`steward/agents/+/status`
+
+`steward/agents/refresh`
 
 ### Refresh Agents
+
 Ask all agents:
 
 > "Tell me who you are and what you can do."
 
 This lets Steward recover after:
-- restart
-- database restore
-- new agent installation
+
+* restart
+* database restore
+* new agent installation
+* administrative capability refresh
+
+Registration is not retained. Refresh is an explicit request for agents to publish their current capabilities.
 
 ```mermaid
 sequenceDiagram
@@ -86,6 +98,7 @@ sequenceDiagram
 ```
 
 #### Topics
+
 `steward/agents/refresh`
 
 `steward/agents/register`
@@ -93,11 +106,13 @@ sequenceDiagram
 ### Agent Registration
 
 An agent announces:
+
 * who it is
 * what it can manage
 
-This is the foundation of your earlier idea:
-> Enforcers advertise what exactly they can block.
+This is the foundation of the Steward agent model:
+
+> Agents advertise what resources they can control. Steward decides when and how those resources are used.
 
 ```mermaid
 sequenceDiagram
@@ -113,11 +128,13 @@ sequenceDiagram
 ```
 
 #### Example
+
 Topic: `steward/agents/register`
 
 ```json
 {
   "agentId": "pihole-home",
+  "instanceId": "container-abc123",
   "name": "Home Pi-hole",
   "resources": [
     {
@@ -132,11 +149,62 @@ Topic: `steward/agents/register`
 }
 ```
 
+`agentId` identifies the logical agent.
+
+`instanceId` identifies a specific running instance of that agent.
+
+This allows Steward to distinguish between:
+
+* the same agent restarting
+* multiple conflicting instances of the same agent
+
+### Agent Lifecycle
+
+Agents publish their connection state separately from registration.
+
+Registration answers:
+
+> "Who are you and what can you do?"
+
+Status answers:
+
+> "Are you currently available?"
+
+Agents use MQTT Last Will and Testament (LWT) to communicate connection status.
+
+```mermaid
+sequenceDiagram
+    participant A as Agent
+    participant M as MQTT Broker
+    participant S as Steward.Server
+
+    A->>M: Publish online status
+    M->>S: Deliver status
+
+    Note over A,M: Agent unexpectedly disconnects
+
+    M->>S: Publish offline status (LWT)
+```
+
+Example topic:
+
+```
+steward/agents/{agentId}/status
+```
+
+Status messages are retained so Steward can recover the current state after restarting.
+
 ### Policy Execution
+
 Tell an agent to perform an action.
 
 Example:
+
 > Block YouTube until 8 PM.
+
+Agents only know about the resources they expose. They do not know about other agents or Steward's logical resource groups.
+
+If multiple agents need to perform an action, Steward sends separate commands to each relevant agent.
 
 ```mermaid
 sequenceDiagram
@@ -155,9 +223,15 @@ sequenceDiagram
 ```
 
 #### Examples
-Topic: `steward/agents/pihole-home/command`
+
+Topic:
+
+```
+steward/agents/pihole-home/command
+```
 
 Payload:
+
 ```json
 {
   "requestId": "abc123",
@@ -167,9 +241,14 @@ Payload:
 }
 ```
 
-Topic: `steward/agents/pihole-home/response`
+Topic:
+
+```
+steward/agents/pihole-home/response
+```
 
 Payload:
+
 ```json
 {
   "requestId": "abc123",
@@ -183,9 +262,6 @@ MQTT topics are organized around the Steward domain. The server acts as the sour
 
 ```
 steward/
-├── server/
-│   └── status
-│
 └── agents/
     ├── refresh
     ├── register
@@ -195,12 +271,6 @@ steward/
         ├── response
         └── status
 ```
-
-### Server Topics
-
-| Topic                   | Publisher      | Subscriber | Purpose                    |
-| ----------------------- | -------------- | ---------- | -------------------------- |
-| `steward/server/status` | Steward.Server | Agents     | Server availability status |
 
 ### Agent Discovery Topics
 
@@ -244,7 +314,6 @@ steward/agents/coldturkey-pc/response
 ```
 
 This allows Steward.Server to communicate with any registered agent without requiring prior knowledge of every agent ID.
-
 
 ## Agent Lifecycle
 
