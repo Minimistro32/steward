@@ -2,6 +2,10 @@ using Steward.Server.Mqtt;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<MqttOptions>(
+    builder.Configuration.GetSection(MqttOptions.SectionName)
+);
+
 // Add services to the container.
 builder.Services.AddHostedService<MqttConnectionService>();
 
