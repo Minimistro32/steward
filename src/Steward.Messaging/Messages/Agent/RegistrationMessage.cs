@@ -1,6 +1,6 @@
 ﻿namespace Steward.Messaging.Messages.Agent;
 
-public sealed class AgentRegistrationMessage
+public sealed class RegistrationMessage
 {
     public required string AgentId { get; init; }
 

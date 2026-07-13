@@ -7,6 +7,7 @@ builder.Services.Configure<MqttOptions>(
 );
 
 // Add services to the container.
+builder.Services.AddSingleton<MqttMessageHandler>();
 builder.Services.AddHostedService<MqttConnectionService>();
 
 var app = builder.Build();

@@ -1,5 +1,7 @@
 using MQTTnet;
 using Microsoft.Extensions.Options;
+using Steward.Messaging;
+using System.Buffers;
 
 namespace Steward.Server.Mqtt;
 
@@ -8,16 +10,26 @@ public class MqttConnectionService : BackgroundService
     private readonly IMqttClient mqttClient;
     private readonly ILogger<MqttConnectionService> logger;
     private readonly MqttOptions options;
+    private readonly MqttMessageHandler messageHandler;
 
     public MqttConnectionService(
         ILogger<MqttConnectionService> logger,
-        IOptions<MqttOptions> options)
+        IOptions<MqttOptions> options,
+        MqttMessageHandler messageHandler)
     {
         this.options = options.Value;
         this.logger = logger;
+        this.messageHandler = messageHandler;
 
         var factory = new MqttClientFactory();
         mqttClient = factory.CreateMqttClient();
+
+        mqttClient.ApplicationMessageReceivedAsync += async e =>
+        {
+            await this.messageHandler.HandleAsync(
+                e.ApplicationMessage.Topic,
+                e.ApplicationMessage.Payload.ToArray());
+        };
     }
 
     protected override async Task ExecuteAsync(
@@ -28,6 +40,7 @@ public class MqttConnectionService : BackgroundService
             .WithClientId(options.ClientId)
             .Build();
 
+        // Connection
         logger.LogInformation(
             "Connecting to MQTT broker at {Host}:{Port}...",
             options.Host,
@@ -40,6 +53,12 @@ public class MqttConnectionService : BackgroundService
             options.Host,
             options.Port);
 
+        // Subscriptions
+        await mqttClient.SubscribeAsync(
+            MqttTopics.AgentRegister,
+            cancellationToken: stoppingToken);
+
+        // Keep alive
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
