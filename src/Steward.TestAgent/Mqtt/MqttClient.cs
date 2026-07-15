@@ -27,28 +27,33 @@ public class MqttClient
 
     public async Task StartAsync()
     {
+        var lastWillTestament = new StatusMessage
+        {
+            State = AgentStatus.Offline
+        };
+
         var clientOptions =
             new MqttClientOptionsBuilder()
                 .WithTcpServer(options.Host, options.Port)
                 .WithClientId(options.AgentId)
+                .WithWillTopic(MqttTopics.AgentStatus(options.AgentId))
+                .WithWillPayload(
+                    StewardMessage.Serialize(lastWillTestament)
+                )
+                .WithWillRetain()
                 .Build();
 
         await mqttClient.ConnectAsync(clientOptions);
-
+        
         Console.WriteLine("Connected.");
 
-        await mqttClient.SubscribeAsync(
-            MqttTopics.AgentRefresh);
-
-        await PublishStatusAsync(
-            AgentStatus.Online);
+        await mqttClient.SubscribeAsync(MqttTopics.AgentRefresh);
+        await PublishOnlineStatusAsync();
 
         Console.WriteLine("Agent started.");
     }
 
-    private async Task HandleMessageAsync(
-        string topic,
-        byte[] payload)
+    private async Task HandleMessageAsync(string topic, byte[] payload)
     {
         if (topic == MqttTopics.AgentRefresh)
         {
@@ -73,17 +78,22 @@ public class MqttClient
         Console.WriteLine("Published registration.");
     }
 
-    private async Task PublishStatusAsync(
-        AgentStatus state)
+    private async Task PublishOnlineStatusAsync()
     {
         var message = new StatusMessage
         {
-            State = state
+            State = AgentStatus.Online
         };
 
-        await mqttClient.PublishStringAsync(
-            MqttTopics.AgentStatus(options.AgentId),
-            StewardMessage.Serialize(message)
+        await mqttClient.PublishAsync(
+            new MqttApplicationMessageBuilder()
+                .WithTopic(
+                    MqttTopics.AgentStatus(options.AgentId))
+                .WithPayload(
+                    StewardMessage.Serialize(message)
+                )
+                .WithRetainFlag()
+                .Build()
         );
     }
 }
