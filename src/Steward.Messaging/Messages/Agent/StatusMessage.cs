@@ -2,6 +2,11 @@
 
 public sealed class StatusMessage
 {
+    /* steward/agents/test-agent/status
+    {
+        "status": "online"
+    }*/
+
     public required AgentStatus State { get; init; }
 }
 
