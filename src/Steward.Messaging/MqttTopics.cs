@@ -2,18 +2,26 @@ namespace Steward.Messaging;
 
 public static class MqttTopics
 {
-    public const string AgentRegister = "steward/agents/register";
+    private const string Root = "steward/agents";
+    public const string AgentRegister = $"{Root}/register";
+    public const string AgentRefresh = $"{Root}/refresh";
+    public const string AgentStatusWildcard = $"{Root}/+/status";
+    public const string AgentResponseWildcard = $"{Root}/+/response";
 
-    public const string AgentRefresh = "steward/agents/refresh";
-
-    public const string AgentStatusSubscription = "steward/agents/+/status";
+    public static string StewardCommand(string agentId)
+        => $"{Root}/{agentId}/command";
 
     public static string AgentStatus(string agentId)
-        => $"steward/agents/{agentId}/status";
-
-    public static string AgentCommand(string agentId)
-        => $"steward/agents/{agentId}/command";
+        => AgentStatusWildcard.Replace("+", agentId);
 
     public static string AgentResponse(string agentId)
-        => $"steward/agents/{agentId}/response";
+        => AgentResponseWildcard.Replace("+", agentId);
+
+    public static bool IsAgentStatus(string topic)
+        => topic.StartsWith(Root)
+        && topic.EndsWith("/status");
+
+    public static bool IsAgentResponse(string topic)
+        => topic.StartsWith(Root)
+        && topic.EndsWith("/response");
 }
