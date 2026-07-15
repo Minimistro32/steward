@@ -23,13 +23,24 @@ public class MqttMessageHandler
             topic);
 
         var json = Encoding.UTF8.GetString(payload);
+        
         logger.LogInformation(
             "Payload: {Payload}",
-            json);
+            json
+        );
 
+        // switch on topic
         if (topic == MqttTopics.AgentRegister)
         {
             HandleRegistration(payload);
+        }
+        else if (MqttTopics.IsAgentStatus(topic))
+        {
+            HandleStatus(payload);
+        }
+        else if (MqttTopics.IsAgentResponse(topic))
+        {
+            HandleResponse(payload);
         }
         else
         {
@@ -65,7 +76,45 @@ public class MqttMessageHandler
         {
             logger.LogError(
                 ex,
-                "Exception while handling agent registration.");
+                "Exception while handling agent registration."
+            );
         }
+    }
+
+    private void HandleStatus(byte[] payload)
+    {
+        var json = Encoding.UTF8.GetString(payload);
+        var message = StewardMessage.Deserialize<StatusMessage>(json);
+
+        if (message is null)
+        {
+            logger.LogWarning(
+                "Failed to deserialize status message.");
+            return;
+        }
+
+        logger.LogInformation(
+            "Agent status: {Status}",
+            message.State
+        );
+    }
+
+    private void HandleResponse(byte[] payload)
+    {
+        var json = Encoding.UTF8.GetString(payload);
+        var message = StewardMessage.Deserialize<ResponseMessage>(json);
+
+        if (message is null)
+        {
+            logger.LogWarning(
+                "Failed to deserialize response message.");
+            return;
+        }
+
+        logger.LogInformation(
+            "Response {RequestId}: {Status}",
+            message.RequestId,
+            message.CommandStatus
+        );
     }
 }

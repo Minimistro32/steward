@@ -2,6 +2,7 @@ using MQTTnet;
 using Microsoft.Extensions.Options;
 using Steward.Messaging;
 using System.Buffers;
+using Steward.Messaging.Messages.Steward;
 
 namespace Steward.Server.Mqtt;
 
@@ -44,19 +45,28 @@ public class MqttConnectionService : BackgroundService
         logger.LogInformation(
             "Connecting to MQTT broker at {Host}:{Port}...",
             options.Host,
-            options.Port);
+            options.Port
+        );
 
         await mqttClient.ConnectAsync(clientOptions, stoppingToken);
 
         logger.LogInformation(
             "Connected to MQTT broker at {Host}:{Port}.",
             options.Host,
-            options.Port);
+            options.Port
+        );
 
         // Subscriptions
-        await mqttClient.SubscribeAsync(
-            MqttTopics.AgentRegister,
-            cancellationToken: stoppingToken);
+        await mqttClient.SubscribeAsync(MqttTopics.AgentRegister, cancellationToken: stoppingToken);
+        await mqttClient.SubscribeAsync(MqttTopics.AgentStatusWildcard, cancellationToken: stoppingToken);
+        await mqttClient.SubscribeAsync(MqttTopics.AgentResponseWildcard, cancellationToken: stoppingToken);
+
+        // Refresh Agents
+        await mqttClient.PublishStringAsync(
+            MqttTopics.AgentRefresh,
+            StewardMessage.Serialize(new RefreshAgentsMessage()),
+            cancellationToken: stoppingToken
+        );
 
         // Keep alive
         await Task.Delay(Timeout.Infinite, stoppingToken);
