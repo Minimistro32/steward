@@ -1,8 +1,7 @@
 ﻿using Steward.TestAgent.Mqtt;
 
-var options = new AgentOptions();
-
-var client = new AgentMqttClient(options);
+var options = new MqttOptions();
+var client = new MqttClient(options);
 
 await client.StartAsync();
 
