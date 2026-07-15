@@ -1,7 +1,7 @@
-using MQTTnet;
 using Microsoft.Extensions.Options;
-using Steward.Messaging;
 using System.Buffers;
+using MQTTnet;
+using Steward.Messaging;
 using Steward.Messaging.Messages.Steward;
 
 namespace Steward.Server.Mqtt;

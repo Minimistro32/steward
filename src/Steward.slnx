@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="Steward.Messaging/Steward.Messaging.csproj" />
+  <Project Path="Steward.Server/Steward.Server.csproj" />
+  <Project Path="Steward.TestAgent/Steward.TestAgent.csproj" />
 </Solution>
