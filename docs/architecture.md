@@ -307,7 +307,7 @@ Reason:
 
 Planned:
 
-* React
+* Svelte
 * TypeScript
 * Vite
 
@@ -316,7 +316,7 @@ The frontend will be a separate project.
 Development:
 
 ```
-React Dev Server
+Svelte Dev Server
         |
         |
 ASP.NET API
@@ -328,7 +328,7 @@ Production:
 ASP.NET Server
 
     /
-    -> React static files
+    -> Svelte static files
 
     /api
     -> API endpoints
