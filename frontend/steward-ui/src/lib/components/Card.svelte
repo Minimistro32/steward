@@ -1,8 +1,31 @@
+<script>
+    let { title = "", children, actions = null } = $props();
+</script>
+
 <div class="card">
-    <slot />
+    {#if title || actions}
+        <div class="card-header">
+            {#if title}
+                <h3>{title}</h3>
+            {/if}
+
+            {#if actions}
+                {@render actions()}
+            {/if}
+        </div>
+    {/if}
+
+    {@render children()}
 </div>
 
 <style>
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-4);
+    }
+
     .card {
         background: var(--color-surface);
         border: 1px solid rgba(134, 188, 73, 0.12);
@@ -16,6 +39,9 @@
         transition:
             border-color 0.2s,
             box-shadow 0.2s;
+
+        grid-column: span var(--col-span, 1);
+        grid-row: span var(--row-span, 1);
     }
 
     .card:hover {

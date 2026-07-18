@@ -20,24 +20,18 @@
 <style>
     .shell {
         display: flex;
-
         min-height: 100vh;
-
         background: var(--color-background);
     }
 
     .content {
         flex: 1;
-
         display: flex;
         flex-direction: column;
     }
 
     main {
         flex: 1;
-
         padding: var(--space-7);
-
-        max-width: var(--content-max-width);
     }
 </style>
