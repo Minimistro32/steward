@@ -2,6 +2,8 @@
     import Card from "../Card.svelte";
 </script>
 
+<!-- This widget should change into a display like cold turkey has of what blocks / time allowances are available to a given user-->
+
 <Card title="Enforcement">
 
     <div class="enforcement">

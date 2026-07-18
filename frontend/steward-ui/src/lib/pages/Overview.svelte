@@ -1,13 +1,17 @@
 <script lang="ts">
+    import PageHeader from "../components/PageHeader.svelte";
     import AgentHealth from "../components/widgets/AgentHealth.svelte";
     import Enforcement from "../components/widgets/Enforcement.svelte";
     import RequestActivity from "../components/widgets/RequestActivity.svelte";
     import Timeline from "../components/widgets/Timeline.svelte";
 </script>
 
-<h1>Dashboard</h1>
-
-<p class="text-muted">Welcome to Steward.</p>
+<PageHeader title="Overview">
+    {#snippet subtitle()}
+        <a href="#/agents">Agents</a> tend each <a href="#/wards">ward</a>
+        with the <a href="#/policies">policies</a> you define.
+    {/snippet}
+</PageHeader>
 
 <div class="dashboard-grid">
     <AgentHealth />
@@ -20,12 +24,16 @@
 <!-- <StatusBadge status="online"/> -->
 
 <style>
-    h1 {
-        margin-bottom: 0.6rem;
+    a {
+        font-size: 1rem;
+        text-decoration: none;
+        color: var(--color-text-muted);
+        font-weight: bold;
     }
 
-    p {
-        margin-bottom: 1.5rem;
+    a:hover {
+        color: var(--color-brand-light);
+        text-decoration: underline;
     }
 
     .dashboard-grid {

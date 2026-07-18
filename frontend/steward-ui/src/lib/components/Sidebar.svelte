@@ -1,3 +1,8 @@
+<script>
+    import { link } from "svelte-spa-router";
+    import active from "svelte-spa-router/active";
+</script>
+
 <nav class="sidebar">
     <img
         class="logo"
@@ -6,13 +11,19 @@
     />
 
     <div class="links">
-        <a href="/" class="active"> Dashboard </a>
-
-        <a href="/control-groups"> Control Groups </a>
-
-        <a href="/policies"> Policies </a>
-
-        <a href="/requests"> Requests </a>
+        <a use:link use:active href="/" class="active"> Overview </a>
+        
+        <a use:link use:active href="/agents"> Agents </a>
+        <!-- linked from agent health: `features.md/1+2`-->
+        
+        <a use:link use:active href="/wards"> Wards </a>
+        <!--`features.md/3`-->
+        
+        <a use:link use:active href="/policies"> Policies </a>
+        <!--`features.md/4`-->
+        
+        <a use:link use:active href="/requests"> Requests </a>
+        <!--`features.md/5`-->
     </div>
 
     <div class="logo-credit">
