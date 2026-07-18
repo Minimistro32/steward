@@ -1,7 +1,7 @@
 <script lang="ts">
     import PageHeader from "../components/PageHeader.svelte";
     import AgentHealth from "../components/overview/AgentHealth.svelte";
-    import Enforcement from "../components/overview/Enforcement.svelte";
+    import Allowances from "../components/overview/Allowances.svelte";
     import RequestActivity from "../components/overview/RequestActivity.svelte";
     import Timeline from "../components/overview/Timeline.svelte";
 </script>
@@ -15,7 +15,7 @@
 
 <div class="dashboard-grid">
     <AgentHealth />
-    <Enforcement --row-span="1" />
+    <Allowances --row-span="1" />
     <RequestActivity --row-span="2" />
     <!-- <Timeline --col-span="1" /> -->
     <Timeline --col-span="2" />
