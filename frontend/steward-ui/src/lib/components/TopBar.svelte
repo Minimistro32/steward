@@ -1,14 +1,14 @@
+<script>
+    import StatusDot from "./StatusDot.svelte";
+</script>
+
 <div class="topbar">
     <div class="brand">
         <div class="brand-name">Steward</div>
         <div class="brand-tagline">Giving you room to grow.</div>
     </div>
 
-    <div class="status">
-        <span class="dot"></span>
-
-        System Healthy
-    </div>
+    <StatusDot label="System Healthy"/>
 </div>
 
 <style>

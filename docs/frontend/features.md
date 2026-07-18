@@ -14,6 +14,7 @@
     - See what users agents control
     - Group the above into something that can be controlled
     - optionally copy
+    - optionally enable a toggle so all users share policy limits (ie shared console)
 4. CRUD Policies
     - enable/disable
     - optionally copy

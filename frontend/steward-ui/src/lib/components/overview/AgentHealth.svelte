@@ -1,5 +1,6 @@
 <script>
     import Card from "../Card.svelte";
+    import StatusDot from "../StatusDot.svelte";
 
     let lastChecked = "10 seconds ago";
 
@@ -15,10 +16,7 @@
     {/snippet}
 
     <div class="health">
-        <div class="status">
-            <span class="dot"></span>
-            <span>Healthy</span>
-        </div>
+        <StatusDot label="Healthy" --font-size=0.9rem />
 
         <div class="details">
             <div>
@@ -35,22 +33,6 @@
 </Card>
 
 <style>
-    .status {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-
-        font-weight: 600;
-        color: var(--color-success);
-    }
-
-    .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--color-success);
-    }
-
     .details {
         display: flex;
         gap: var(--space-7);
