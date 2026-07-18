@@ -46,7 +46,7 @@ input {
 }
 
 .cta-button {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.025);
     border: 1px solid var(--color-border);
     color: var(--color-text-muted);
 

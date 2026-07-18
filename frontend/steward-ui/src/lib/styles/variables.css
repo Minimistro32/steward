@@ -11,6 +11,7 @@
 
     --color-background: #0f1115;
     --color-surface: #171a21;
+    --color-surface-button: #1c2028;
     --color-surface-raised: #1e232d;
 
     --color-border: #2a303c;
@@ -34,6 +35,7 @@
     --space-5: 1.5rem;
     --space-6: 2rem;
     --space-7: 3rem;
+    --space-8: 5rem;
 
 
     /* Shape */

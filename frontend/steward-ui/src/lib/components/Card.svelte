@@ -3,15 +3,17 @@
 </script>
 
 <div class="card">
-    {#if title || actions}
+    {#if title}
         <div class="card-header">
-            {#if title}
-                <h3>{title}</h3>
-            {/if}
+            <h3>{title}</h3>
 
             {#if actions}
                 {@render actions()}
             {/if}
+        </div>
+    {:else if actions}
+        <div class="floating-actions">
+            {@render actions()}
         </div>
     {/if}
 
@@ -42,10 +44,22 @@
 
         grid-column: span var(--col-span, 1);
         grid-row: span var(--row-span, 1);
+
+        position: relative;
+    }
+
+    .floating-actions {
+        position: absolute;
+        top: var(--space-3);
+        right: var(--space-3);
     }
 
     .card:hover {
-        border-color: color-mix(in srgb, var(--color-brand-light), transparent 80%);
+        border-color: color-mix(
+            in srgb,
+            var(--color-brand-light),
+            transparent 80%
+        );
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
     }
 </style>
