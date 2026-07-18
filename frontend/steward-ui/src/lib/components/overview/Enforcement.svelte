@@ -48,8 +48,8 @@
 
     .stats {
         display: flex;
-        gap: var(--space-6);
-        margin-top: var(--space-5);
+        gap: var(--space-7);
+        margin-top: var(--space-6);
     }
 
     strong {

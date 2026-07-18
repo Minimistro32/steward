@@ -32,6 +32,6 @@
 
     main {
         flex: 1;
-        padding: var(--space-5) var(--space-7);
+        padding: var(--space-6) var(--space-8);
     }
 </style>

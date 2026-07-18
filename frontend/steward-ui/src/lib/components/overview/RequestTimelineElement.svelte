@@ -28,13 +28,13 @@
         display: flex;
         gap: var(--space-4);
 
-        margin-bottom: var(--space-5);
+        margin-bottom: var(--space-6);
     }
 
     .dot {
         position: absolute;
 
-        left: calc(var(--space-6) * -1 + 2px);
+        left: calc(var(--space-7) * -1 + 2px);
         top: 5px;
 
         width: 10px;

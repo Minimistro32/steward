@@ -41,7 +41,7 @@
     .sidebar {
         background: var(--color-surface);
         border-right: 1px solid var(--color-border);
-        padding: var(--space-2) var(--space-5);
+        padding: var(--space-2) var(--space-6);
 
         display: flex;
         flex-direction: column;
@@ -50,7 +50,7 @@
 
     .logo {
         width: 90px;
-        padding-bottom: var(--space-5);
+        padding-bottom: var(--space-6);
     }
 
     .links {
@@ -92,7 +92,7 @@
 
     .logo-credit {
         margin-top: auto;
-        padding-top: var(--space-6);
+        padding-top: var(--space-7);
 
         font-size: 0.65rem;
         color: var(--color-text-muted);

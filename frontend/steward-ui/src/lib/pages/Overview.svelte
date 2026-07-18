@@ -1,9 +1,9 @@
 <script lang="ts">
     import PageHeader from "../components/PageHeader.svelte";
-    import AgentHealth from "../components/widgets/AgentHealth.svelte";
-    import Enforcement from "../components/widgets/Enforcement.svelte";
-    import RequestActivity from "../components/widgets/RequestActivity.svelte";
-    import Timeline from "../components/widgets/Timeline.svelte";
+    import AgentHealth from "../components/overview/AgentHealth.svelte";
+    import Enforcement from "../components/overview/Enforcement.svelte";
+    import RequestActivity from "../components/overview/RequestActivity.svelte";
+    import Timeline from "../components/overview/Timeline.svelte";
 </script>
 
 <PageHeader title="Overview">
@@ -39,6 +39,6 @@
     .dashboard-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: var(--space-5);
+        gap: var(--space-6);
     }
 </style>

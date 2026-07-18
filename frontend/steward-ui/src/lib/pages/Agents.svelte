@@ -1,6 +1,6 @@
 <script lang="ts">
-    import AgentCard from "../components/AgentCard.svelte";
-    import AgentSummary from "../components/AgentSummary.svelte";
+    import AgentCard from "../components/agents/AgentCard.svelte";
+    import AgentSummary from "../components/agents/AgentSummary.svelte";
     import PageHeader from "../components/PageHeader.svelte";
 
     let agents = [
@@ -79,19 +79,19 @@
 
 <style>
     h2 {
-        margin: var(--space-6) 0 var(--space-4);
+        margin: var(--space-7) 0 var(--space-4);
     }
 
     .masonry {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: var(--space-5);
+        gap: var(--space-6);
         align-items: start;
     }
 
     .column {
         display: flex;
         flex-direction: column;
-        gap: var(--space-5);
+        gap: var(--space-6);
     }
 </style>

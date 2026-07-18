@@ -1,5 +1,5 @@
 <script>
-    import Card from "./Card.svelte";
+    import Card from "../Card.svelte";
 
     let devices = [
         "Engineering Laptop Pool",
@@ -89,11 +89,10 @@
 
     .summary {
         display: grid;
-        grid-template-columns: 1fr 1fr 2fr 1fr;
-        gap: var(--space-6);
+        grid-template-columns: 1fr 1fr 1.5fr 1.5fr;
+        gap: var(--space-7);
 
-        margin-left: var(--space-5);
-        margin-right: var(--space-8);
+        margin-left: var(--space-6);
 
         align-items: center;
     }
@@ -110,7 +109,7 @@
 
     ul {
         margin: 0;
-        padding-left: var(--space-4);
+        padding-left: var(--space-5);
 
         position: relative;
         max-height: 9.5vh;

@@ -113,8 +113,8 @@
     }
 
     .divider {
-        margin-top: var(--space-5);
-        padding-top: var(--space-5);
+        margin-top: var(--space-6);
+        padding-top: var(--space-6);
         border-top: 1px solid var(--color-border);
     }
 
@@ -129,7 +129,7 @@
 
     .timeline {
         position: relative;
-        padding-left: var(--space-6);
+        padding-left: var(--space-7);
     }
 
     .timeline::before {

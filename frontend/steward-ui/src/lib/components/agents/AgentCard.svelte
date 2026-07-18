@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Card from "./Card.svelte";
+    import Card from "../Card.svelte";
     import { slide } from "svelte/transition";
 
     let { agent } = $props();
@@ -111,7 +111,7 @@
         justify-content: space-between;
         align-items: center;
 
-        margin-bottom: var(--space-5);
+        margin-bottom: var(--space-6);
     }
 
     .identity {
@@ -149,7 +149,7 @@
 
     .stats {
         display: flex;
-        gap: var(--space-6);
+        gap: var(--space-7);
     }
 
     .stats strong {
@@ -168,7 +168,7 @@
         display: flex;
         flex-direction: column;
 
-        gap: var(--space-5);
+        gap: var(--space-6);
     }
 
     .details section {
