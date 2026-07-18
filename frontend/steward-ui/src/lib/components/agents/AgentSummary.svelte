@@ -112,7 +112,7 @@
         padding-left: var(--space-5);
 
         position: relative;
-        max-height: 9.5vh;
+        max-height: 9vh;
         overflow-y: auto;
     }
 
