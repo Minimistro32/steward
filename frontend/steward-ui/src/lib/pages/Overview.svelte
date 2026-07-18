@@ -8,7 +8,7 @@
 
 <PageHeader title="Overview">
     {#snippet subtitle()}
-        <a href="#/agents">Agents</a> tend each <a href="#/wards">ward</a>
+        <a href="#/agents">Agents</a> tend to each <a href="#/wards">ward</a>
         with the <a href="#/policies">policies</a> you define.
     {/snippet}
 </PageHeader>
