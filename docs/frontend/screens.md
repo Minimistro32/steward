@@ -9,7 +9,7 @@ With that framing, here are the screens I would brainstorm.
 
 <hr>
 
-## Priority
+## Priority Pages
 1. Home (w/ status widgets)
 2. Control Groups  (w/ creation)
 3. Policies / Rules (w/ creation)
