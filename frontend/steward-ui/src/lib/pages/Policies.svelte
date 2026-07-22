@@ -77,7 +77,9 @@
 </PageHeader>
 
 <div class="toolbar">
-    <button class="cta-button"> + Create Policy </button>
+    <a href="#/policyform">
+        <button class="cta-button"> + Create Policy </button>
+    </a>
 </div>
 
 <div class="table-container">

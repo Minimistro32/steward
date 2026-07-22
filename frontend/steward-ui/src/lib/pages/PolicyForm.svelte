@@ -7,125 +7,130 @@
     let allowOverrides = true;
 </script>
 
-<div class="editor">
-    <PageHeader title="Create Policy" --margin-bottom="0px">
+<div class="centered">
+    <PageHeader title="Create Policy" --margin-bottom="var(--space-4)">
         {#snippet subtitle()}
             Define how a <a href="#/wards">ward</a> is managed.
         {/snippet}
     </PageHeader>
 
-    <Card>
-        <h2>General</h2>
+    <div class="editor">
+        <Card>
+            <h2>General</h2>
 
-        <label>
-            Policy Name
-            <input placeholder="Example: Gaming Restrictions" />
-        </label>
-
-        <label>
-            Ward
-            <select>
-                <option>Alice</option>
-                <option>Family Gaming</option>
-                <option>School Devices</option>
-            </select>
-        </label>
-
-        <label>
-            Tags
-            <input placeholder="gaming, school, weekday" />
-        </label>
-    </Card>
-
-    <Card>
-        <ScheduleEditor />
-    </Card>
-
-    <Card>
-        <h2>Access Allowance</h2>
-
-        <p class="text-muted">
-            Normal access limits before an override is requested.
-        </p>
-
-        <div class="allowance-grid">
             <label>
-                Daily Time
-                <input value="60" />
-                <span>minutes</span>
+                Policy Name
+                <input placeholder="Example: Gaming Restrictions" />
             </label>
 
             <label>
-                Maximum Session
-                <input value="30" />
-                <span>minutes</span>
+                Ward
+                <select>
+                    <option>Alice</option>
+                    <option>Family Gaming</option>
+                    <option>School Devices</option>
+                </select>
             </label>
 
             <label>
-                Daily Unlocks
-                <input value="3" />
-                <span>per day</span>
+                Tags
+                <input placeholder="gaming, school, weekday" />
             </label>
+        </Card>
+
+        <Card>
+            <ScheduleEditor />
+        </Card>
+
+        <Card>
+            <h2>Access Allowance</h2>
+
+            <p class="text-muted">
+                Normal access limits before an override is requested.
+            </p>
+
+            <div class="allowance-grid">
+                <label>
+                    Daily Time
+                    <input value="60" />
+                    <span>minutes</span>
+                </label>
+
+                <label>
+                    Maximum Session
+                    <input value="30" />
+                    <span>minutes</span>
+                </label>
+
+                <label>
+                    Daily Unlocks
+                    <input value="3" />
+                    <span>per day</span>
+                </label>
+            </div>
+        </Card>
+
+        <Card>
+            <div class="override">
+                <h2>Override Requests</h2>
+
+                <Checkbox
+                    label="Allow override requests"
+                    bind:checked={allowOverrides}
+                />
+
+                {#if allowOverrides}
+                    <h3>Requirements</h3>
+                    <div class="nested">
+                        <Checkbox label="Delay" />
+
+                        <Checkbox label="Type random phrase" />
+
+                        <Checkbox label="Another user approval" />
+                    </div>
+
+                    <h3>Override Allowance</h3>
+
+                    <div class="allowance-grid">
+                        <label>
+                            Additional Time
+                            <input value="30" />
+                            <span>minutes</span>
+                        </label>
+
+                        <label>
+                            Maximum Request Length
+                            <input value="15" />
+                            <span>minutes</span>
+                        </label>
+
+                        <label>
+                            Additional Unlocks
+                            <input value="1" />
+                            <span>unlock</span>
+                        </label>
+                    </div>
+                {/if}
+            </div>
+        </Card>
+
+        <div class="actions">
+            <button class="cta-button"> Cancel </button>
+
+            <button class="primary"> Save Policy </button>
         </div>
-    </Card>
-
-    <Card>
-        <div class="override">
-            <h2>Override Requests</h2>
-
-            <Checkbox
-                label="Allow override requests"
-                bind:checked={allowOverrides}
-            />
-
-            {#if allowOverrides}
-                <h3>Requirements</h3>
-                <div class="nested">
-                    <Checkbox label="Delay" />
-
-                    <Checkbox label="Type random phrase" />
-
-                    <Checkbox label="Another user approval" />
-                </div>
-
-                <h3>Override Allowance</h3>
-
-                <div class="allowance-grid">
-                    <label>
-                        Additional Time
-                        <input value="30" />
-                        <span>minutes</span>
-                    </label>
-
-                    <label>
-                        Maximum Request Length
-                        <input value="15" />
-                        <span>minutes</span>
-                    </label>
-
-                    <label>
-                        Additional Unlocks
-                        <input value="1" />
-                        <span>unlock</span>
-                    </label>
-                </div>
-            {/if}
-        </div>
-    </Card>
-
-    <div class="actions">
-        <button class="cta-button"> Cancel </button>
-
-        <button class="primary"> Save Policy </button>
     </div>
 </div>
 
 <style>
+    .centered {
+        margin: 0 auto;
+        max-width: 50vw;
+    }
+
     .editor {
         display: flex;
         flex-direction: column;
-        max-width: 50vw;
-        margin: 0 auto;
 
         gap: var(--space-4);
     }
