@@ -1,5 +1,5 @@
 <script>
-    import StatusDot from "./StatusDot.svelte";
+    import StatusDot from "./ui/StatusDot.svelte";
 </script>
 
 <div class="topbar">

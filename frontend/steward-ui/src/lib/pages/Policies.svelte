@@ -1,7 +1,7 @@
 <script lang="ts">
     import PageHeader from "../components/PageHeader.svelte";
     import ConfigurationSummary from "../components/policies/ConfigurationSummary.svelte";
-    import StatusDot from "../components/StatusDot.svelte";
+    import StatusDot from "../components/ui/StatusDot.svelte";
 
     type Policy = {
         name: string;

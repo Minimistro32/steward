@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Card from "../Card.svelte";
+    import Card from "../ui/Card.svelte";
     import { slide } from "svelte/transition";
 
     let { agent } = $props();

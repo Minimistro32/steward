@@ -1,6 +1,6 @@
 <script>
-    import Card from "../Card.svelte";
-    import StatusDot from "../StatusDot.svelte";
+    import Card from "../ui/Card.svelte";
+    import StatusDot from "../ui/StatusDot.svelte";
 
     let lastChecked = "10 seconds ago";
 

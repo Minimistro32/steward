@@ -7,6 +7,7 @@
   import Agents from "./lib/pages/Agents.svelte";
   // import Wards from "./lib/pages/Wards.svelte";
   import Policies from "./lib/pages/Policies.svelte";
+  import PolicyForm from "./lib/pages/PolicyForm.svelte";
   // import Requests from "./lib/pages/Requests.svelte";
 
   const routes = {
@@ -14,6 +15,7 @@
     "/agents": Agents,
     // "/wards": Wards,
     "/policies": Policies,
+    "/policyform": PolicyForm,
     // "/requests": Requests,
   };
 

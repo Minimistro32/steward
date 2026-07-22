@@ -1,5 +1,5 @@
 <script>
-    import Card from "../Card.svelte";
+    import Card from "../ui/Card.svelte";
 </script>
 
 <Card title="Weekly Timeline">

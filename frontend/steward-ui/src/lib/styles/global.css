@@ -45,6 +45,23 @@ input {
     font: inherit;
 }
 
+input,
+select {
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+   filter: invert(0.5) sepia(1) saturate(5) hue-rotate(35deg)
+}
+
+input::placeholder {
+    color: var(--color-text-muted);
+}
+
 .cta-button {
     background: rgba(255, 255, 255, 0.025);
     border: 1px solid var(--color-border);
