@@ -6,7 +6,7 @@
     export let extension = false;
 </script>
 
-<div class:extension class="configuration">
+<div class:extension class="allowance">
     <div class="item">
         <span class="label"> Daily </span>
 
@@ -33,7 +33,7 @@
 </div>
 
 <style>
-    .configuration {
+    .allowance {
         display: grid;
         grid-template-columns: repeat(3, minmax(65px, 1fr));
         gap: var(--space-1);
