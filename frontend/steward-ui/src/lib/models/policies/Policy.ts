@@ -3,22 +3,19 @@ import type { OverridePolicy } from "./OverridePolicy";
 import type { Schedule } from "./Schedule";
 
 export interface Policy {
-    id: string;
-
-    wardId: string;
+    id?: string;
+    createdAt?: Date;
+    modifiedAt?: Date;
 
     name: string;
-
     tags: string[];
-
-    isActive: boolean;
-
-    createdAt: Date;
-    modifiedAt: Date;
+    disabled: boolean;
+    
+    wardId: string;
 
     schedule: Schedule;
 
     access: Allowance;
 
-    overrides: OverridePolicy;
+    override: OverridePolicy;
 }

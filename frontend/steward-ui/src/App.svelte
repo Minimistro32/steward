@@ -15,7 +15,8 @@
     "/agents": Agents,
     // "/wards": Wards,
     "/policies": Policies,
-    "/policyform": PolicyForm,
+    "/policies/new": PolicyForm,
+    "/policies/:id": PolicyForm,
     // "/requests": Requests,
   };
 

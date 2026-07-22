@@ -5,7 +5,7 @@ export interface OverridePolicy {
 
     requireDelay: boolean;
 
-    escalatingDelay: boolean;
+    // escalatingDelay: boolean;
 
     requireRandomPhrase: boolean;
 

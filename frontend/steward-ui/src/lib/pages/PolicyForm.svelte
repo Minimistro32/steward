@@ -4,7 +4,40 @@
     import Card from "../components/ui/Card.svelte";
     import Checkbox from "../components/ui/Checkbox.svelte";
 
-    let allowOverrides = true;
+    import type { Policy } from "../models/policies/Policy";
+    import { createDefaultPolicy } from "../models/policies/createDefaultPolicy";
+    
+    export let params;
+    const id = params?.id;
+    
+    export let policy: Policy;
+
+    if (id) {
+        // policy = await policyApi.get(id);
+        policy = {
+            id: id,
+            name: `Test getting id from route ${id}`,
+            tags: [],
+            disabled: false,
+            wardId: "test",
+            schedule: {
+                enabled: true,
+                days: [],
+                startTime: "",
+                endTime: "",
+            },
+            access: {},
+            override: {
+                allowed: true,
+                requireDelay: false,
+                requireRandomPhrase: false,
+                requireUserApproval: false,
+                allowance: {},
+            },
+        };
+    } else {
+        policy = createDefaultPolicy();
+    }
 </script>
 
 <div class="centered">
@@ -20,12 +53,19 @@
 
             <label>
                 Policy Name
-                <input placeholder="Example: Gaming Restrictions" />
+                <input
+                    bind:value={policy.name}
+                    placeholder="Enter a policy name"
+                />
             </label>
 
             <label>
                 Ward
-                <select>
+                <select
+                    bind:value={policy.wardId}
+                    class:placeholder={!policy.wardId}
+                >
+                    <option value="" disabled hidden>Select a ward</option>
                     <option>Alice</option>
                     <option>Family Gaming</option>
                     <option>School Devices</option>
@@ -34,7 +74,10 @@
 
             <label>
                 Tags
-                <input placeholder="gaming, school, weekday" />
+                <input
+                    bind:value={policy.tags}
+                    placeholder="gaming, school, weekday"
+                />
             </label>
         </Card>
 
@@ -52,19 +95,31 @@
             <div class="allowance-grid">
                 <label>
                     Daily Time
-                    <input value="60" />
+                    <input
+                        type="number"
+                        placeholder="∞"
+                        bind:value={policy.access.dailyTimeMinutes}
+                    />
                     <span>minutes</span>
                 </label>
 
                 <label>
                     Maximum Session
-                    <input value="30" />
+                    <input
+                        type="number"
+                        placeholder="∞"
+                        bind:value={policy.access.maxSessionMinutes}
+                    />
                     <span>minutes</span>
                 </label>
 
                 <label>
                     Daily Unlocks
-                    <input value="3" />
+                    <input
+                        type="number"
+                        placeholder="∞"
+                        bind:value={policy.access.dailyUnlocks}
+                    />
                     <span>per day</span>
                 </label>
             </div>
@@ -76,10 +131,10 @@
 
                 <Checkbox
                     label="Allow override requests"
-                    bind:checked={allowOverrides}
+                    bind:checked={policy.override.allowed}
                 />
 
-                {#if allowOverrides}
+                {#if policy.override.allowed}
                     <h3>Requirements</h3>
                     <div class="nested">
                         <Checkbox label="Delay" />
@@ -94,19 +149,37 @@
                     <div class="allowance-grid">
                         <label>
                             Additional Time
-                            <input value="30" />
+                            <input
+                                type="number"
+                                placeholder="∞"
+                                bind:value={
+                                    policy.override.allowance.dailyTimeMinutes
+                                }
+                            />
                             <span>minutes</span>
                         </label>
 
                         <label>
                             Maximum Request Length
-                            <input value="15" />
+                            <input
+                                type="number"
+                                placeholder="∞"
+                                bind:value={
+                                    policy.override.allowance.maxSessionMinutes
+                                }
+                            />
                             <span>minutes</span>
                         </label>
 
                         <label>
                             Additional Unlocks
-                            <input value="1" />
+                            <input
+                                type="number"
+                                placeholder="∞"
+                                bind:value={
+                                    policy.override.allowance.dailyUnlocks
+                                }
+                            />
                             <span>unlock</span>
                         </label>
                     </div>
@@ -131,42 +204,36 @@
     .editor {
         display: flex;
         flex-direction: column;
-
         gap: var(--space-4);
     }
 
     label {
         display: flex;
         flex-direction: column;
-
         gap: var(--space-2);
-
         margin-bottom: var(--space-4);
-
         color: var(--color-text-muted);
-
         font-size: 0.9rem;
+    }
+
+    select.placeholder {
+        color: var(--color-text-muted);
     }
 
     .allowance-grid {
         display: grid;
-
         grid-template-columns: repeat(3, minmax(0, 1fr));
-
         gap: var(--space-4);
     }
 
     .allowance-grid label {
         background: var(--color-surface-raised);
-
         padding: var(--space-4);
-
         border-radius: var(--radius-md);
     }
 
     .allowance-grid span {
         font-size: 0.8rem;
-
         color: var(--color-text-muted);
     }
 
@@ -177,32 +244,23 @@
 
     .nested {
         margin-left: var(--space-5);
-
         padding-left: var(--space-5);
-
         border-left: 2px solid var(--color-border);
     }
 
     .actions {
         display: flex;
-
         justify-content: flex-end;
-
         gap: var(--space-3);
         grid-column: span 2;
     }
 
     .primary {
         background: var(--color-brand);
-
         color: white;
-
         border: none;
-
         padding: var(--space-2) var(--space-4);
-
         border-radius: var(--radius-sm);
-
         cursor: pointer;
     }
 
