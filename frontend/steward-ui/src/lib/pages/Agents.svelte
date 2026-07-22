@@ -1,7 +1,7 @@
 <script lang="ts">
     import AgentCard from "../components/agents/AgentCard.svelte";
     import AgentSummary from "../components/agents/AgentSummary.svelte";
-    import PageHeader from "../components/PageHeader.svelte";
+    import PageHeader from "../components/ui/PageHeader.svelte";
 
     let agents = [
         {

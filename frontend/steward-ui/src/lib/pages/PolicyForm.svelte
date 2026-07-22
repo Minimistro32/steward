@@ -1,5 +1,5 @@
 <script lang="ts">
-    import PageHeader from "../components/PageHeader.svelte";
+    import PageHeader from "../components/ui/PageHeader.svelte";
     import ScheduleEditor from "../components/policies/ScheduleEditor.svelte";
     import Card from "../components/ui/Card.svelte";
     import Checkbox from "../components/ui/Checkbox.svelte";
@@ -7,13 +7,13 @@
     let allowOverrides = true;
 </script>
 
-<PageHeader title="Create Policy">
-    {#snippet subtitle()}
-        Define how a <a href="#/wards">ward</a> is managed.
-    {/snippet}
-</PageHeader>
-
 <div class="editor">
+    <PageHeader title="Create Policy" --margin-bottom="0px">
+        {#snippet subtitle()}
+            Define how a <a href="#/wards">ward</a> is managed.
+        {/snippet}
+    </PageHeader>
+
     <Card>
         <h2>General</h2>
 
@@ -41,7 +41,7 @@
         <ScheduleEditor />
     </Card>
 
-    <section class="card">
+    <Card>
         <h2>Access Allowance</h2>
 
         <p class="text-muted">
@@ -67,49 +67,51 @@
                 <span>per day</span>
             </label>
         </div>
-    </section>
+    </Card>
 
-    <section class="card override">
-        <h2>Override Requests</h2>
+    <Card>
+        <div class="override">
+            <h2>Override Requests</h2>
 
-        <Checkbox
-            label="Allow override requests"
-            bind:checked={allowOverrides}
-        />
+            <Checkbox
+                label="Allow override requests"
+                bind:checked={allowOverrides}
+            />
 
-        {#if allowOverrides}
-            <h3>Requirements</h3>
-            <div class="nested">
-                <Checkbox label="Delay" />
+            {#if allowOverrides}
+                <h3>Requirements</h3>
+                <div class="nested">
+                    <Checkbox label="Delay" />
 
-                <Checkbox label="Type random phrase" />
+                    <Checkbox label="Type random phrase" />
 
-                <Checkbox label="Another user approval" />
-            </div>
+                    <Checkbox label="Another user approval" />
+                </div>
 
-            <h3>Override Allowance</h3>
+                <h3>Override Allowance</h3>
 
-            <div class="allowance-grid">
-                <label>
-                    Additional Time
-                    <input value="30" />
-                    <span>minutes</span>
-                </label>
+                <div class="allowance-grid">
+                    <label>
+                        Additional Time
+                        <input value="30" />
+                        <span>minutes</span>
+                    </label>
 
-                <label>
-                    Maximum Request Length
-                    <input value="15" />
-                    <span>minutes</span>
-                </label>
+                    <label>
+                        Maximum Request Length
+                        <input value="15" />
+                        <span>minutes</span>
+                    </label>
 
-                <label>
-                    Additional Unlocks
-                    <input value="1" />
-                    <span>unlock</span>
-                </label>
-            </div>
-        {/if}
-    </section>
+                    <label>
+                        Additional Unlocks
+                        <input value="1" />
+                        <span>unlock</span>
+                    </label>
+                </div>
+            {/if}
+        </div>
+    </Card>
 
     <div class="actions">
         <button class="cta-button"> Cancel </button>
@@ -120,22 +122,12 @@
 
 <style>
     .editor {
-        max-width: 900px;
-
         display: flex;
         flex-direction: column;
+        max-width: 50vw;
+        margin: 0 auto;
 
-        gap: var(--space-6);
-    }
-
-    .card {
-        background: var(--color-surface);
-
-        border: 1px solid var(--color-border);
-
-        border-radius: var(--radius-lg);
-
-        padding: var(--space-6);
+        gap: var(--space-4);
     }
 
     label {
@@ -154,7 +146,7 @@
     .allowance-grid {
         display: grid;
 
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
 
         gap: var(--space-4);
     }
@@ -173,10 +165,10 @@
         color: var(--color-text-muted);
     }
 
-    .override, h3 {
+    .override,
+    h3 {
         padding-top: var(--space-3);
     }
-
 
     .nested {
         margin-left: var(--space-5);
@@ -192,6 +184,7 @@
         justify-content: flex-end;
 
         gap: var(--space-3);
+        grid-column: span 2;
     }
 
     .primary {

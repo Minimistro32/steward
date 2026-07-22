@@ -1,5 +1,5 @@
 <script lang="ts">
-    import PageHeader from "../components/PageHeader.svelte";
+    import PageHeader from "../components/ui/PageHeader.svelte";
     import AgentHealth from "../components/overview/AgentHealth.svelte";
     import Allowances from "../components/overview/Allowances.svelte";
     import RequestActivity from "../components/overview/RequestActivity.svelte";

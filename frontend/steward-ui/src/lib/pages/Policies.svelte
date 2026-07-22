@@ -1,5 +1,5 @@
 <script lang="ts">
-    import PageHeader from "../components/PageHeader.svelte";
+    import PageHeader from "../components/ui/PageHeader.svelte";
     import ConfigurationSummary from "../components/policies/ConfigurationSummary.svelte";
     import StatusDot from "../components/ui/StatusDot.svelte";
 

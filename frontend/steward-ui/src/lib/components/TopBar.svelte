@@ -43,18 +43,4 @@
         color: var(--color-text-muted);
         letter-spacing: 0.01em;
     }
-
-    .status {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-        color: var(--color-text-muted);
-    }
-
-    .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--color-success);
-    }
 </style>

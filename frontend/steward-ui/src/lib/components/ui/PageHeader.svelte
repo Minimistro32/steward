@@ -15,7 +15,7 @@
     }
 
     p {
-        margin-bottom: var(--space-6);
+        margin-bottom: var(--margin-bottom, var(--space-6));
         font-size: 0.9rem;
     }
 </style>
