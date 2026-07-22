@@ -52,6 +52,18 @@ select {
     color: var(--color-text);
     padding: var(--space-3);
     border-radius: var(--radius-sm);
+    padding-right: 2.5rem;
+}
+
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background-image: url("../../assets/dropdown-arrow.svg");
+    background-repeat: no-repeat;
+    background-position: right var(--space-3) center;
+    background-size: 16px;
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {
@@ -60,6 +72,12 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 input::placeholder {
     color: var(--color-text-muted);
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--color-brand);
 }
 
 .cta-button {
