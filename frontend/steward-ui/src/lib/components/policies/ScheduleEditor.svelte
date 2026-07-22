@@ -1,6 +1,25 @@
-<script>
-    let selectedDays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+<script lang="ts">
+    import { DayOfWeek, type Schedule } from "../../models/policies/Schedule";
+
+    export let schedule: Schedule;
+
+    const days = [
+        { value: DayOfWeek.Monday, label: "Mon" },
+        { value: DayOfWeek.Tuesday, label: "Tue" },
+        { value: DayOfWeek.Wednesday, label: "Wed" },
+        { value: DayOfWeek.Thursday, label: "Thu" },
+        { value: DayOfWeek.Friday, label: "Fri" },
+        { value: DayOfWeek.Saturday, label: "Sat" },
+        { value: DayOfWeek.Sunday, label: "Sun" },
+    ];
+
+    function toggleDay(day: number) {
+        if (schedule.days.includes(day)) {
+            schedule.days = schedule.days.filter((d) => d !== day);
+        } else {
+            schedule.days = [...schedule.days, day];
+        }
+    }
 </script>
 
 <h2>Schedule</h2>
@@ -9,8 +28,12 @@
 
 <div class="days">
     {#each days as day}
-        <button class:selected={selectedDays.includes(day)}>
-            {day}
+        <button
+            type="button"
+            class:selected={schedule.days.includes(day.value)}
+            onclick={() => toggleDay(day.value)}
+        >
+            {day.label}
         </button>
     {/each}
 </div>
@@ -18,12 +41,12 @@
 <div class="row">
     <label>
         Start Time
-        <input type="time" value="20:00" />
+        <input type="time" bind:value={schedule.startTime} />
     </label>
 
     <label>
         End Time
-        <input type="time" value="07:00" />
+        <input type="time" bind:value={schedule.endTime} />
     </label>
 </div>
 

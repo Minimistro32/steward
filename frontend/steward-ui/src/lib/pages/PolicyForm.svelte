@@ -6,17 +6,15 @@
 
     import type { Policy } from "../models/policies/Policy";
     import { createDefaultPolicy } from "../models/policies/createDefaultPolicy";
-    
-    export let params;
-    const id = params?.id;
-    
-    export let policy: Policy;
 
-    if (id) {
+    export let params;
+
+    export let policy: Policy;
+    if (params?.id) {
         // policy = await policyApi.get(id);
         policy = {
-            id: id,
-            name: `Test getting id from route ${id}`,
+            id: params?.id,
+            name: `Test getting id from route ${params?.id}`,
             tags: [],
             disabled: false,
             wardId: "test",
@@ -37,6 +35,55 @@
         };
     } else {
         policy = createDefaultPolicy();
+    }
+
+    function savePolicy() {
+        if (!validatePolicy()) {
+            return;
+        }
+
+        console.log("Saving policy:", policy);
+
+        // Later:
+        // await policyApi.save(policy);
+    }
+
+    let errors: string[] = [];
+    function validatePolicy(): boolean {
+        errors = [];
+
+        if (!policy.name.trim()) {
+            errors.push("Policy name is required.");
+        }
+
+        if (!policy.wardId) {
+            errors.push("A ward must be selected.");
+        }
+
+        if (
+            policy.access.maxSessionMinutes &&
+            policy.access.dailyTimeMinutes &&
+            policy.access.maxSessionMinutes > policy.access.dailyTimeMinutes
+        ) {
+            errors.push(
+                "Maximum session length cannot exceed daily allowance.",
+            );
+        }
+
+        if (policy.override.allowed) {
+            if (
+                policy.override.allowance.maxSessionMinutes &&
+                policy.override.allowance.dailyTimeMinutes &&
+                policy.override.allowance.maxSessionMinutes >
+                    policy.override.allowance.dailyTimeMinutes
+            ) {
+                errors.push(
+                    "Override session length cannot exceed override allowance.",
+                );
+            }
+        }
+
+        return errors.length === 0;
     }
 </script>
 
@@ -82,7 +129,7 @@
         </Card>
 
         <Card>
-            <ScheduleEditor />
+            <ScheduleEditor bind:schedule={policy.schedule}/>
         </Card>
 
         <Card>
@@ -187,10 +234,20 @@
             </div>
         </Card>
 
-        <div class="actions">
-            <button class="cta-button"> Cancel </button>
+        {#if errors.length > 0}
+            <div class="errors">
+                {#each errors as error}
+                    <p>{error}</p>
+                {/each}
+            </div>
+        {/if}
 
-            <button class="primary"> Save Policy </button>
+        <div class="actions">
+            <a href="#/policies">
+                <button class="cta-button"> Cancel </button>
+            </a>
+
+            <button onclick={savePolicy} class="primary"> Save Policy </button>
         </div>
     </div>
 </div>
@@ -272,5 +329,20 @@
 
     a:hover {
         color: var(--color-brand-light);
+    }
+
+    .errors {
+        background: rgba(229, 83, 83, 0.1);
+        border: 1px solid var(--color-failure);
+        border-radius: var(--radius-md);
+
+        padding: var(--space-4);
+
+        margin-bottom: var(--space-4);
+    }
+
+    .errors p {
+        color: var(--color-failure);
+        margin: 0;
     }
 </style>
