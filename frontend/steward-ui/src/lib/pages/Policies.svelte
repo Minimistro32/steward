@@ -5,6 +5,7 @@
 
     import type { OverrideRequirement } from "../models/policies/OverridePolicy";
     import { getPolicies } from "../api/mockApi";
+    import { formatTimeRange } from "../models/policies/Schedule";
 
     const policies = getPolicies();
     const wards: Record<string, string> = {
@@ -50,14 +51,7 @@
     } {
         const days = [...schedule.days].sort((a, b) => a - b);
 
-        const hasStart = schedule.startTime !== "";
-        const hasEnd = schedule.endTime !== "";
-
-        const timeText =
-            hasStart || hasEnd
-                ? `${formatTime(schedule.startTime || "00:00")} \u2013 ${formatTime(schedule.endTime || "24:00")}`
-                : "";
-
+        const timeText = formatTimeRange(schedule);
         let dayText: string;
 
         if (arraysEqual(days, [0, 1, 2, 3, 4, 5, 6])) {
@@ -112,22 +106,6 @@
         }
 
         return ranges.join(", ");
-    }
-
-    function formatTime(time: string): string {
-        if (time === "24:00") return "Midnight";
-
-        let [hour, minute] = time.split(":").map(Number);
-
-        const suffix = hour >= 12 ? "PM" : "AM";
-
-        hour %= 12;
-
-        if (hour === 0) hour = 12;
-
-        return minute === 0
-            ? `${hour}${suffix}`
-            : `${hour}:${minute.toString().padStart(2, "0")}${suffix}`;
     }
 
     function arraysEqual(a: number[], b: number[]): boolean {

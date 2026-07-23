@@ -3,7 +3,7 @@
     import AgentHealth from "../components/overview/AgentHealth.svelte";
     import Allowances from "../components/overview/Allowances.svelte";
     import RequestActivity from "../components/overview/RequestActivity.svelte";
-    import Timeline from "../components/overview/Timeline.svelte";
+    import PolicyTimeline from "../components/overview/PolicyTimeline.svelte";
 </script>
 
 <PageHeader title="Overview">
@@ -18,7 +18,7 @@
     <Allowances --row-span="1" />
     <RequestActivity --row-span="2" />
     <!-- <Timeline --col-span="1" /> -->
-    <Timeline --col-span="2" />
+    <PolicyTimeline --col-span="2" />
 </div>
 
 <!-- <StatusBadge status="online"/> -->

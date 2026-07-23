@@ -13,3 +13,29 @@ export enum DayOfWeek {
     Friday = 5,
     Saturday = 6
 }
+
+export function formatTimeRange(schedule: Schedule): string {
+    const hasStart = schedule.startTime !== "";
+    const hasEnd = schedule.endTime !== "";
+
+    return hasStart || hasEnd
+        ? `${formatTime(schedule.startTime || "00:00")} \u2013 ${formatTime(schedule.endTime || "24:00")}`
+        : "";
+
+}
+
+function formatTime(time: string): string {
+    if (time === "24:00") return "Midnight";
+
+    let [hour, minute] = time.split(":").map(Number);
+
+    const suffix = hour >= 12 ? "PM" : "AM";
+
+    hour %= 12;
+
+    if (hour === 0) hour = 12;
+
+    return minute === 0
+        ? `${hour}${suffix}`
+        : `${hour}:${minute.toString().padStart(2, "0")}${suffix}`;
+}
