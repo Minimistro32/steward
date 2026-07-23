@@ -1,10 +1,30 @@
 <script lang="ts">
-    import Card from "../ui/Card.svelte";
     import { slide } from "svelte/transition";
+    import Card from "../ui/Card.svelte";
 
-    let { agent } = $props();
+    import type { Agent } from "../../models/agents/Agent";
+    import { AgentStatus } from "../../models/agents/Agent";
+
+    const { agent } = $props<{ agent: Agent }>();
 
     let expanded = $state(false);
+
+    // DRY up with the date formatter in AgentSummary?
+    function formatLastSeen(date?: Date) {
+        if (!date) return "Online";
+
+        const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
+
+        if (minutes < 1) return "Just now";
+        if (minutes === 1) return "1 minute ago";
+        if (minutes < 60) return `${minutes} minutes ago`;
+
+        const hours = Math.floor(minutes / 60);
+
+        if (hours === 1) return "1 hour ago";
+
+        return `${hours} hours ago`;
+    }
 </script>
 
 <Card>
@@ -34,12 +54,16 @@
     >
         <div class="header">
             <div class="identity">
-                <div class={`dot ${agent.status}`}></div>
+                <div
+                    class="dot"
+                    class:online={agent.status === AgentStatus.Online}
+                    class:offline={agent.status === AgentStatus.Offline}
+                ></div>
 
                 <div>
                     <h3>{agent.name}</h3>
                     {#if agent.lastSeen}
-                        <p>Last seen {agent.lastSeen}</p>
+                        <p>{formatLastSeen(agent.lastSeen)}</p>
                     {:else}
                         <p>Online</p>
                     {/if}
@@ -53,8 +77,8 @@
                     <h4>Resources</h4>
 
                     <ul>
-                        {#each agent.resourceList as resource}
-                            <li>{resource}</li>
+                        {#each agent.resources as resource}
+                            <li>{resource.name}</li>
                         {/each}
                     </ul>
                 </section>
@@ -82,17 +106,17 @@
         {:else}
             <div class="stats">
                 <div>
-                    <strong>{agent.resourceList.length}</strong>
+                    <strong>{agent.resources.length}</strong>
                     <span>Resources</span>
                 </div>
 
                 <div>
-                    <strong>{agent.userList.length}</strong>
+                    <strong>2</strong>
                     <span>Users</span>
                 </div>
 
                 <div>
-                    <strong>{agent.deviceList.length}</strong>
+                    <strong>1</strong>
                     <span>Devices</span>
                 </div>
             </div>

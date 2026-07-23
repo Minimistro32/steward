@@ -1,65 +1,24 @@
 <script lang="ts">
     import AgentCard from "../components/agents/AgentCard.svelte";
-    import AgentSummary, { updateRefreshDate } from "../components/agents/AgentSummary.svelte";
+    import AgentSummary from "../components/agents/AgentSummary.svelte";
     import PageHeader from "../components/ui/PageHeader.svelte";
 
-    let agents = [
-        {
-            name: "Pi-Hole",
-            status: "online",
-            resourceList: ["GitHub", "AWS", "Jira"],
-            userList: ["Sarah", "Marcus"],
-            deviceList: ["ENG-LAPTOP-04", "Build Server"],
-        },
-        {
-            name: "ESP32-PS5",
-            status: "online",
-            resourceList: ["GitHub", "AWS", "Jira"],
-            userList: ["Sarah", "Marcus"],
-            deviceList: ["ENG-LAPTOP-04", "Build Server"],
-        },
-        {
-            name: "Cold Turkey Blocker",
-            status: "offline",
-            lastSeen: "3 hours ago",
-            resourceList: ["GitHub", "AWS", "Jira"],
-            userList: ["Sarah", "Marcus"],
-            deviceList: ["ENG-LAPTOP-04", "Build Server"],
-        },
-        {
-            name: "Pi-Hole2",
-            status: "online",
-            resourceList: ["GitHub", "AWS", "Jira"],
-            userList: ["Sarah", "Marcus"],
-            deviceList: ["ENG-LAPTOP-04", "Build Server"],
-        },
-        {
-            name: "ESP32-PS52",
-            status: "online",
-            resourceList: ["GitHub", "AWS", "Jira"],
-            userList: ["Sarah", "Marcus"],
-            deviceList: ["ENG-LAPTOP-04", "Build Server"],
-        },
-        {
-            name: "Cold Turkey Blocker2",
-            status: "offline",
-            lastSeen: "3 hours ago",
-            resourceList: ["GitHub", "AWS", "Jira"],
-            userList: ["Sarah", "Marcus"],
-            deviceList: ["ENG-LAPTOP-04", "Build Server"],
-        },
-    ];
+    import type { Agent } from "../models/agents/Agent";
+    import { getAgents, refreshAgents } from "../api/mockAgentsApi";
 
-    let columns = $derived([
+    let agents: Agent[] = getAgents();
+
+    $: columns = [
         agents.filter((_, i) => i % 3 === 0),
         agents.filter((_, i) => i % 3 === 1),
         agents.filter((_, i) => i % 3 === 2),
-    ]);
+    ];
+
+    let lastRefresh = new Date();
 
     function refresh() {
-        // TODO: call health endpoint
-        // lastRefreshed = "just now";
-        updateRefreshDate()
+        agents = refreshAgents();
+        lastRefresh = new Date();
     }
 </script>
 
@@ -72,14 +31,17 @@
     {/snippet}
 </PageHeader>
 
-<AgentSummary />
+<AgentSummary
+    agents={agents}
+    lastRefresh={lastRefresh}
+/>
 
 <h2>Registered Agents</h2>
 
 <div class="masonry">
     {#each columns as column}
         <div class="column">
-            {#each column as agent (agent.name)}
+            {#each column as agent (agent.agentId)}
                 <AgentCard {agent} />
             {/each}
         </div>

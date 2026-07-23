@@ -1,31 +1,53 @@
-<script lang="ts" module>
+<script lang="ts">
     import Card from "../ui/Card.svelte";
 
-    let refreshDate = new Date();
-    refreshDate.setDate(5);
-    export function updateRefreshDate() {
-        refreshDate = new Date();
-        console.log(refreshDate);
-    }
+    import type { Agent } from "../../models/agents/Agent";
+    import { AgentStatus } from "../../models/agents/Agent";
 
-    console.log(refreshDate);
+    type Props = {
+        agents: Agent[];
+        lastRefresh: Date;
+    };
+    const { agents, lastRefresh }: Props = $props();
 
-    let devices = [
+    const online = $derived(
+        agents.filter((a) => a.status === AgentStatus.Online).length,
+    );
+
+    const disabled = $derived(0);
+
+    const resources = $derived([
+        ...new Set(
+            agents.flatMap((agent) => agent.resources.map((r) => r.name)),
+        ),
+    ]);
+
+    // Placeholder until wards/users exist.
+    const users = ["Sarah", "Marcus", "Jamie"];
+
+    // Placeholder until devices exist.
+    const devices = [
         "Engineering Laptop Pool",
         "Production Server",
         "AWS Infrastructure",
-        "AWS Infrastructure",
-        "AWS Infrastructure",
-        "AWS Infrastructure",
-        "AWS Infrastructure",
-        "AWS Infrastructure",
     ];
 
-    let users = ["Sarah", "Marcus", "Jamie"];
-    let disabled = "0";
-    let online = "5";
-    let agents = [1, 2, 3, 4, 5, 6];
-    let lastRefreshed = "3 minutes ago";
+    // DRY up with the date formatter in AgentCard?
+    function formatLastRefresh(date: Date): string {
+        const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+        if (seconds < 5) return "Just now";
+        if (seconds < 60) return `${seconds} seconds ago`;
+
+        const minutes = Math.floor(seconds / 60);
+        if (minutes === 1) return "1 minute ago";
+        if (minutes < 60) return `${minutes} minutes ago`;
+
+        const hours = Math.floor(minutes / 60);
+        if (hours === 1) return "1 hour ago";
+
+        return `${hours} hours ago`;
+    }
 </script>
 
 <Card title="Summary">
@@ -62,7 +84,7 @@
     </div>
 
     <div class="refresh">
-        Last refreshed {lastRefreshed}
+        {formatLastRefresh(lastRefresh)}
     </div>
 </Card>
 
