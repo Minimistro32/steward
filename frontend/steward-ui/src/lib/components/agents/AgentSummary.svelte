@@ -1,5 +1,14 @@
-<script>
+<script lang="ts" module>
     import Card from "../ui/Card.svelte";
+
+    let refreshDate = new Date();
+    refreshDate.setDate(5);
+    export function updateRefreshDate() {
+        refreshDate = new Date();
+        console.log(refreshDate);
+    }
+
+    console.log(refreshDate);
 
     let devices = [
         "Engineering Laptop Pool",
@@ -13,11 +22,10 @@
     ];
 
     let users = ["Sarah", "Marcus", "Jamie"];
-
-    let lastRefreshed = "3 minutes ago";
     let disabled = "0";
     let online = "5";
     let agents = [1, 2, 3, 4, 5, 6];
+    let lastRefreshed = "3 minutes ago";
 </script>
 
 <Card title="Summary">

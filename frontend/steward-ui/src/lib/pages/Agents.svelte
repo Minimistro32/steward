@@ -1,6 +1,6 @@
 <script lang="ts">
     import AgentCard from "../components/agents/AgentCard.svelte";
-    import AgentSummary from "../components/agents/AgentSummary.svelte";
+    import AgentSummary, { updateRefreshDate } from "../components/agents/AgentSummary.svelte";
     import PageHeader from "../components/ui/PageHeader.svelte";
 
     let agents = [
@@ -59,6 +59,7 @@
     function refresh() {
         // TODO: call health endpoint
         // lastRefreshed = "just now";
+        updateRefreshDate()
     }
 </script>
 
