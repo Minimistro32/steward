@@ -55,11 +55,19 @@
         agents.filter((_, i) => i % 3 === 1),
         agents.filter((_, i) => i % 3 === 2),
     ]);
+
+    function refresh() {
+        // TODO: call health endpoint
+        // lastRefreshed = "just now";
+    }
 </script>
 
 <PageHeader title="Agents">
     {#snippet subtitle()}
         Agents watch over wards, discover resources, and enforce policies.
+    {/snippet}
+    {#snippet actions()}
+        <button class="cta-button" onclick={refresh}> ↻ Refresh </button>
     {/snippet}
 </PageHeader>
 

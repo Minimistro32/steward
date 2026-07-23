@@ -120,13 +120,12 @@
     {#snippet subtitle()}
         Define how wards access their resources and request additional access.
     {/snippet}
+    {#snippet actions()}
+        <a href="#/policies/new">
+            <button class="cta-button"> + Create Policy </button>
+        </a>
+    {/snippet}
 </PageHeader>
-
-<div class="toolbar">
-    <a href="#/policies/new">
-        <button class="cta-button"> + Create Policy </button>
-    </a>
-</div>
 
 <div class="table-container">
     <table>
@@ -212,8 +211,8 @@
                     </td>
 
                     <td>
-                    <a href="#/policies/{policy.id}">
-                        <button class="cta-button"> Edit </button>
+                        <a href="#/policies/{policy.id}">
+                            <button class="cta-button"> Edit </button>
                         </a>
                     </td>
                 </tr>
@@ -223,12 +222,6 @@
 </div>
 
 <style>
-    .toolbar {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: var(--space-6);
-    }
-
     .table-container {
         background: var(--color-surface);
         border: 1px solid var(--color-border);

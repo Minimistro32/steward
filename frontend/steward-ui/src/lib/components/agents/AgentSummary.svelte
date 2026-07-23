@@ -14,11 +14,6 @@
 
     let users = ["Sarah", "Marcus", "Jamie"];
 
-    function refresh() {
-        // TODO: call health endpoint
-        lastRefreshed = "just now";
-    }
-
     let lastRefreshed = "3 minutes ago";
     let disabled = "0";
     let online = "5";
@@ -26,10 +21,6 @@
 </script>
 
 <Card title="Summary">
-    {#snippet actions()}
-        <button class="cta-button" onclick={refresh}> ↻ Refresh </button>
-    {/snippet}
-
     <div class="summary">
         <div class="metric">
             <strong>{online} / {agents.length}</strong>
