@@ -4,7 +4,7 @@
     import StatusDot from "../components/ui/StatusDot.svelte";
 
     import type { OverrideRequirement } from "../models/policies/OverridePolicy";
-    import { getPolicies } from "../api/mockApi";
+    import { getPolicies } from "../api/mockPoliciesApi";
     import { formatTimeRange } from "../models/policies/Schedule";
 
     const policies = getPolicies();

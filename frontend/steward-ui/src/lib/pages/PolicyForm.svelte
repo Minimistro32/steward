@@ -10,7 +10,7 @@
     import { createDefaultPolicy } from "../models/policies/Policy";
     import type { OverrideRequirement } from "../models/policies/OverridePolicy";
 
-    import { getPolicies } from "../api/mockApi";
+    import { getPolicies } from "../api/mockPoliciesApi";
 
     export let params;
     let policy: Policy;

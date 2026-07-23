@@ -3,7 +3,7 @@
     import type { Policy } from "../../models/policies/Policy";
     import { formatTimeRange } from "../../models/policies/Schedule";
 
-    import { getPolicies } from "../../api/mockApi";
+    import { getPolicies } from "../../api/mockPoliciesApi";
 
     let policies: Policy[] = getPolicies();
 
