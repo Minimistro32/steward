@@ -1,11 +1,7 @@
 export interface Schedule {
-    enabled: boolean;
-
     days: DayOfWeek[];
-
-    startTime: string;
-
-    endTime: string;
+    startTime: string;   // "" means beginning of day
+    endTime: string;     // "" means end of day
 }
 
 export enum DayOfWeek {

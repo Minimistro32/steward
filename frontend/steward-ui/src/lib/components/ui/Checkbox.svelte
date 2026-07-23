@@ -1,10 +1,11 @@
 <script lang="ts">
     export let checked = false;
     export let label = "";
+    export let onchange = () => {};
 </script>
 
 <label class="checkbox">
-    <input type="checkbox" bind:checked />
+    <input type="checkbox" bind:checked on:change={onchange} />
 
     <span class="box"></span>
 
@@ -16,21 +17,15 @@
 <style>
     .checkbox {
         display: flex;
-
         align-items: center;
-
         gap: var(--space-3);
-
         cursor: pointer;
-
         color: var(--color-text);
     }
 
     .checkbox input {
         position: absolute;
-
         opacity: 0;
-
         pointer-events: none;
     }
 
@@ -39,15 +34,11 @@
         height: 18px;
 
         border: 1px solid var(--color-border);
-
         border-radius: var(--radius-sm);
-
         background: var(--color-surface-raised);
 
         display: flex;
-
         align-items: center;
-
         justify-content: center;
 
         transition:
@@ -61,7 +52,6 @@
 
     .checkbox input:checked + .box {
         background: var(--color-brand);
-
         border-color: var(--color-brand);
     }
 
@@ -72,7 +62,6 @@
         height: 10px;
 
         border: solid white;
-
         border-width: 0 1.5px 1.5px 0;
 
         transform: rotate(45deg) translateY(-1px);

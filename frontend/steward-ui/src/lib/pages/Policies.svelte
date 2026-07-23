@@ -1,73 +1,141 @@
 <script lang="ts">
     import PageHeader from "../components/ui/PageHeader.svelte";
-    import ConfigurationSummary from "../components/policies/AllowanceSummary.svelte";
+    import AllowanceSummary from "../components/policies/AllowanceSummary.svelte";
     import StatusDot from "../components/ui/StatusDot.svelte";
 
-    type Policy = {
-        name: string;
-        ward: string;
-        active: boolean;
-        schedule: string;
-        access: {
-            dailyTime: string;
-            sessionLength: string;
-            unlocks: string;
-        };
-        override?: string;
-        allowance?: {
-            dailyTime: string;
-            sessionLength: string;
-            unlocks: string;
-        };
+    import type { OverrideRequirement } from "../models/policies/OverridePolicy";
+    import { getPolicies } from "../api/mockApi";
+
+    const policies = getPolicies();
+    const wards: Record<string, string> = {
+        alice: "Alice",
+        kids: "Kids Devices",
+        bob: "Bob",
     };
 
-    let policies: Policy[] = [
-        {
-            name: "Gaming Restrictions",
-            ward: "Alice",
-            active: true,
-            schedule: "Weekdays 8PM - 7AM",
-            access: {
-                dailyTime: "60 min",
-                sessionLength: "30 min",
-                unlocks: "3",
-            },
-            override: "Escalating Delay",
-            allowance: {
-                dailyTime: "+30 min",
-                sessionLength: "15 min",
-                unlocks: "+1",
-            },
-        },
-        {
-            name: "School Night Rules",
-            ward: "Kids Devices",
-            active: true,
-            schedule: "Sun - Thu",
-            access: {
-                dailyTime: "90 min",
-                sessionLength: "45 min",
-                unlocks: "2",
-            },
-        },
-        {
-            name: "Weekend Relaxed",
-            ward: "Bob",
-            active: false,
-            schedule: "Saturday",
-            access: {
-                dailyTime: "∞",
-                sessionLength: "60 min",
-                unlocks: "5",
-            },
-            override: "User Approval",
-            allowance: {
-                dailyTime: "+60 min",
-                sessionLength: "30 min",
-                unlocks: "+1",
-            },
-        },
+    function minutes(value?: number) {
+        return value == null ? "∞" : `${value} min`;
+    }
+
+    function unlocks(value?: number) {
+        return value == null ? "∞" : value.toString();
+    }
+
+    function overrideLabel(
+        requirement: OverrideRequirement | undefined,
+    ): string | undefined {
+        if (requirement === "userApproval") return "User Approval";
+        if (requirement === "randomText") return "Random Text";
+        if (requirement === "delay") return "Delay";
+
+        return requirement;
+    }
+
+    // scheduleSummary
+    import type { Schedule } from "../models/policies/Schedule";
+
+    const dayNames = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
     ];
+
+    export function scheduleSummary(schedule: Schedule): {
+        days: string;
+        time: string | undefined;
+    } {
+        const days = [...schedule.days].sort((a, b) => a - b);
+
+        const hasStart = schedule.startTime !== "";
+        const hasEnd = schedule.endTime !== "";
+
+        const timeText =
+            hasStart || hasEnd
+                ? `${formatTime(schedule.startTime || "00:00")} \u2013 ${formatTime(schedule.endTime || "24:00")}`
+                : "";
+
+        let dayText: string;
+
+        if (arraysEqual(days, [0, 1, 2, 3, 4, 5, 6])) {
+            dayText = timeText ? "Daily" : "Always Active";
+        } else if (arraysEqual(days, [1, 2, 3, 4, 5])) {
+            dayText = "Weekdays";
+        } else if (arraysEqual(days, [0, 6])) {
+            dayText = "Weekends";
+        } else {
+            dayText = summarizeDays(days);
+        }
+
+        return {
+            days: dayText,
+            time: timeText || undefined,
+        };
+    }
+
+    function summarizeDays(days: number[]): string {
+        let shortDayNames = dayNames.map((n) => n.substring(0, 3));
+        const ranges: string[] = [];
+
+        let start = days[0];
+        let previous = days[0];
+
+        for (let i = 1; i <= days.length; i++) {
+            const current = days[i];
+
+            if (current === previous + 1) {
+                previous = current;
+                continue;
+            }
+
+            if (start === previous) {
+                if (days.length === 1) {
+                    ranges.push(dayNames[start]);
+                } else {
+                    ranges.push(shortDayNames[start]);
+                }
+            } else if (previous === start + 1) {
+                // Two consecutive days look better separated by commas.
+                ranges.push(shortDayNames[start]);
+                ranges.push(shortDayNames[previous]);
+            } else {
+                ranges.push(
+                    `${shortDayNames[start]} \u2013\n ${shortDayNames[previous]}`,
+                );
+            }
+
+            start = current;
+            previous = current;
+        }
+
+        return ranges.join(", ");
+    }
+
+    function formatTime(time: string): string {
+        if (time === "24:00") return "Midnight";
+
+        let [hour, minute] = time.split(":").map(Number);
+
+        const suffix = hour >= 12 ? "PM" : "AM";
+
+        hour %= 12;
+
+        if (hour === 0) hour = 12;
+
+        return minute === 0
+            ? `${hour}${suffix}`
+            : `${hour}:${minute.toString().padStart(2, "0")}${suffix}`;
+    }
+
+    function arraysEqual(a: number[], b: number[]): boolean {
+        return (
+            a.length === b.length &&
+            a.every((value, index) => value === b[index])
+        );
+    }
 </script>
 
 <PageHeader title="Policies">
@@ -98,60 +166,77 @@
 
         <tbody>
             {#each policies as policy}
+                {@const summary = scheduleSummary(policy.schedule)}
+
                 <tr>
-                    <td class="col1">
+                    <td>
                         <strong>
                             {policy.name}
                         </strong>
 
                         <div class="status">
                             <StatusDot
-                                label={policy.active ? "Active" : "Disabled"}
-                                color={policy.active
-                                    ? "var(--color-success)"
-                                    : "var(--color-text-muted)"}
+                                label={policy.disabled ? "Disabled" : "Active"}
+                                color={policy.disabled
+                                    ? "var(--color-text-muted)"
+                                    : "var(--color-success)"}
                                 --font-size="0.85rem"
                             />
                         </div>
                     </td>
 
+                    <td>{wards[policy.wardId]}</td>
+
                     <td>
-                        {policy.ward}
+                        <div class="schedule">
+                            <strong>{summary.days}</strong>
+
+                            {#if summary.time}
+                                <div class="time">
+                                    {summary.time}
+                                </div>
+                            {/if}
+                        </div>
                     </td>
 
                     <td>
-                        {policy.schedule}
-                    </td>
-
-                    <td>
-                        <ConfigurationSummary
-                            dailyTime={policy.access.dailyTime}
-                            sessionLength={policy.access.sessionLength}
-                            unlocks={policy.access.unlocks}
+                        <AllowanceSummary
+                            dailyTime={minutes(policy.access.dailyTimeMinutes)}
+                            sessionLength={minutes(
+                                policy.access.maxSessionMinutes,
+                            )}
+                            unlocks={unlocks(policy.access.dailyUnlocks)}
                         />
                     </td>
 
                     <td>
-                        {#if policy.override}
-                            {policy.override}
-                        {:else}
-                            <span class="text-muted"> Disabled </span>
-                        {/if}
+                        <span class:text-muted={!policy.override.allowed}>
+                            {overrideLabel(policy.override.requirement) ||
+                                "Disabled"}
+                        </span>
                     </td>
 
                     <td>
-                        {#if policy.allowance}
-                            <ConfigurationSummary
+                        {#if policy.override.allowance}
+                            <AllowanceSummary
                                 extension
-                                dailyTime={policy.allowance.dailyTime}
-                                sessionLength={policy.allowance.sessionLength}
-                                unlocks={policy.allowance.unlocks}
+                                dailyTime={minutes(
+                                    policy.override.allowance.dailyTimeMinutes,
+                                )}
+                                sessionLength={minutes(
+                                    policy.override.allowance.maxSessionMinutes,
+                                )}
+                                unlocks={unlocks(
+                                    policy.override.allowance.dailyUnlocks,
+                                )}
                             />
                         {/if}
                     </td>
 
                     <td>
+                    <a href="#/policies/{policy.id}">
                         <button class="cta-button"> Edit </button>
+                        </a>
                     </td>
                 </tr>
             {/each}
@@ -160,11 +245,6 @@
 </div>
 
 <style>
-    .col1 {
-        display: flex;
-        flex-direction: column;
-    }
-
     .toolbar {
         display: flex;
         justify-content: flex-end;
@@ -202,5 +282,16 @@
 
     .status {
         padding-left: var(--space-6);
+    }
+
+    .schedule {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .schedule .time {
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
     }
 </style>

@@ -1,41 +1,39 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+
     import PageHeader from "../components/ui/PageHeader.svelte";
     import ScheduleEditor from "../components/policies/ScheduleEditor.svelte";
     import Card from "../components/ui/Card.svelte";
     import Checkbox from "../components/ui/Checkbox.svelte";
 
     import type { Policy } from "../models/policies/Policy";
-    import { createDefaultPolicy } from "../models/policies/createDefaultPolicy";
+    import { createDefaultPolicy } from "../models/policies/Policy";
+    import type { OverrideRequirement } from "../models/policies/OverridePolicy";
+
+    import { getPolicies } from "../api/mockApi";
 
     export let params;
+    let policy: Policy;
+    let notFound = false;
+    let loading = true;
+    
+    onMount(() => {
+        if (params?.id) {
+            // const found = await policyApi.get(id);
+            const found = getPolicies().find((p) => p.id === params.id);
 
-    export let policy: Policy;
-    if (params?.id) {
-        // policy = await policyApi.get(id);
-        policy = {
-            id: params?.id,
-            name: `Test getting id from route ${params?.id}`,
-            tags: [],
-            disabled: false,
-            wardId: "test",
-            schedule: {
-                enabled: true,
-                days: [],
-                startTime: "",
-                endTime: "",
-            },
-            access: {},
-            override: {
-                allowed: true,
-                requireDelay: false,
-                requireRandomPhrase: false,
-                requireUserApproval: false,
-                allowance: {},
-            },
-        };
-    } else {
-        policy = createDefaultPolicy();
-    }
+            if (!found) {
+                notFound = true;
+                return;
+            }
+
+            policy = found;
+        } else {
+            policy = createDefaultPolicy();
+        }
+
+        loading = false;
+    });
 
     function savePolicy() {
         if (!validatePolicy()) {
@@ -85,8 +83,34 @@
 
         return errors.length === 0;
     }
+
+    function setRequirement(requirement: OverrideRequirement) {
+        if (policy.override.requirement === requirement) {
+            policy.override.requirement = undefined;
+        } else {
+            policy.override.requirement = requirement;
+        }
+    }
 </script>
 
+{#if loading}
+
+    <p>Loading...</p>
+
+{:else if notFound}
+    <PageHeader title="Policy Not Found">
+        {#snippet subtitle()}
+            The policy you requested does not exist.
+        {/snippet}
+    </PageHeader>
+
+    <a href="#/policies">
+        <button class="cta-button">
+            Return to Policies
+        </button>
+    </a>
+
+{:else if policy}
 <div class="centered">
     <PageHeader title="Create Policy" --margin-bottom="var(--space-4)">
         {#snippet subtitle()}
@@ -129,7 +153,7 @@
         </Card>
 
         <Card>
-            <ScheduleEditor bind:schedule={policy.schedule}/>
+            <ScheduleEditor bind:schedule={policy.schedule} />
         </Card>
 
         <Card>
@@ -184,11 +208,25 @@
                 {#if policy.override.allowed}
                     <h3>Requirements</h3>
                     <div class="nested">
-                        <Checkbox label="Delay" />
+                        <Checkbox
+                            label="Delay"
+                            checked={policy.override.requirement === "delay"}
+                            onchange={() => setRequirement("delay")}
+                        />
 
-                        <Checkbox label="Type random phrase" />
+                        <Checkbox
+                            label="Type random text"
+                            checked={policy.override.requirement ===
+                                "randomText"}
+                            onchange={() => setRequirement("randomText")}
+                        />
 
-                        <Checkbox label="Another user approval" />
+                        <Checkbox
+                            label="Another user approval"
+                            checked={policy.override.requirement ===
+                                "userApproval"}
+                            onchange={() => setRequirement("userApproval")}
+                        />
                     </div>
 
                     <h3>Override Allowance</h3>
@@ -251,6 +289,7 @@
         </div>
     </div>
 </div>
+{/if}
 
 <style>
     .centered {

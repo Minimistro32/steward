@@ -19,3 +19,36 @@ export interface Policy {
 
     override: OverridePolicy;
 }
+
+export function createDefaultPolicy(): Policy {
+    return {
+        name: "",
+
+        wardId: "",
+
+        tags: [],
+
+        disabled: false,
+
+        schedule: {
+            days: [],
+            startTime: "",
+            endTime: ""
+        },
+
+        access: {},
+
+        override: {
+            allowed: false,
+
+            requireDelay: false,
+            // escalatingDelay: false,
+
+            requireRandomText: false,
+
+            requireUserApproval: false,
+
+            allowance: {}
+        }
+    };
+}
