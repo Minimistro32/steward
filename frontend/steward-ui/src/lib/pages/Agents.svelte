@@ -3,7 +3,7 @@
     import AgentSummary from "../components/agents/AgentSummary.svelte";
     import PageHeader from "../components/ui/PageHeader.svelte";
 
-    import type { Agent } from "../models/agents/Agent";
+    import { type Agent } from "../models/agents";
     import { getAgents, refreshAgents } from "../api/mockAgentsApi";
 
     let agents: Agent[] = getAgents();

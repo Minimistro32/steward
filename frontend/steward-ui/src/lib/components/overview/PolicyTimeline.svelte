@@ -1,7 +1,6 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
-    import type { Policy } from "../../models/policies/Policy";
-    import { formatTimeRange } from "../../models/policies/Schedule";
+    import { type Policy, formatTimeRange } from "../../models/policies";
 
     import { getPolicies } from "../../api/mockPoliciesApi";
 

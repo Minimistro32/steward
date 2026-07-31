@@ -1,9 +1,7 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import Card from "../ui/Card.svelte";
-
-    import type { Agent } from "../../models/agents/Agent";
-    import { AgentStatus } from "../../models/agents/Agent";
+    import { type Agent, AgentStatus } from "../../models/agents";
 
     const { agent } = $props<{ agent: Agent }>();
 

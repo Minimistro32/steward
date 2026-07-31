@@ -6,9 +6,7 @@
     import Card from "../components/ui/Card.svelte";
     import Checkbox from "../components/ui/Checkbox.svelte";
 
-    import type { Policy } from "../models/policies/Policy";
-    import { createDefaultPolicy } from "../models/policies/Policy";
-    import type { OverrideRequirement } from "../models/policies/OverridePolicy";
+    import  { type Policy, createDefaultPolicy, type OverrideRequirement } from "../models/policies";
 
     import { getPolicies } from "../api/mockPoliciesApi";
 

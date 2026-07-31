@@ -1,4 +1,4 @@
-import type { Policy } from "../models/policies/Policy";
+import { type Policy } from "../models/policies";
 
 export function getPolicies(): Policy[] {
     return [

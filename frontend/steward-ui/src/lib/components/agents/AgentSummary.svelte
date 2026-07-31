@@ -1,8 +1,6 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
-
-    import type { Agent } from "../../models/agents/Agent";
-    import { AgentStatus } from "../../models/agents/Agent";
+    import { type Agent, AgentStatus } from "../../models/agents";
 
     type Props = {
         agents: Agent[];

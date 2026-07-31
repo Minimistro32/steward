@@ -3,9 +3,8 @@
     import AllowanceSummary from "../components/policies/AllowanceSummary.svelte";
     import StatusDot from "../components/ui/StatusDot.svelte";
 
-    import type { OverrideRequirement } from "../models/policies/OverridePolicy";
+    import { type OverrideRequirement, formatTimeRange, type Schedule } from "../models/policies";
     import { getPolicies } from "../api/mockPoliciesApi";
-    import { formatTimeRange } from "../models/policies/Schedule";
 
     const policies = getPolicies();
     const wards: Record<string, string> = {
@@ -33,8 +32,6 @@
     }
 
     // scheduleSummary
-    import type { Schedule } from "../models/policies/Schedule";
-
     const dayNames = [
         "Sunday",
         "Monday",

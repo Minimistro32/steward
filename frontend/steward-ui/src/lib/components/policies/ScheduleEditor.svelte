@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { DayOfWeek, type Schedule } from "../../models/policies/Schedule";
+    import { DayOfWeek, type Schedule } from "../../models/policies";
 
     export let schedule: Schedule;
 

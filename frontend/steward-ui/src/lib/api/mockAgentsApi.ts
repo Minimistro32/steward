@@ -1,6 +1,8 @@
-import type { Agent } from "../models/agents/Agent";
-import { AgentStatus } from "../models/agents/Agent";
-import type { Resource } from "../models/agents/Resource";
+import {
+    type Agent,
+    type Resource,
+    AgentStatus,
+} from "../models/agents";
 
 const resources: Resource[] = [
     {
