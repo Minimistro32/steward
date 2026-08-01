@@ -1,6 +1,6 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
-    import type { Ward } from "../../models/wards/Ward";
+    import type { Ward } from "../../models/wards";
 
     type Props = {
         ward: Ward;
@@ -16,9 +16,9 @@
             <h4>Users</h4>
 
             <ul>
-                {#each ward.users as user}
+                {#each ward.userIds as user}
                     <li>
-                        {user.name}
+                        {user}
                     </li>
                 {:else}
                     <li class="empty">No users</li>
@@ -38,9 +38,9 @@
             <h4>Devices</h4>
 
             <ul>
-                {#each ward.devices as device}
+                {#each ward.deviceIds as device}
                     <li>
-                        {device.name}
+                        {device}
                     </li>
                 {:else}
                     <li class="empty">No devices</li>
@@ -59,7 +59,7 @@
             <h4>Resources</h4>
 
             <ul>
-                {#each ward.resources as resource}
+                {#each ward.resourceIds as resource}
                     <li>
                         {resource}
                     </li>

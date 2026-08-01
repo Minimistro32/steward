@@ -1,34 +1,46 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
     import { type Agent, AgentStatus } from "../../models/agents";
+    import type { Device } from "../../models/wards/Device";
+    import type { User } from "../../models/wards/User";
 
     type Props = {
         agents: Agent[];
+        devices: Device[];
+        users: User[];
         lastRefresh: Date;
     };
-    const { agents, lastRefresh }: Props = $props();
+
+    const { agents, devices, users, lastRefresh }: Props = $props();
 
     const online = $derived(
         agents.filter((a) => a.status === AgentStatus.Online).length,
     );
 
-    const disabled = $derived(0);
+    const disabled = $derived(
+        agents.filter((a) => a.status === AgentStatus.Disabled).length,
+    );
 
-    const resources = $derived([
-        ...new Set(
-            agents.flatMap((agent) => agent.resources.map((r) => r.name)),
+    // Agents that can currently enforce policies
+    const connectedAgents = $derived(
+        agents.filter((agent) => agent.status === AgentStatus.Online),
+    );
+
+    // Devices whose enforcement agent is connected
+    const managedDevices = $derived(
+        devices.filter((device) =>
+            connectedAgents.some((agent) => agent.agentId === device.agentId),
         ),
-    ]);
+    );
 
-    // Placeholder until wards/users exist.
-    const users = ["Sarah", "Marcus", "Jamie"];
-
-    // Placeholder until devices exist.
-    const devices = [
-        "Engineering Laptop Pool",
-        "Production Server",
-        "AWS Infrastructure",
-    ];
+    // Users who own at least one managed device
+    const managedUsers = $derived(
+        users.filter((user) =>
+            user.deviceIds.some((deviceId) =>
+                managedDevices.some((device) => device.id === deviceId),
+            ),
+        ),
+    );
 
     // DRY up with the date formatter in AgentCard?
     function formatLastRefresh(date: Date): string {
@@ -64,8 +76,10 @@
             <h4>Managed Devices</h4>
 
             <ul>
-                {#each devices as device}
-                    <li>{device}</li>
+                {#each managedDevices as device}
+                    <li>{device.name}</li>
+                {:else}
+                    <li class="empty">No devices</li>
                 {/each}
             </ul>
         </div>
@@ -74,8 +88,10 @@
             <h4>Managed Users</h4>
 
             <ul>
-                {#each users as user}
-                    <li>{user}</li>
+                {#each managedUsers as user}
+                    <li>{user.name}</li>
+                {:else}
+                    <li class="empty">No users</li>
                 {/each}
             </ul>
         </div>

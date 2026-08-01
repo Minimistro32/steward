@@ -1,98 +1,34 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+
     import PageHeader from "../components/ui/PageHeader.svelte";
-    import Card from "../components/ui/Card.svelte";
     import CurrentWard from "../components/wards/CurrentWard.svelte";
     import WardCard from "../components/wards/WardCard.svelte";
+
     import { type Ward } from "../models/wards/Ward";
+    import { getWards } from "../api/wardApi";
 
-    const wards: Ward[] = [
-        {
-            id: "alice",
-            name: "Alice",
-            tags: ["gaming", "school"],
+    let wards = $state<Ward[]>([]);
+    let selectedWard = $state<Ward | undefined>(undefined);
+    let loading = $state(true);
 
-            users: [
-                {
-                    id: "alice",
-                    name: "Alice",
-                },
-            ],
+    onMount(async () => {
+        wards = await getWards();
 
-            devices: [
-                {
-                    id: "gaming-pc",
-                    name: "Gaming PC",
-                },
-                {
-                    id: "laptop",
-                    name: "Laptop",
-                },
-            ],
+        if (wards.length > 0) {
+            selectedWard = wards[0];
+        }
 
-            resources: ["Steam", "Discord", "YouTube"],
-        },
+        loading = false;
+    });
 
-        {
-            id: "kids",
-            name: "Kids Devices",
-            tags: ["family"],
-
-            users: [
-                {
-                    id: "alice",
-                    name: "Alice",
-                },
-                {
-                    id: "bob",
-                    name: "Bob",
-                },
-            ],
-
-            devices: [
-                {
-                    id: "desktop",
-                    name: "Family Desktop",
-                },
-                {
-                    id: "switch",
-                    name: "Nintendo Switch",
-                },
-            ],
-
-            resources: ["Internet", "Minecraft", "Discord"],
-        },
-
-        {
-            id: "gaming",
-            name: "Gaming Consoles",
-            tags: [],
-
-            users: [],
-
-            devices: [
-                {
-                    id: "xbox",
-                    name: "Xbox",
-                },
-                {
-                    id: "ps5",
-                    name: "PS5",
-                },
-            ],
-
-            resources: ["Power", "Network"],
-        },
-    ];
-
-    $: columns = [
+    const columns = $derived([
         wards.filter((_, i) => i % 5 === 0),
         wards.filter((_, i) => i % 5 === 1),
         wards.filter((_, i) => i % 5 === 2),
         wards.filter((_, i) => i % 5 === 3),
         wards.filter((_, i) => i % 5 === 4),
-    ];
-
-    let selectedWard = wards[0];
+    ]);
 
     function selectWard(ward: Ward) {
         selectedWard = ward;
@@ -111,13 +47,13 @@
     {/snippet}
 </PageHeader>
 
-<div class="currentWard">
-    <CurrentWard ward={selectedWard} />
-</div>
-
-<!-- <Card>
-    Users -> Devices x Resources
-</Card> -->
+{#if loading}
+    <p>Loading wards...</p>
+{:else if selectedWard}
+    <div class="currentWard">
+        <CurrentWard ward={selectedWard} />
+    </div>
+{/if}
 
 <h2>Wards</h2>
 
@@ -127,7 +63,7 @@
             {#each column as ward (ward.id)}
                 <WardCard
                     {ward}
-                    selected={selectedWard.id === ward.id}
+                    selected={selectedWard?.id === ward.id}
                     onclick={() => selectWard(ward)}
                 />
             {/each}

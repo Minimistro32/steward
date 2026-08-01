@@ -2,7 +2,7 @@
     import Card from "../ui/Card.svelte";
     import { type Policy, formatTimeRange } from "../../models/policies";
 
-    import { getPolicies } from "../../api/mockPoliciesApi";
+    import { getPolicies } from "../../api/policyApi";
 
     let policies: Policy[] = getPolicies();
 

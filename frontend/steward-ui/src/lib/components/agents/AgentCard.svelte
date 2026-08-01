@@ -2,8 +2,17 @@
     import { slide } from "svelte/transition";
     import Card from "../ui/Card.svelte";
     import { type Agent, AgentStatus } from "../../models/agents";
+    import type { Device, User } from "../../models/wards";
 
-    const { agent } = $props<{ agent: Agent }>();
+    type AgentCardData = {
+        agent: Agent;
+        devices: Device[];
+        users: User[];
+    };
+    const { data } = $props<{ data: AgentCardData }>();
+    const agent = $derived(data.agent);
+    const devices = $derived(data.devices);
+    const users = $derived(data.users);
 
     let expanded = $state(false);
 
@@ -56,6 +65,7 @@
                     class="dot"
                     class:online={agent.status === AgentStatus.Online}
                     class:offline={agent.status === AgentStatus.Offline}
+                    class:disabled={agent.status === AgentStatus.Disabled}
                 ></div>
 
                 <div>
@@ -72,21 +82,11 @@
         {#if expanded}
             <div class="details" transition:slide={{ duration: 200 }}>
                 <section>
-                    <h4>Resources</h4>
-
-                    <ul>
-                        {#each agent.resources as resource}
-                            <li>{resource.name}</li>
-                        {/each}
-                    </ul>
-                </section>
-
-                <section>
                     <h4>Users</h4>
 
                     <ul>
-                        {#each agent.userList as user}
-                            <li>{user}</li>
+                        {#each users as user}
+                            <li>{user.name}</li>
                         {/each}
                     </ul>
                 </section>
@@ -95,8 +95,18 @@
                     <h4>Devices</h4>
 
                     <ul>
-                        {#each agent.deviceList as device}
-                            <li>{device}</li>
+                        {#each devices as device}
+                            <li>{device.name}</li>
+                        {/each}
+                    </ul>
+                </section>
+
+                <section>
+                    <h4>Resources</h4>
+
+                    <ul>
+                        {#each agent.resourceIds as resource}
+                            <li>{resource}</li>
                         {/each}
                     </ul>
                 </section>
@@ -104,18 +114,18 @@
         {:else}
             <div class="stats">
                 <div>
-                    <strong>{agent.resources.length}</strong>
-                    <span>Resources</span>
-                </div>
-
-                <div>
-                    <strong>2</strong>
+                    <strong>{users.length}</strong>
                     <span>Users</span>
                 </div>
 
                 <div>
-                    <strong>1</strong>
+                    <strong>{devices.length}</strong>
                     <span>Devices</span>
+                </div>
+
+                <div>
+                    <strong>{agent.resourceIds.length}</strong>
+                    <span>Resources</span>
                 </div>
             </div>
         {/if}
@@ -167,6 +177,10 @@
 
     .dot.offline {
         background: var(--color-failure);
+    }
+
+    .dot.disabled {
+        background: var(--color-warning);
     }
 
     .stats {

@@ -1,17 +1,36 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+
     import PageHeader from "../components/ui/PageHeader.svelte";
     import AllowanceSummary from "../components/policies/AllowanceSummary.svelte";
     import StatusDot from "../components/ui/StatusDot.svelte";
 
-    import { type OverrideRequirement, formatTimeRange, type Schedule } from "../models/policies";
-    import { getPolicies } from "../api/mockPoliciesApi";
+    import {
+        type Policy,
+        type OverrideRequirement,
+        formatTimeRange,
+        type Schedule,
+    } from "../models/policies";
+    import type { Ward } from "../models/wards/Ward";
 
-    const policies = getPolicies();
-    const wards: Record<string, string> = {
-        alice: "Alice",
-        kids: "Kids Devices",
-        bob: "Bob",
-    };
+    import { getPolicies } from "../api/policyApi";
+    import { getWards } from "../api/wardApi";
+
+    let policies = $state<Policy[]>([]);
+    let wards = $state<Ward[]>([]);
+
+    async function loadData() {
+        [policies, wards] = await Promise.all([
+            getPolicies(),
+            getWards(),
+        ]);
+    }
+
+    onMount(loadData);
+
+    function wardName(id: string): string {
+        return wards.find((ward) => ward.id === id)?.name ?? "Unknown Ward";
+    }
 
     function minutes(value?: number) {
         return value == null ? "∞" : `${value} min`;
@@ -159,7 +178,7 @@
                         </div>
                     </td>
 
-                    <td>{wards[policy.wardId]}</td>
+                    <td>{wardName(policy.wardId)}</td>
 
                     <td>
                         <div class="schedule">

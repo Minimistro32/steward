@@ -1,7 +1,5 @@
 export interface Device {
     id: string;
-
     name: string;
-
-    description?: string;
+    agentId: string;
 }

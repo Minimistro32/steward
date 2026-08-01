@@ -4,8 +4,8 @@ import type { Schedule } from "./Schedule";
 
 export interface Policy {
     id?: string;
-    createdAt?: Date;
-    modifiedAt?: Date;
+    createdAt?: string;
+    modifiedAt?: string;
 
     name: string;
     tags: string[];
@@ -40,14 +40,6 @@ export function createDefaultPolicy(): Policy {
 
         override: {
             allowed: false,
-
-            requireDelay: false,
-            // escalatingDelay: false,
-
-            requireRandomText: false,
-
-            requireUserApproval: false,
-
             allowance: {}
         }
     };

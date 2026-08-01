@@ -1,6 +1,6 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
-    import type { Ward } from "../../models/wards/Ward";
+    import type { Ward } from "../../models/wards";
 
     type Props = {
         ward: Ward;
@@ -30,9 +30,9 @@
             <h2>{ward.name}</h2>
 
             <div class="summary">
-                <span>{ward.users.length} Users</span>
-                <span>{ward.devices.length} Devices</span>
-                <span>{ward.resources.length} Resources</span>
+                <span>{ward.userIds.length} Users</span>
+                <span>{ward.deviceIds.length} Devices</span>
+                <span>{ward.resourceIds.length} Resources</span>
             </div>
         </button>
     </Card>

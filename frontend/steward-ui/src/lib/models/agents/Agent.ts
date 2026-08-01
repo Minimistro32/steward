@@ -1,5 +1,3 @@
-import type { Resource } from "./Resource";
-
 export interface Agent {
     agentId: string;
     instanceId: string;
@@ -8,12 +6,13 @@ export interface Agent {
 
     status: AgentStatus;
 
-    resources: Resource[];
+    resourceIds: string[];
 
     lastSeen?: Date;
 }
 
 export enum AgentStatus {
     Offline = "Offline",
-    Online = "Online"
+    Online = "Online",
+    Disabled = "Disabled"
 }

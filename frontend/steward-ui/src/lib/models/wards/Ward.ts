@@ -1,6 +1,3 @@
-import type { User } from "./User";
-import type { Device } from "./Device";
-
 export interface Ward {
     id: string;
 
@@ -8,9 +5,9 @@ export interface Ward {
 
     tags: string[];
 
-    users: User[];
+    userIds: string[];
 
-    devices: Device[];
+    deviceIds: string[];
 
-    resources: string[];
+    resourceIds: string[];
 }

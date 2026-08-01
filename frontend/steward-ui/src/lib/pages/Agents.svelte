@@ -1,23 +1,65 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+
     import AgentCard from "../components/agents/AgentCard.svelte";
     import AgentSummary from "../components/agents/AgentSummary.svelte";
     import PageHeader from "../components/ui/PageHeader.svelte";
 
     import { type Agent } from "../models/agents";
-    import { getAgents, refreshAgents } from "../api/mockAgentsApi";
+    import type { Device, User } from "../models/wards";
+    import { getAgents, refreshAgents } from "../api/agentApi";
+    import { getDevices, getUsers } from "../api/wardApi";
 
-    let agents: Agent[] = getAgents();
+    let agents = $state<Agent[]>([]);
+    let devices = $state<Device[]>([]);
+    let users = $state<User[]>([]);
 
-    $: columns = [
-        agents.filter((_, i) => i % 3 === 0),
-        agents.filter((_, i) => i % 3 === 1),
-        agents.filter((_, i) => i % 3 === 2),
-    ];
+    async function loadAgents() {
+        agents = await getAgents();
+        devices = await getDevices();
+        users = await getUsers();
+    }
 
-    let lastRefresh = new Date();
+    onMount(async () => {
+        await loadAgents();
+    });
 
-    function refresh() {
-        agents = refreshAgents();
+    type AgentCardData = {
+        agent: Agent;
+        devices: Device[];
+        users: User[];
+    };
+
+    const cardData = $derived(
+        agents.map((agent): AgentCardData => {
+            const cardDevices = devices.filter(
+                (device) => device.agentId === agent.agentId,
+            );
+
+            const cardUsers = users.filter((user) =>
+                user.deviceIds.some((userDevice) =>
+                    cardDevices.some((device) => device.id === userDevice),
+                ),
+            );
+
+            return {
+                agent,
+                devices: cardDevices,
+                users: cardUsers,
+            };
+        }),
+    );
+
+    const columns = $derived([
+        cardData.filter((_, i) => i % 3 === 0),
+        cardData.filter((_, i) => i % 3 === 1),
+        cardData.filter((_, i) => i % 3 === 2),
+    ]);
+
+    let lastRefresh = $state(new Date());
+
+    async function refresh() {
+        agents = await refreshAgents();
         lastRefresh = new Date();
     }
 </script>
@@ -31,18 +73,15 @@
     {/snippet}
 </PageHeader>
 
-<AgentSummary
-    agents={agents}
-    lastRefresh={lastRefresh}
-/>
+<AgentSummary {agents} {devices} {users} {lastRefresh} />
 
 <h2>Registered Agents</h2>
 
 <div class="masonry">
     {#each columns as column}
         <div class="column">
-            {#each column as agent (agent.agentId)}
-                <AgentCard {agent} />
+            {#each column as data (data.agent.agentId)}
+                <AgentCard {data} />
             {/each}
         </div>
     {/each}

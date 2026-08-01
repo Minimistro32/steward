@@ -6,22 +6,33 @@
     import Card from "../components/ui/Card.svelte";
     import Checkbox from "../components/ui/Checkbox.svelte";
 
-    import  { type Policy, createDefaultPolicy, type OverrideRequirement } from "../models/policies";
+    import {
+        type Policy,
+        createDefaultPolicy,
+        type OverrideRequirement
+    } from "../models/policies";
 
-    import { getPolicies } from "../api/mockPoliciesApi";
+    import {
+        getPolicy,
+        createPolicy,
+        updatePolicy
+    } from "../api/policyApi";
 
-    export let params;
-    let policy: Policy;
-    let notFound = false;
-    let loading = true;
+    let { params } = $props();
+
+    let policy = $state<Policy>();
+    let notFound = $state(false);
+    let loading = $state(true);
+
+    let isNew = $derived(!params?.id);
     
-    onMount(() => {
+    onMount(async () => {
         if (params?.id) {
-            // const found = await policyApi.get(id);
-            const found = getPolicies().find((p) => p.id === params.id);
+            const found = await getPolicy(params.id);
 
             if (!found) {
                 notFound = true;
+                loading = false;
                 return;
             }
 
@@ -33,19 +44,30 @@
         loading = false;
     });
 
-    function savePolicy() {
-        if (!validatePolicy()) {
+    async function savePolicy() {
+        if (!policy || !validatePolicy()) {
             return;
         }
 
-        console.log("Saving policy:", policy);
+        if (isNew) {
+            await createPolicy(policy);
+        } else {
+            await updatePolicy(policy);
+        }
+
+        console.log("Saved policy", policy);
 
         // Later:
-        // await policyApi.save(policy);
+        // navigate back to policies
     }
 
-    let errors: string[] = [];
+    let errors = $state<string[]>([]);
+
     function validatePolicy(): boolean {
+        if (!policy) {
+            return false;
+        }
+
         errors = [];
 
         if (!policy.name.trim()) {
@@ -83,6 +105,8 @@
     }
 
     function setRequirement(requirement: OverrideRequirement) {
+        if (!policy) return;
+
         if (policy.override.requirement === requirement) {
             policy.override.requirement = undefined;
         } else {
@@ -110,7 +134,7 @@
 
 {:else if policy}
 <div class="centered">
-    <PageHeader title="Create Policy" --margin-bottom="var(--space-4)">
+    <PageHeader title={isNew ? "Create Policy" : "Edit Policy"} --margin-bottom="var(--space-4)">
         {#snippet subtitle()}
             Define how a <a href="#/wards">ward</a> is managed.
         {/snippet}
