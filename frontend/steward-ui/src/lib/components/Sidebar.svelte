@@ -16,6 +16,8 @@
         <a use:link use:active href="/agents"> Agents </a>
         <!-- linked from agent health: `features.md/1+2`-->
         
+        <a use:link use:active href="/users"> Users </a>
+        
         <a use:link use:active href="/wards"> Wards </a>
         <!--`features.md/3`-->
         
