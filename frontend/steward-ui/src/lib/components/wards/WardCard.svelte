@@ -51,10 +51,6 @@
         padding: 0;
     }
 
-    h1 {
-        margin: 0 0 var(--space-4);
-    }
-
     .summary {
         display: flex;
         gap: var(--space-4);

@@ -9,7 +9,8 @@
     const { ward }: Props = $props();
 </script>
 
-<Card title="Management Surface">
+<Card>
+    <h1>{ward.name}</h1>
     <div class="relationship">
         <section>
             <h4>Users</h4>
@@ -47,7 +48,6 @@
             </ul>
         </section>
 
-        <!-- <div class="cross">&#215;</div> -->
         <div class="cross">
             &#215;
             <span>
@@ -71,8 +71,8 @@
     </div>
 
     <p class="description">
-        Every listed resource is managed on every listed device. Policies are
-        evaluated independently for each user.
+        Every listed resource is managed on every listed device. A policy's allowance is applied
+        independently to each user.
     </p>
 </Card>
 

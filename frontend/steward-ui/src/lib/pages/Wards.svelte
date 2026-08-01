@@ -136,7 +136,6 @@
 </div>
 
 <style>
-
     h2 {
         margin: var(--space-7) 0 var(--space-4);
     }
