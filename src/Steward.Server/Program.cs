@@ -1,6 +1,13 @@
 using Steward.Server.Mqtt;
+using Microsoft.EntityFrameworkCore;
+using Steward.Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<StewardDbContext>(options =>
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("Steward")
+    ));
 
 builder.Services.Configure<MqttOptions>(
     builder.Configuration.GetSection(MqttOptions.SectionName)

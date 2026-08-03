@@ -1,6 +1,7 @@
 # Custom
 # ==========
 wwwroot/
+steward.db
 
 # Svelte
 # ==========
