@@ -1,23 +1,7 @@
 import {
     type Agent,
-    type Resource,
-    AgentStatus
+    AgentStatus,
 } from "../models/agents";
-
-const mockResources: Resource[] = [
-    {
-        id: "media",
-        name: "Media"
-    },
-    {
-        id: "games",
-        name: "Games"
-    },
-    {
-        id: "browser",
-        name: "Browser"
-    }
-];
 
 const mockAgents: Agent[] = [
     {
@@ -25,11 +9,34 @@ const mockAgents: Agent[] = [
         instanceId: "abc123",
         name: "ESP32 Relay",
         status: AgentStatus.Online,
-        resourceIds: [
-            "media",
-            "games"
+
+        devices: [
+            {
+                id: "switch",
+                name: "Nintendo Switch",
+            },
+            {
+                id: "xbox",
+                name: "Xbox",
+            },
+            {
+                id: "ps5",
+                name: "PlayStation 5",
+            },
         ],
-        lastSeen: new Date()
+
+        resources: [
+            {
+                id: "power",
+                name: "Power",
+            },
+            {
+                id: "network",
+                name: "Network",
+            },
+        ],
+
+        lastSeen: new Date(),
     },
 
     {
@@ -37,11 +44,26 @@ const mockAgents: Agent[] = [
         instanceId: "def456",
         name: "Pi-hole",
         status: AgentStatus.Disabled,
-        resourceIds: [
-            "games",
-            "browser"
+
+        devices: [
+            {
+                id: "desktop",
+                name: "Family Desktop",
+            },
         ],
-        lastSeen: new Date(Date.now() - 1000 * 60 * 5)
+
+        resources: [
+            {
+                id: "internet",
+                name: "Internet",
+            },
+            {
+                id: "browser",
+                name: "Browser",
+            },
+        ],
+
+        lastSeen: new Date(Date.now() - 1000 * 60 * 5),
     },
 
     {
@@ -49,26 +71,32 @@ const mockAgents: Agent[] = [
         instanceId: "ghi789",
         name: "Cold Turkey",
         status: AgentStatus.Offline,
-        resourceIds: [
-            "media"
+
+        devices: [
+            {
+                id: "gaming-pc",
+                name: "Gaming PC",
+            },
+            {
+                id: "laptop",
+                name: "Laptop",
+            },
         ],
-        lastSeen: new Date(Date.now() - 1000 * 60 * 60 * 12)
-    }
+
+        resources: [
+            {
+                id: "media",
+                name: "Media",
+            },
+            {
+                id: "games",
+                name: "Games",
+            },
+        ],
+
+        lastSeen: new Date(Date.now() - 1000 * 60 * 60 * 12),
+    },
 ];
-
-//
-// Resources
-//
-
-export async function getResources(): Promise<Resource[]> {
-    return structuredClone(mockResources);
-}
-
-export async function getResource(id: string): Promise<Resource | undefined> {
-    return structuredClone(
-        mockResources.find(r => r.id === id)
-    );
-}
 
 //
 // Agents
@@ -78,9 +106,11 @@ export async function getAgents(): Promise<Agent[]> {
     return structuredClone(mockAgents);
 }
 
-export async function getAgent(agentId: string): Promise<Agent | undefined> {
+export async function getAgent(
+    agentId: string,
+): Promise<Agent | undefined> {
     return structuredClone(
-        mockAgents.find(a => a.agentId === agentId)
+        mockAgents.find((a) => a.agentId === agentId),
     );
 }
 

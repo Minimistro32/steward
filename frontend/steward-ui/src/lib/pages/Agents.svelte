@@ -6,18 +6,15 @@
     import PageHeader from "../components/ui/PageHeader.svelte";
 
     import { type Agent } from "../models/agents";
-    import type { Device, User } from "../models/wards";
+    import type { User } from "../models/wards";
     import { getAgents, refreshAgents } from "../api/agentApi";
-    import { getDevices, getUsers } from "../api/wardApi";
+    import { getUsers } from "../api/wardApi";
 
     let agents = $state<Agent[]>([]);
-    let devices = $state<Device[]>([]);
     let users = $state<User[]>([]);
 
     async function loadAgents() {
-        agents = await getAgents();
-        devices = await getDevices();
-        users = await getUsers();
+        [agents, users] = await Promise.all([getAgents(), getUsers()]);
     }
 
     onMount(async () => {
@@ -26,25 +23,20 @@
 
     type AgentCardData = {
         agent: Agent;
-        devices: Device[];
         users: User[];
     };
 
     const cardData = $derived(
         agents.map((agent): AgentCardData => {
-            const cardDevices = devices.filter(
-                (device) => device.agentId === agent.agentId,
-            );
-
             const cardUsers = users.filter((user) =>
-                user.deviceIds.some((userDevice) =>
-                    cardDevices.some((device) => device.id === userDevice),
+                user.agentSelections[agent.agentId]?.deviceIds.some(
+                    (deviceId) =>
+                        agent.devices.some((device) => device.id === deviceId),
                 ),
             );
 
             return {
                 agent,
-                devices: cardDevices,
                 users: cardUsers,
             };
         }),
@@ -73,7 +65,7 @@
     {/snippet}
 </PageHeader>
 
-<AgentSummary {agents} {devices} {users} {lastRefresh} />
+<AgentSummary {agents} {users} {lastRefresh} />
 
 <h2>Registered Agents</h2>
 

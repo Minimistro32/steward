@@ -1,13 +1,13 @@
+import type { Device } from "./Device";
+import type { Resource } from "./Resource";
+
 export interface Agent {
     agentId: string;
     instanceId: string;
-
     name: string;
-
     status: AgentStatus;
-
-    resourceIds: string[];
-
+    resources: Resource[];
+    devices: Device[];
     lastSeen?: Date;
 }
 

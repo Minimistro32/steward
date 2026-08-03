@@ -1,20 +1,23 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
     import { type Agent, AgentStatus } from "../../models/agents";
-    import type { Device } from "../../models/wards/Device";
     import type { User } from "../../models/wards/User";
+    import Agents from "../../pages/Agents.svelte";
 
     type Props = {
         agents: Agent[];
-        devices: Device[];
         users: User[];
         lastRefresh: Date;
     };
 
-    const { agents, devices, users, lastRefresh }: Props = $props();
+    const { agents, users, lastRefresh }: Props = $props();
 
     const online = $derived(
         agents.filter((a) => a.status === AgentStatus.Online).length,
+    );
+
+    const total = $derived(
+        agents.filter((a) => a.status !== AgentStatus.Disabled).length,
     );
 
     const disabled = $derived(
@@ -27,17 +30,22 @@
     );
 
     // Devices whose enforcement agent is connected
-    const managedDevices = $derived(
-        devices.filter((device) =>
-            connectedAgents.some((agent) => agent.agentId === device.agentId),
+    const managedDevices = $derived.by(() =>
+        connectedAgents.flatMap((agent) =>
+            agent.devices.map((device) => ({
+                agent,
+                device,
+            })),
         ),
     );
 
     // Users who own at least one managed device
     const managedUsers = $derived(
         users.filter((user) =>
-            user.deviceIds.some((deviceId) =>
-                managedDevices.some((device) => device.id === deviceId),
+            managedDevices.some(({ agent, device }) =>
+                user.agentSelections[agent.agentId]?.deviceIds.includes(
+                    device.id,
+                ),
             ),
         ),
     );
@@ -63,7 +71,7 @@
 <Card title="Summary">
     <div class="summary">
         <div class="metric">
-            <strong>{online} / {agents.length}</strong>
+            <strong>{online} / {total}</strong>
             <span>Agents Online</span>
         </div>
 
@@ -76,8 +84,8 @@
             <h4>Managed Devices</h4>
 
             <ul>
-                {#each managedDevices as device}
-                    <li>{device.name}</li>
+                {#each managedDevices as item}
+                    <li>{item.device.name}</li>
                 {:else}
                     <li class="empty">No devices</li>
                 {/each}

@@ -1,12 +1,67 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+
     import Card from "../ui/Card.svelte";
-    import type { Ward } from "../../models/wards";
+    import type { Ward, User } from "../../models/wards";
+    import type { Agent } from "../../models/agents";
+
+    import { getUsers } from "../../api/wardApi";
+    import { getAgents } from "../../api/agentApi";
 
     type Props = {
         ward: Ward;
     };
 
     const { ward }: Props = $props();
+
+    let users = $state<User[]>([]);
+    let agents = $state<Agent[]>([]);
+
+    onMount(async () => {
+        [users, agents] = await Promise.all([getUsers(), getAgents()]);
+    });
+
+    const wardUsers = $derived(
+        users.filter((user) => ward.userIds.includes(user.id)),
+    );
+
+    const wardDevices = $derived.by(() => {
+        return Object.entries(ward.agentSelections).flatMap(
+            ([agentId, selection]) => {
+                const agent = agents.find((a) => a.agentId === agentId);
+
+                if (!agent) {
+                    return [];
+                }
+
+                return selection.deviceIds
+                    .map((deviceId) =>
+                        agent.devices.find((device) => device.id === deviceId),
+                    )
+                    .filter(Boolean);
+            },
+        );
+    });
+
+    const wardResources = $derived.by(() => {
+        return Object.entries(ward.agentSelections).flatMap(
+            ([agentId, selection]) => {
+                const agent = agents.find((a) => a.agentId === agentId);
+
+                if (!agent) {
+                    return [];
+                }
+
+                return selection.resourceIds
+                    .map((resourceId) =>
+                        agent.resources.find(
+                            (resource) => resource.id === resourceId,
+                        ),
+                    )
+                    .filter(Boolean);
+            },
+        );
+    });
 </script>
 
 <Card>
@@ -16,9 +71,9 @@
             <h4>Users</h4>
 
             <ul>
-                {#each ward.userIds as user}
+                {#each wardUsers as user}
                     <li>
-                        {user}
+                        {user.name}
                     </li>
                 {:else}
                     <li class="empty">No users</li>
@@ -38,9 +93,9 @@
             <h4>Devices</h4>
 
             <ul>
-                {#each ward.deviceIds as device}
+                {#each wardDevices as device}
                     <li>
-                        {device}
+                        {device?.name}
                     </li>
                 {:else}
                     <li class="empty">No devices</li>
@@ -50,18 +105,16 @@
 
         <div class="cross">
             &#215;
-            <span>
-                to every device and resource
-            </span>
+            <span> to every device and resource </span>
         </div>
 
         <section>
             <h4>Resources</h4>
 
             <ul>
-                {#each ward.resourceIds as resource}
+                {#each wardResources as resource}
                     <li>
-                        {resource}
+                        {resource?.name}
                     </li>
                 {:else}
                     <li class="empty">No resources</li>
@@ -71,8 +124,8 @@
     </div>
 
     <p class="description">
-        Every listed resource is managed on every listed device. A policy's allowance is applied
-        independently to each user.
+        Every listed resource is managed on every listed device. A policy's
+        allowance is applied independently to each user.
     </p>
 </Card>
 

@@ -2,17 +2,18 @@
     import { slide } from "svelte/transition";
     import Card from "../ui/Card.svelte";
     import { type Agent, AgentStatus } from "../../models/agents";
-    import type { Device, User } from "../../models/wards";
+    import type { User } from "../../models/wards";
 
     type AgentCardData = {
         agent: Agent;
-        devices: Device[];
         users: User[];
     };
     const { data } = $props<{ data: AgentCardData }>();
     const agent = $derived(data.agent);
-    const devices = $derived(data.devices);
     const users = $derived(data.users);
+
+    const devices = $derived(agent.devices);
+    const resources = $derived(agent.resources);
 
     let expanded = $state(false);
 
@@ -87,6 +88,8 @@
                     <ul>
                         {#each users as user}
                             <li>{user.name}</li>
+                        {:else}
+                            <li class="empty">No users</li>
                         {/each}
                     </ul>
                 </section>
@@ -97,6 +100,8 @@
                     <ul>
                         {#each devices as device}
                             <li>{device.name}</li>
+                        {:else}
+                            <li class="empty">No devices</li>
                         {/each}
                     </ul>
                 </section>
@@ -105,8 +110,10 @@
                     <h4>Resources</h4>
 
                     <ul>
-                        {#each agent.resourceIds as resource}
-                            <li>{resource}</li>
+                        {#each resources as resource}
+                            <li>{resource.name}</li>
+                        {:else}
+                            <li class="empty">No resources</li>
                         {/each}
                     </ul>
                 </section>
@@ -124,7 +131,7 @@
                 </div>
 
                 <div>
-                    <strong>{agent.resourceIds.length}</strong>
+                    <strong>{resources.length}</strong>
                     <span>Resources</span>
                 </div>
             </div>

@@ -9,6 +9,20 @@
     };
 
     const { ward, selected, onclick }: Props = $props();
+
+    const deviceCount = $derived(
+        Object.values(ward.agentSelections).reduce(
+            (total, selection) => total + selection.deviceIds.length,
+            0,
+        ),
+    );
+
+    const resourceCount = $derived(
+        Object.values(ward.agentSelections).reduce(
+            (total, selection) => total + selection.resourceIds.length,
+            0,
+        ),
+    );
 </script>
 
 <div class:selected>
@@ -31,8 +45,8 @@
 
             <div class="summary">
                 <span>{ward.userIds.length} Users</span>
-                <span>{ward.deviceIds.length} Devices</span>
-                <span>{ward.resourceIds.length} Resources</span>
+                <span>{deviceCount} Devices</span>
+                <span>{resourceCount} Resources</span>
             </div>
         </button>
     </Card>

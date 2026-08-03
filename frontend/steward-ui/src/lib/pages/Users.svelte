@@ -2,38 +2,54 @@
     import UserCard from "../components/users/UserCard.svelte";
     import DeviceInventory from "../components/users/DeviceInventory.svelte";
 
-    import { getUsers, getDevices } from "../api/wardApi";
+    import { getUsers } from "../api/wardApi";
+    import type { User } from "../models/wards";
 
-    import type { User } from "../models/wards/User";
-    import type { Device } from "../models/wards/Device";
+    import { getAgents } from "../api/agentApi";
+    import type { Agent } from "../models/agents";
 
     let users = $state<User[]>([]);
-    let devices = $state<Device[]>([]);
+    let agents = $state<Agent[]>([]);
 
     async function load() {
-        users = await getUsers();
-        devices = await getDevices();
+        [users, agents] = await Promise.all([getUsers(), getAgents()]);
     }
 
     load();
 
-    function assignDevice(user: User, device: Device) {
-        if (user.deviceIds.includes(device.id)) {
+    function getUserSelection(user: User, agentId: string) {
+        return (user.agentSelections[agentId] ??= {
+            deviceIds: [],
+        });
+    }
+
+    function assignDevice(user: User, agentId: string, deviceId: string) {
+        const selection = getUserSelection(user, agentId);
+
+        if (selection.deviceIds.includes(deviceId)) {
             return;
         }
 
-        user.deviceIds = [...user.deviceIds, device.id];
+        selection.deviceIds = [...selection.deviceIds, deviceId];
 
         users = [...users];
 
-        console.log("Assigned", device.name, "to", user.name);
+        console.log("Assigned", deviceId, "to", user.name);
 
         // Later:
-        // await api.assignDevice(user.id, device.id)
+        // await api.assignDevice(user.id, agentId, deviceId)
     }
 
-    function removeDevice(user: User, deviceId: string) {
-        user.deviceIds = user.deviceIds.filter((id) => id !== deviceId);
+    function removeDevice(user: User, agentId: string, deviceId: string) {
+        const selection = getUserSelection(user, agentId);
+
+        selection.deviceIds = selection.deviceIds.filter(
+            (id) => id !== deviceId,
+        );
+
+        if (selection.deviceIds.length === 0) {
+            delete user.agentSelections[agentId];
+        }
 
         users = [...users];
 
@@ -47,7 +63,7 @@
         {#each users as user (user.id)}
             <UserCard
                 {user}
-                {devices}
+                {agents}
                 onAssign={assignDevice}
                 onRemove={removeDevice}
             />
@@ -55,7 +71,7 @@
     </div>
 
     <div class="inventory">
-        <DeviceInventory {devices}/>
+        <DeviceInventory {agents} />
     </div>
 </div>
 

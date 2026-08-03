@@ -1,5 +1,7 @@
 export interface User {
     id: string;
     name: string;
-    deviceIds: string[];
+    agentSelections: Record<string, {
+        deviceIds: string[];
+    }>;
 }

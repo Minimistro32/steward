@@ -1,36 +1,23 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-
     import Card from "../ui/Card.svelte";
-    import type { Device } from "../../models/wards/Device";
     import type { Agent } from "../../models/agents";
 
     import { getAgents } from "../../api/agentApi";
 
     type Props = {
-        devices: Device[];
+        agents: Agent[];
     };
 
-    const { devices }: Props = $props();
-    let agents = $state<Agent[]>([]);
+    const { agents }: Props = $props();
 
-    onMount(async () => {
-        agents = await getAgents();
-    });
-
-    const groupedDevices = $derived(
-        agents
-            .map((agent) => ({
-                agent,
-                devices: devices.filter(
-                    (device) => device.agentId === agent.agentId,
-                ),
-            }))
-            .filter((group) => group.devices.length > 0),
+    const availableAgents = $derived(
+        agents.filter((agent) => agent.devices.length > 0),
     );
 
-    function dragStart(event: DragEvent, device: Device) {
-        event.dataTransfer?.setData("deviceId", device.id);
+    function dragStart(event: DragEvent, agent: Agent, deviceId: string) {
+        event.dataTransfer?.setData("agentId", agent.agentId);
+
+        event.dataTransfer?.setData("deviceId", deviceId);
 
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = "copy";
@@ -40,20 +27,21 @@
 
 <Card title="Available Devices">
     <div class="inventory">
-        {#each groupedDevices as group}
+        {#each availableAgents as agent}
             <section class="agent-group">
                 <h4>
-                    {group.agent.name}
+                    {agent.name}
                 </h4>
 
                 <div class="devices" role="list">
-                    {#each group.devices as device}
+                    {#each agent.devices as device}
                         <button
                             class="device"
                             type="button"
                             draggable="true"
                             aria-label={`Drag ${device.name} to assign`}
-                            ondragstart={(event) => dragStart(event, device)}
+                            ondragstart={(event) =>
+                                dragStart(event, agent, device.id)}
                         >
                             {device.name}
                         </button>
