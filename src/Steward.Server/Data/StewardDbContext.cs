@@ -19,20 +19,17 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
     public DbSet<WardDeviceEntity> WardDevices => Set<WardDeviceEntity>();
     public DbSet<WardResourceEntity> WardResources => Set<WardResourceEntity>();
 
+    // Policy
+    public DbSet<PolicyEntity> Policies => Set<PolicyEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AgentEntity>()
-            .HasIndex(x => new { x.AgentId, x.InstanceId })
-            .IsUnique();
+            .HasKey(x => x.AgentId);
 
-
-        modelBuilder.Entity<UserDeviceEntity>()
-            .HasKey(x => new
-            {
-                x.UserId,
-                x.DeviceId
-            });
+        modelBuilder.Entity<AgentEntity>()
+            .Property(a => a.Status)
+            .HasConversion<string>();
 
         modelBuilder.Entity<UserDeviceEntity>()
             .HasKey(x => new
@@ -48,7 +45,6 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
                 x.UserId
             });
 
-
         modelBuilder.Entity<WardDeviceEntity>()
             .HasKey(x => new
             {
@@ -62,6 +58,18 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
             {
                 x.WardId,
                 x.ResourceId
+            });
+
+        modelBuilder.Entity<PolicyEntity>()
+            .OwnsOne(x => x.Schedule);
+
+        modelBuilder.Entity<PolicyEntity>()
+            .OwnsOne(x => x.Access);
+
+        modelBuilder.Entity<PolicyEntity>()
+            .OwnsOne(x => x.Override, overrideBuilder =>
+            {
+                overrideBuilder.OwnsOne(x => x.Allowance);
             });
     }
 }

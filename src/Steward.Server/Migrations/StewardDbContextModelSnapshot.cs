@@ -19,11 +19,10 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.AgentEntity", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("AgentId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("AgentId")
-                        .IsRequired()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("InstanceId")
@@ -37,13 +36,11 @@ namespace Steward.Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentId", "InstanceId")
-                        .IsUnique();
+                    b.HasKey("AgentId");
 
                     b.ToTable("Agents");
                 });
@@ -66,6 +63,39 @@ namespace Steward.Server.Migrations
                     b.HasIndex("AgentId");
 
                     b.ToTable("Devices");
+                });
+
+            modelBuilder.Entity("Steward.Server.Data.Entities.PolicyEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WardId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WardId");
+
+                    b.ToTable("Policies");
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.ResourceEntity", b =>
@@ -191,6 +221,114 @@ namespace Steward.Server.Migrations
                     b.Navigation("Agent");
                 });
 
+            modelBuilder.Entity("Steward.Server.Data.Entities.PolicyEntity", b =>
+                {
+                    b.HasOne("Steward.Server.Data.Entities.WardEntity", "Ward")
+                        .WithMany("Policies")
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Steward.Server.Data.Policies.Allowance", "Access", b1 =>
+                        {
+                            b1.Property<string>("PolicyEntityId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int?>("DailyTimeMinutes")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int?>("DailyUnlocks")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int?>("MaxSessionMinutes")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("PolicyEntityId");
+
+                            b1.ToTable("Policies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PolicyEntityId");
+                        });
+
+                    b.OwnsOne("Steward.Server.Data.Policies.OverridePolicy", "Override", b1 =>
+                        {
+                            b1.Property<string>("PolicyEntityId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<bool>("Allowed")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int?>("Requirement")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("PolicyEntityId");
+
+                            b1.ToTable("Policies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PolicyEntityId");
+
+                            b1.OwnsOne("Steward.Server.Data.Policies.Allowance", "Allowance", b2 =>
+                                {
+                                    b2.Property<string>("OverridePolicyPolicyEntityId")
+                                        .HasColumnType("TEXT");
+
+                                    b2.Property<int?>("DailyTimeMinutes")
+                                        .HasColumnType("INTEGER");
+
+                                    b2.Property<int?>("DailyUnlocks")
+                                        .HasColumnType("INTEGER");
+
+                                    b2.Property<int?>("MaxSessionMinutes")
+                                        .HasColumnType("INTEGER");
+
+                                    b2.HasKey("OverridePolicyPolicyEntityId");
+
+                                    b2.ToTable("Policies");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("OverridePolicyPolicyEntityId");
+                                });
+
+                            b1.Navigation("Allowance")
+                                .IsRequired();
+                        });
+
+                    b.OwnsOne("Steward.Server.Data.Policies.Schedule", "Schedule", b1 =>
+                        {
+                            b1.Property<string>("PolicyEntityId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Days")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<TimeOnly?>("EndTime")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<TimeOnly?>("StartTime")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("PolicyEntityId");
+
+                            b1.ToTable("Policies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PolicyEntityId");
+                        });
+
+                    b.Navigation("Access")
+                        .IsRequired();
+
+                    b.Navigation("Override")
+                        .IsRequired();
+
+                    b.Navigation("Schedule")
+                        .IsRequired();
+
+                    b.Navigation("Ward");
+                });
+
             modelBuilder.Entity("Steward.Server.Data.Entities.ResourceEntity", b =>
                 {
                     b.HasOne("Steward.Server.Data.Entities.AgentEntity", "Agent")
@@ -293,6 +431,8 @@ namespace Steward.Server.Migrations
             modelBuilder.Entity("Steward.Server.Data.Entities.WardEntity", b =>
                 {
                     b.Navigation("Devices");
+
+                    b.Navigation("Policies");
 
                     b.Navigation("Resources");
 

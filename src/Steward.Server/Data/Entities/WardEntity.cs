@@ -6,11 +6,13 @@ public class WardEntity
 
     public string Name { get; set; } = "";
 
-    public List<string> Tags { get; set; } = [];
+    public ICollection<string> Tags { get; set; } = [];
 
-    public List<WardUserEntity> Users { get; set; } = [];
+    public ICollection<WardUserEntity> Users { get; set; } = [];
 
-    public List<WardDeviceEntity> Devices { get; set; } = [];
+    public ICollection<WardDeviceEntity> Devices { get; set; } = [];
 
-    public List<WardResourceEntity> Resources { get; set; } = [];
+    public ICollection<WardResourceEntity> Resources { get; set; } = [];
+
+    public ICollection<PolicyEntity> Policies { get; set; } = [];
 }

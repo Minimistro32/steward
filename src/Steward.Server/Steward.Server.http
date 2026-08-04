@@ -1,4 +1,158 @@
 ###
+# Get all policies
+
+GET http://localhost:5042/api/policies
+
+
+###
+# Create policy
+
+POST http://localhost:5042/api/policies
+Content-Type: application/json
+
+{
+    "name": "Gaming Restrictions",
+    "tags": [
+        "gaming"
+    ],
+    "disabled": false,
+    "wardId": "alice",
+    "schedule": {
+        "days": [
+            1,
+            2,
+            3,
+            4,
+            5
+        ],
+        "startTime": "20:00",
+        "endTime": "07:00"
+    },
+    "access": {
+        "dailyTimeMinutes": 60,
+        "maxSessionMinutes": 30,
+        "dailyUnlocks": 3
+    },
+    "override": {
+        "allowed": true,
+        "requirement": "Delay",
+        "allowance": {
+            "dailyTimeMinutes": 30,
+            "maxSessionMinutes": 15,
+            "dailyUnlocks": 1
+        }
+    }
+}
+
+
+###
+# Get policy by id
+#
+# Replace the id after creating
+
+GET http://localhost:5042/api/policies/3039e029-9352-4780-a178-d80a7fe54b37
+
+
+###
+# Update policy
+#
+# Replace the id after creating
+
+PUT http://localhost:5042/api/policies/3039e029-9352-4780-a178-d80a7fe54b37
+Content-Type: application/json
+
+{
+    "id": "1",
+    "name": "Gaming Restrictions Updated",
+    "tags": [
+        "gaming",
+        "updated"
+    ],
+    "disabled": true,
+    "wardId": "alice",
+    "schedule": {
+        "days": [
+            6,
+            0
+        ],
+        "startTime": "09:00",
+        "endTime": "23:00"
+    },
+    "access": {
+        "dailyTimeMinutes": 120,
+        "maxSessionMinutes": 60,
+        "dailyUnlocks": 5
+    },
+    "override": {
+        "allowed": false,
+        "allowance": {}
+    }
+}
+
+
+###
+# Delete policy
+#
+# Replace the id after creating
+
+DELETE http://localhost:5042/api/policies/3039e029-9352-4780-a178-d80a7fe54b37
+
+###
+# Get agents
+###
+
+GET http://localhost:5042/api/agents
+
+
+###
+# Disable agent
+###
+
+PUT http://localhost:5042/api/agents/coldTurkey/disable
+
+
+###
+# Create user
+###
+
+POST http://localhost:5042/api/users
+Content-Type: application/json
+
+{
+  "id": "alice",
+  "name": "Alice",
+  "agentSelections": {}
+}
+
+
+###
+# Get users
+###
+
+GET http://localhost:5042/api/users
+
+
+###
+# Update user
+###
+
+PUT http://localhost:5042/api/users/alice
+Content-Type: application/json
+
+{
+  "id": "alice",
+  "name": "Alice Updated",
+  "agentSelections": {}
+}
+
+
+###
+# Delete user
+###
+
+DELETE http://localhost:5042/api/users/alice
+
+###
 # Get all wards
 ###
 
@@ -13,7 +167,7 @@ POST http://localhost:5042/api/wards
 Content-Type: application/json
 
 {
-  "id": "kids",
+  "id": "alice",
   "name": "Kids Devices",
   "tags": [
     "family",

@@ -15,16 +15,16 @@ namespace Steward.Server.Migrations
                 name: "Agents",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
                     AgentId = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<string>(type: "TEXT", nullable: true),
                     InstanceId = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", nullable: false),
                     LastSeen = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Agents", x => x.Id);
+                    table.PrimaryKey("PK_Agents", x => x.AgentId);
                 });
 
             migrationBuilder.CreateTable(
@@ -67,7 +67,7 @@ namespace Steward.Server.Migrations
                         name: "FK_Devices_Agents_AgentId",
                         column: x => x.AgentId,
                         principalTable: "Agents",
-                        principalColumn: "Id",
+                        principalColumn: "AgentId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -86,6 +86,40 @@ namespace Steward.Server.Migrations
                         name: "FK_Resources_Agents_AgentId",
                         column: x => x.AgentId,
                         principalTable: "Agents",
+                        principalColumn: "AgentId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Policies",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ModifiedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Tags = table.Column<string>(type: "TEXT", nullable: false),
+                    Disabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    WardId = table.Column<string>(type: "TEXT", nullable: false),
+                    Schedule_Days = table.Column<int>(type: "INTEGER", nullable: false),
+                    Schedule_StartTime = table.Column<TimeOnly>(type: "TEXT", nullable: true),
+                    Schedule_EndTime = table.Column<TimeOnly>(type: "TEXT", nullable: true),
+                    Access_DailyTimeMinutes = table.Column<int>(type: "INTEGER", nullable: true),
+                    Access_MaxSessionMinutes = table.Column<int>(type: "INTEGER", nullable: true),
+                    Access_DailyUnlocks = table.Column<int>(type: "INTEGER", nullable: true),
+                    Override_Allowed = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Override_Requirement = table.Column<int>(type: "INTEGER", nullable: true),
+                    Override_Allowance_DailyTimeMinutes = table.Column<int>(type: "INTEGER", nullable: true),
+                    Override_Allowance_MaxSessionMinutes = table.Column<int>(type: "INTEGER", nullable: true),
+                    Override_Allowance_DailyUnlocks = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Policies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Policies_Wards_WardId",
+                        column: x => x.WardId,
+                        principalTable: "Wards",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -187,15 +221,14 @@ namespace Steward.Server.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Agents_AgentId_InstanceId",
-                table: "Agents",
-                columns: new[] { "AgentId", "InstanceId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Devices_AgentId",
                 table: "Devices",
                 column: "AgentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Policies_WardId",
+                table: "Policies",
+                column: "WardId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Resources_AgentId",
@@ -226,6 +259,9 @@ namespace Steward.Server.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Policies");
+
             migrationBuilder.DropTable(
                 name: "UserDeviceEntity");
 

@@ -1,4 +1,3 @@
-
 namespace Steward.Server.Data.Entities;
 
 public class DeviceEntity

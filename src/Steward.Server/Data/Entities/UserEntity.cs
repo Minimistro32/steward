@@ -6,5 +6,5 @@ public class UserEntity
     
     public string Name { get; set; } = "";
     
-    public List<UserDeviceEntity> UserDevices { get; set; } = [];
+    public ICollection<UserDeviceEntity> UserDevices { get; set; } = [];
 }

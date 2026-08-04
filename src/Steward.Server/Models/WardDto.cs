@@ -27,11 +27,9 @@ public class WardDto
 
         Name = ward.Name,
 
-        Tags = ward.Tags,
+        Tags = [.. ward.Tags],
 
-        UserIds = ward.Users
-            .Select(x => x.UserId)
-            .ToList(),
+        UserIds = [.. ward.Users.Select(x => x.UserId)],
 
         AgentSelections = ward.Devices
             .GroupBy(x => x.Device.AgentId)
@@ -39,16 +37,13 @@ public class WardDto
                 group => group.Key,
                 group => new WardAgentSelectionDto
                 {
-                    DeviceIds = group
-                        .Select(x => x.DeviceId)
-                        .ToList(),
+                    DeviceIds = [.. group.Select(x => x.DeviceId)],
 
-                    ResourceIds = ward.Resources
+                    ResourceIds = [.. ward.Resources
                         .Where(resource =>
                             resource.Resource.AgentId == group.Key)
                         .Select(resource =>
-                            resource.ResourceId)
-                        .ToList()
+                            resource.ResourceId)]
                 })
     };
 }
