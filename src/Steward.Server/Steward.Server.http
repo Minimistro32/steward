@@ -1,6 +1,57 @@
-@Steward.Server_HostAddress = http://localhost:5042
+###
+# Get all wards
+###
 
-GET {{Steward.Server_HostAddress}}/weatherforecast/
-Accept: application/json
+GET http://localhost:5042/api/wards
+
 
 ###
+# Create a ward
+###
+
+POST http://localhost:5042/api/wards
+Content-Type: application/json
+
+{
+  "id": "kids",
+  "name": "Kids Devices",
+  "tags": [
+    "family",
+    "screen-time"
+  ],
+  "userIds": [],
+  "agentSelections": {}
+}
+
+
+###
+# Get a specific ward
+###
+
+GET http://localhost:5042/api/wards/kids
+
+
+###
+# Update a ward
+###
+
+PUT http://localhost:5042/api/wards/kids
+Content-Type: application/json
+
+{
+  "id": "kids",
+  "name": "Updated Kids Devices",
+  "tags": [
+    "family",
+    "updated"
+  ],
+  "userIds": [],
+  "agentSelections": {}
+}
+
+
+###
+# Delete a ward
+###
+
+DELETE http://localhost:5042/api/wards/kids
