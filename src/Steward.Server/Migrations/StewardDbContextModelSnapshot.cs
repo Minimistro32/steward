@@ -144,7 +144,7 @@ namespace Steward.Server.Migrations
 
                     b.HasIndex("DeviceId");
 
-                    b.ToTable("UserDeviceEntity");
+                    b.ToTable("UserDevices");
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.UserEntity", b =>

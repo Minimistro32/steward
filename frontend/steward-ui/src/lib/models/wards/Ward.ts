@@ -1,11 +1,9 @@
 export interface Ward {
-    id: string;
+    id?: number;
     name: string;
     tags: string[];
 
-    userIds: string[];
-    agentSelections: Record<string, {
-        deviceIds: string[];
-        resourceIds: string[];
-    }>;
+    userIds: number[];
+    deviceIds: number[];
+    resourceIds: number[]
 }

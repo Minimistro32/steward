@@ -1,6 +1,6 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
-    import type { Ward } from "../../models/wards";
+    import type { Ward } from "../../models";
 
     type Props = {
         ward: Ward;
@@ -10,19 +10,8 @@
 
     const { ward, selected, onclick }: Props = $props();
 
-    const deviceCount = $derived(
-        Object.values(ward.agentSelections).reduce(
-            (total, selection) => total + selection.deviceIds.length,
-            0,
-        ),
-    );
-
-    const resourceCount = $derived(
-        Object.values(ward.agentSelections).reduce(
-            (total, selection) => total + selection.resourceIds.length,
-            0,
-        ),
-    );
+    const deviceCount = $derived(ward.deviceIds.length);
+    const resourceCount = $derived(ward.resourceIds.length);
 </script>
 
 <div class:selected>

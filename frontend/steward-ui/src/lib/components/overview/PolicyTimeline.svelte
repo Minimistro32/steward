@@ -1,10 +1,15 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+
     import Card from "../ui/Card.svelte";
-    import { type Policy, formatTimeRange } from "../../models/policies";
+    import { DayOfWeek, Schedule, type Policy } from "../../models";
+    import { getPolicies } from "../../api";
 
-    import { getPolicies } from "../../api/policyApi";
+    let policies: Policy[] = [];
 
-    let policies: Policy[] = getPolicies();
+    onMount(async () => {
+        policies = await getPolicies();
+    });
 
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -52,21 +57,22 @@
 
         {#each policies as policy, policyIndex}
             <div class="time-label row" style="top:{48 + policyIndex * 42}px;">
-                {formatTimeRange(policy.schedule)}
+                {Schedule.formatTimeRange(policy.schedule)}
             </div>
             <span
                 class="row divider"
                 style="
-                    left:{((1 / 8) * 100) - 0.1}%;
+                    left:{(1 / 8) * 100 - 0.1}%;
                     top:{28 + policyIndex * 42}px;
                 "
             ></span>
-            {#each getDayRanges(policy.schedule.days) as range}
+            {#each getDayRanges(policy.schedule.days.map(DayOfWeek.toNumber)) as range}
                 <div
                     class="event row"
                     style="
-                        left:{((range.start / 8) * 100) + 0.5}%;
-                        width:{(((range.end - range.start + 1) / 8) * 100) - 0.5}%;
+                        left:{(range.start / 8) * 100 + 0.5}%;
+                        width:{((range.end - range.start + 1) / 8) * 100 -
+                        0.5}%;
                         top:{48 + policyIndex * 42}px;
                     "
                 >

@@ -11,7 +11,7 @@ using Steward.Server.Data;
 namespace Steward.Server.Migrations
 {
     [DbContext(typeof(StewardDbContext))]
-    [Migration("20260804174816_InitialCreate")]
+    [Migration("20260804200252_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -147,7 +147,7 @@ namespace Steward.Server.Migrations
 
                     b.HasIndex("DeviceId");
 
-                    b.ToTable("UserDeviceEntity");
+                    b.ToTable("UserDevices");
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.UserEntity", b =>

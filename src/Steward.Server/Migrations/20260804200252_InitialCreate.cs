@@ -157,7 +157,7 @@ namespace Steward.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserDeviceEntity",
+                name: "UserDevices",
                 columns: table => new
                 {
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
@@ -165,15 +165,15 @@ namespace Steward.Server.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserDeviceEntity", x => new { x.UserId, x.DeviceId });
+                    table.PrimaryKey("PK_UserDevices", x => new { x.UserId, x.DeviceId });
                     table.ForeignKey(
-                        name: "FK_UserDeviceEntity_Devices_DeviceId",
+                        name: "FK_UserDevices_Devices_DeviceId",
                         column: x => x.DeviceId,
                         principalTable: "Devices",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserDeviceEntity_Users_UserId",
+                        name: "FK_UserDevices_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -244,8 +244,8 @@ namespace Steward.Server.Migrations
                 column: "AgentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserDeviceEntity_DeviceId",
-                table: "UserDeviceEntity",
+                name: "IX_UserDevices_DeviceId",
+                table: "UserDevices",
                 column: "DeviceId");
 
             migrationBuilder.CreateIndex(
@@ -271,7 +271,7 @@ namespace Steward.Server.Migrations
                 name: "Policies");
 
             migrationBuilder.DropTable(
-                name: "UserDeviceEntity");
+                name: "UserDevices");
 
             migrationBuilder.DropTable(
                 name: "WardDevices");

@@ -4,6 +4,8 @@ namespace Steward.Server.Models;
 
 public class AgentDto
 {
+    public int Id { get; set; }
+
     public string AgentId { get; set; } = "";
 
     public string InstanceId { get; set; } = "";
@@ -21,6 +23,7 @@ public class AgentDto
 
     public static AgentDto FromEntity(AgentEntity agent) => new()
     {
+        Id = agent.Id,
         AgentId = agent.AgentId,
         InstanceId = agent.InstanceId,
         Name = agent.Name,
@@ -32,6 +35,7 @@ public class AgentDto
             .. agent.Devices.Select(device => new DeviceDto
             {
                 Id = device.Id,
+                DeviceId = device.DeviceId,
                 Name = device.Name
             })
         ],
@@ -41,6 +45,7 @@ public class AgentDto
             .. agent.Resources.Select(resource => new ResourceDto
             {
                 Id = resource.Id,
+                ResourceId = resource.ResourceId,
                 Name = resource.Name
             })
         ]

@@ -1,7 +1,8 @@
-import type { Device } from "./Device";
+import type { Device } from "../";
 import type { Resource } from "./Resource";
 
 export interface Agent {
+    id: number
     agentId: string;
     instanceId: string;
     name: string;

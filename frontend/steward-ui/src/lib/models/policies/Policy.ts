@@ -3,7 +3,7 @@ import type { OverridePolicy } from "./OverridePolicy";
 import type { Schedule } from "./Schedule";
 
 export interface Policy {
-    id?: string;
+    id?: number;
     createdAt?: string;
     modifiedAt?: string;
 
@@ -11,7 +11,7 @@ export interface Policy {
     tags: string[];
     disabled: boolean;
     
-    wardId: string;
+    wardId: number;
 
     schedule: Schedule;
 
@@ -24,7 +24,7 @@ export function createDefaultPolicy(): Policy {
     return {
         name: "",
 
-        wardId: "",
+        wardId: -1,
 
         tags: [],
 

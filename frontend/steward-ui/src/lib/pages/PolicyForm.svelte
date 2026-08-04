@@ -9,24 +9,25 @@
     import {
         type Policy,
         createDefaultPolicy,
-        type OverrideRequirement
-    } from "../models/policies";
+        type OverrideRequirement,
+        type Ward,
+    } from "../models";
 
-    import {
-        getPolicy,
-        createPolicy,
-        updatePolicy
-    } from "../api/policyApi";
+    import { getPolicy, createPolicy, updatePolicy, getWards } from "../api";
 
     let { params } = $props();
 
     let policy = $state<Policy>();
+    let wards = $state<Ward[]>([]);
+
     let notFound = $state(false);
     let loading = $state(true);
 
     let isNew = $derived(!params?.id);
-    
+
     onMount(async () => {
+        wards = await getWards();
+
         if (params?.id) {
             const found = await getPolicy(params.id);
 
@@ -55,10 +56,7 @@
             await updatePolicy(policy);
         }
 
-        console.log("Saved policy", policy);
-
-        // Later:
-        // navigate back to policies
+        window.location.hash = "#/policies";
     }
 
     let errors = $state<string[]>([]);
@@ -116,9 +114,7 @@
 </script>
 
 {#if loading}
-
     <p>Loading...</p>
-
 {:else if notFound}
     <PageHeader title="Policy Not Found">
         {#snippet subtitle()}
@@ -127,190 +123,207 @@
     </PageHeader>
 
     <a href="#/policies">
-        <button class="cta-button">
-            Return to Policies
-        </button>
+        <button class="cta-button"> Return to Policies </button>
     </a>
-
 {:else if policy}
-<div class="centered">
-    <PageHeader title={isNew ? "Create Policy" : "Edit Policy"} --margin-bottom="var(--space-4)">
-        {#snippet subtitle()}
-            Define how a <a href="#/wards">ward</a> is managed.
-        {/snippet}
-    </PageHeader>
+    <div class="centered">
+        <PageHeader
+            title={isNew ? "Create Policy" : "Edit Policy"}
+            --margin-bottom="var(--space-4)"
+        >
+            {#snippet subtitle()}
+                Define how a <a href="#/wards">ward</a> is managed.
+            {/snippet}
+        </PageHeader>
 
-    <div class="editor">
-        <Card>
-            <h2>General</h2>
+        <div class="editor">
+            <Card>
+                <h2>General</h2>
 
-            <label>
-                Policy Name
-                <input
-                    bind:value={policy.name}
-                    placeholder="Enter a policy name"
-                />
-            </label>
-
-            <label>
-                Ward
-                <select
-                    bind:value={policy.wardId}
-                    class:placeholder={!policy.wardId}
-                >
-                    <option value="" disabled hidden>Select a ward</option>
-                    <option>Alice</option>
-                    <option>Family Gaming</option>
-                    <option>School Devices</option>
-                </select>
-            </label>
-
-            <label>
-                Tags
-                <input
-                    bind:value={policy.tags}
-                    placeholder="gaming, school, weekday"
-                />
-            </label>
-        </Card>
-
-        <Card>
-            <ScheduleEditor bind:schedule={policy.schedule} />
-        </Card>
-
-        <Card>
-            <h2>Access Allowance</h2>
-
-            <p class="text-muted">
-                Normal access limits before an override is requested.
-            </p>
-
-            <div class="allowance-grid">
                 <label>
-                    Daily Time
+                    Policy Name
                     <input
-                        type="number"
-                        placeholder="∞"
-                        bind:value={policy.access.dailyTimeMinutes}
+                        bind:value={policy.name}
+                        placeholder="Enter a policy name"
                     />
-                    <span>minutes</span>
                 </label>
 
                 <label>
-                    Maximum Session
-                    <input
-                        type="number"
-                        placeholder="∞"
-                        bind:value={policy.access.maxSessionMinutes}
-                    />
-                    <span>minutes</span>
+                    Ward
+                    <select
+                        bind:value={policy.wardId}
+                        class:placeholder={!policy.wardId}
+                    >
+                        <option value="" disabled hidden>Select a ward</option>
+                        {#each wards as ward}
+                            <option value={ward.id}>
+                                {ward.name}
+                            </option>
+                        {/each}
+                    </select>
                 </label>
 
                 <label>
-                    Daily Unlocks
+                    Tags
                     <input
-                        type="number"
-                        placeholder="∞"
-                        bind:value={policy.access.dailyUnlocks}
+                        value={policy.tags.join(", ")}
+                        onchange={(event) => {
+                            if (policy) {
+                                policy.tags = (
+                                    event.currentTarget as HTMLInputElement
+                                ).value
+                                    .split(",")
+                                    .map((tag) => tag.trim())
+                                    .filter(Boolean);
+                            }
+                        }}
+                        placeholder="gaming, school, weekday"
                     />
-                    <span>per day</span>
                 </label>
-            </div>
-        </Card>
+            </Card>
 
-        <Card>
-            <div class="override">
-                <h2>Override Requests</h2>
+            <Card>
+                <ScheduleEditor bind:schedule={policy.schedule} />
+            </Card>
 
-                <Checkbox
-                    label="Allow override requests"
-                    bind:checked={policy.override.allowed}
-                />
+            <Card>
+                <h2>Access Allowance</h2>
 
-                {#if policy.override.allowed}
-                    <h3>Requirements</h3>
-                    <div class="nested">
-                        <Checkbox
-                            label="Delay"
-                            checked={policy.override.requirement === "delay"}
-                            onchange={() => setRequirement("delay")}
+                <p class="text-muted">
+                    Normal access limits before an override is requested.
+                </p>
+
+                <div class="allowance-grid">
+                    <label>
+                        Daily Time
+                        <input
+                            type="number"
+                            placeholder="∞"
+                            bind:value={policy.access.dailyTimeMinutes}
                         />
+                        <span>minutes</span>
+                    </label>
 
-                        <Checkbox
-                            label="Type random text"
-                            checked={policy.override.requirement ===
-                                "randomText"}
-                            onchange={() => setRequirement("randomText")}
+                    <label>
+                        Maximum Session
+                        <input
+                            type="number"
+                            placeholder="∞"
+                            bind:value={policy.access.maxSessionMinutes}
                         />
+                        <span>minutes</span>
+                    </label>
 
-                        <Checkbox
-                            label="Another user approval"
-                            checked={policy.override.requirement ===
-                                "userApproval"}
-                            onchange={() => setRequirement("userApproval")}
+                    <label>
+                        Daily Unlocks
+                        <input
+                            type="number"
+                            placeholder="∞"
+                            bind:value={policy.access.dailyUnlocks}
                         />
-                    </div>
+                        <span>per day</span>
+                    </label>
+                </div>
+            </Card>
 
-                    <h3>Override Allowance</h3>
+            <Card>
+                <div class="override">
+                    <h2>Override Requests</h2>
 
-                    <div class="allowance-grid">
-                        <label>
-                            Additional Time
-                            <input
-                                type="number"
-                                placeholder="∞"
-                                bind:value={
-                                    policy.override.allowance.dailyTimeMinutes
-                                }
+                    <Checkbox
+                        label="Allow override requests"
+                        bind:checked={policy.override.allowed}
+                    />
+
+                    {#if policy.override.allowed}
+                        <h3>Requirements</h3>
+                        <div class="nested">
+                            <Checkbox
+                                label="Delay"
+                                checked={policy.override.requirement ===
+                                    "delay"}
+                                onchange={() => setRequirement("delay")}
                             />
-                            <span>minutes</span>
-                        </label>
 
-                        <label>
-                            Maximum Request Length
-                            <input
-                                type="number"
-                                placeholder="∞"
-                                bind:value={
-                                    policy.override.allowance.maxSessionMinutes
-                                }
+                            <Checkbox
+                                label="Type random text"
+                                checked={policy.override.requirement ===
+                                    "randomText"}
+                                onchange={() => setRequirement("randomText")}
                             />
-                            <span>minutes</span>
-                        </label>
 
-                        <label>
-                            Additional Unlocks
-                            <input
-                                type="number"
-                                placeholder="∞"
-                                bind:value={
-                                    policy.override.allowance.dailyUnlocks
-                                }
+                            <Checkbox
+                                label="Another user approval"
+                                checked={policy.override.requirement ===
+                                    "userApproval"}
+                                onchange={() => setRequirement("userApproval")}
                             />
-                            <span>unlock</span>
-                        </label>
-                    </div>
-                {/if}
+                        </div>
+
+                        <h3>Override Allowance</h3>
+
+                        <div class="allowance-grid">
+                            <label>
+                                Additional Time
+                                <input
+                                    type="number"
+                                    placeholder="∞"
+                                    bind:value={
+                                        policy.override.allowance
+                                            .dailyTimeMinutes
+                                    }
+                                />
+                                <span>minutes</span>
+                            </label>
+
+                            <label>
+                                Maximum Request Length
+                                <input
+                                    type="number"
+                                    placeholder="∞"
+                                    bind:value={
+                                        policy.override.allowance
+                                            .maxSessionMinutes
+                                    }
+                                />
+                                <span>minutes</span>
+                            </label>
+
+                            <label>
+                                Additional Unlocks
+                                <input
+                                    type="number"
+                                    placeholder="∞"
+                                    bind:value={
+                                        policy.override.allowance.dailyUnlocks
+                                    }
+                                />
+                                <span>unlock</span>
+                            </label>
+                        </div>
+                    {/if}
+                </div>
+            </Card>
+
+            {#if errors.length > 0}
+                <div class="errors">
+                    {#each errors as error}
+                        <p>{error}</p>
+                    {/each}
+                </div>
+            {/if}
+
+            <div class="actions">
+                <a href="#/policies">
+                    <button class="cta-button"> Cancel </button>
+                </a>
+
+                <button onclick={savePolicy} class="primary">
+                    Save Policy
+                </button>
             </div>
-        </Card>
-
-        {#if errors.length > 0}
-            <div class="errors">
-                {#each errors as error}
-                    <p>{error}</p>
-                {/each}
-            </div>
-        {/if}
-
-        <div class="actions">
-            <a href="#/policies">
-                <button class="cta-button"> Cancel </button>
-            </a>
-
-            <button onclick={savePolicy} class="primary"> Save Policy </button>
         </div>
     </div>
-</div>
 {/if}
 
 <style>

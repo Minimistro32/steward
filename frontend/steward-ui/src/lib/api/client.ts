@@ -35,7 +35,7 @@ export const client = {
         });
     },
 
-    put<T>(path: string, body: unknown) {
+    put<T>(path: string, body?: unknown) {
         return request<T>(path, {
             method: "PUT",
             body: JSON.stringify(body),

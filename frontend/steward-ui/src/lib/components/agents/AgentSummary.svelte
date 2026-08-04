@@ -1,8 +1,6 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
-    import { type Agent, AgentStatus } from "../../models/agents";
-    import type { User } from "../../models/wards/User";
-    import Agents from "../../pages/Agents.svelte";
+    import { type Agent, AgentStatus, type User } from "../../models";
 
     type Props = {
         agents: Agent[];
@@ -42,10 +40,8 @@
     // Users who own at least one managed device
     const managedUsers = $derived(
         users.filter((user) =>
-            managedDevices.some(({ agent, device }) =>
-                user.agentSelections[agent.agentId]?.deviceIds.includes(
-                    device.id,
-                ),
+            managedDevices.some(({ device }) =>
+                user.deviceIds.includes(device.id),
             ),
         ),
     );

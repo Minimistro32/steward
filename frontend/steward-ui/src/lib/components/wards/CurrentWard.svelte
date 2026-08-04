@@ -2,11 +2,8 @@
     import { onMount } from "svelte";
 
     import Card from "../ui/Card.svelte";
-    import type { Ward, User } from "../../models/wards";
-    import type { Agent } from "../../models/agents";
-
-    import { getUsers } from "../../api/wardApi";
-    import { getAgents } from "../../api/agentApi";
+    import type { Ward, User, Agent } from "../../models";
+    import { getUsers, getAgents } from "../../api";
 
     type Props = {
         ward: Ward;
@@ -25,43 +22,17 @@
         users.filter((user) => ward.userIds.includes(user.id)),
     );
 
-    const wardDevices = $derived.by(() => {
-        return Object.entries(ward.agentSelections).flatMap(
-            ([agentId, selection]) => {
-                const agent = agents.find((a) => a.agentId === agentId);
+    const wardDevices = $derived(
+        agents
+            .flatMap((agent) => agent.devices)
+            .filter((device) => ward.deviceIds.includes(device.id)),
+    );
 
-                if (!agent) {
-                    return [];
-                }
-
-                return selection.deviceIds
-                    .map((deviceId) =>
-                        agent.devices.find((device) => device.id === deviceId),
-                    )
-                    .filter(Boolean);
-            },
-        );
-    });
-
-    const wardResources = $derived.by(() => {
-        return Object.entries(ward.agentSelections).flatMap(
-            ([agentId, selection]) => {
-                const agent = agents.find((a) => a.agentId === agentId);
-
-                if (!agent) {
-                    return [];
-                }
-
-                return selection.resourceIds
-                    .map((resourceId) =>
-                        agent.resources.find(
-                            (resource) => resource.id === resourceId,
-                        ),
-                    )
-                    .filter(Boolean);
-            },
-        );
-    });
+    const wardResources = $derived(
+        agents
+            .flatMap((agent) => agent.resources)
+            .filter((resource) => ward.resourceIds.includes(resource.id)),
+    );
 </script>
 
 <Card>

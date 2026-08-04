@@ -8,8 +8,8 @@
     import {
         type Policy,
         type OverrideRequirement,
-        formatTimeRange,
-        type Schedule,
+        DayOfWeek,
+        Schedule,
     } from "../models/policies";
     import type { Ward } from "../models/wards/Ward";
 
@@ -20,15 +20,12 @@
     let wards = $state<Ward[]>([]);
 
     async function loadData() {
-        [policies, wards] = await Promise.all([
-            getPolicies(),
-            getWards(),
-        ]);
+        [policies, wards] = await Promise.all([getPolicies(), getWards()]);
     }
 
     onMount(loadData);
 
-    function wardName(id: string): string {
+    function wardName(id: number): string {
         return wards.find((ward) => ward.id === id)?.name ?? "Unknown Ward";
     }
 
@@ -51,23 +48,15 @@
     }
 
     // scheduleSummary
-    const dayNames = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-    ];
-
-    export function scheduleSummary(schedule: Schedule): {
+    function scheduleSummary(schedule: Schedule): {
         days: string;
         time: string | undefined;
     } {
-        const days = [...schedule.days].sort((a, b) => a - b);
+        const days = [...schedule.days]
+            .map((d) => DayOfWeek.toNumber(d))
+            .sort((a, b) => a - b);
 
-        const timeText = formatTimeRange(schedule);
+        const timeText = Schedule.formatTimeRange(schedule);
         let dayText: string;
 
         if (arraysEqual(days, [0, 1, 2, 3, 4, 5, 6])) {
@@ -87,7 +76,7 @@
     }
 
     function summarizeDays(days: number[]): string {
-        let shortDayNames = dayNames.map((n) => n.substring(0, 3));
+        let shortDayNames = DayOfWeek.all.map((n) => n.substring(0, 3));
         const ranges: string[] = [];
 
         let start = days[0];
@@ -103,7 +92,7 @@
 
             if (start === previous) {
                 if (days.length === 1) {
-                    ranges.push(dayNames[start]);
+                    ranges.push(DayOfWeek.all[start]);
                 } else {
                     ranges.push(shortDayNames[start]);
                 }

@@ -134,27 +134,23 @@ public static class WardEndpoints
             });
         }
 
-
-        foreach (var selection in dto.AgentSelections)
+        foreach (var deviceId in dto.DeviceIds)
         {
-            foreach (var deviceId in selection.Value.DeviceIds)
+            ward.Devices.Add(new WardDeviceEntity
             {
-                ward.Devices.Add(new WardDeviceEntity
-                {
-                    WardId = ward.Id,
-                    DeviceId = deviceId
-                });
-            }
+                WardId = ward.Id,
+                DeviceId = deviceId
+            });
+        }
 
 
-            foreach (var resourceId in selection.Value.ResourceIds)
+        foreach (var resourceId in dto.ResourceIds)
+        {
+            ward.Resources.Add(new WardResourceEntity
             {
-                ward.Resources.Add(new WardResourceEntity
-                {
-                    WardId = ward.Id,
-                    ResourceId = resourceId
-                });
-            }
+                WardId = ward.Id,
+                ResourceId = resourceId
+            });
         }
     }
 

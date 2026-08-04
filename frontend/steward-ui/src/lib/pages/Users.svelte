@@ -2,11 +2,8 @@
     import UserCard from "../components/users/UserCard.svelte";
     import DeviceInventory from "../components/users/DeviceInventory.svelte";
 
-    import { getUsers } from "../api/wardApi";
-    import type { User } from "../models/wards";
-
-    import { getAgents } from "../api/agentApi";
-    import type { Agent } from "../models/agents";
+    import { getUsers, getAgents, assignUserDevice, removeUserDevice } from "../api";
+    import type { User, Agent } from "../models";
 
     let users = $state<User[]>([]);
     let agents = $state<Agent[]>([]);
@@ -17,44 +14,32 @@
 
     load();
 
-    function getUserSelection(user: User, agentId: string) {
-        return (user.agentSelections[agentId] ??= {
-            deviceIds: [],
-        });
-    }
+    const devices = $derived(
+        agents.flatMap((agent) => agent.devices),
+    );
 
-    function assignDevice(user: User, agentId: string, deviceId: string) {
-        const selection = getUserSelection(user, agentId);
-
-        if (selection.deviceIds.includes(deviceId)) {
+    function assignDevice(user: User, deviceId: number) {
+        if (user.deviceIds.includes(deviceId)) {
             return;
         }
 
-        selection.deviceIds = [...selection.deviceIds, deviceId];
+        user.deviceIds = [...user.deviceIds, deviceId];
 
         users = [...users];
 
         console.log("Assigned", deviceId, "to", user.name);
 
-        // Later:
-        // await api.assignDevice(user.id, agentId, deviceId)
+        assignUserDevice(user.id, deviceId)
     }
 
-    function removeDevice(user: User, agentId: string, deviceId: string) {
-        const selection = getUserSelection(user, agentId);
-
-        selection.deviceIds = selection.deviceIds.filter(
-            (id) => id !== deviceId,
-        );
-
-        if (selection.deviceIds.length === 0) {
-            delete user.agentSelections[agentId];
-        }
+    function removeDevice(user: User, deviceId: number) {
+        user.deviceIds = user.deviceIds.filter((id) => id !== deviceId);
 
         users = [...users];
 
-        // Later:
-        // await api.removeDevice(...)
+        console.log("Removed", deviceId, "from", user.name);
+
+        removeUserDevice(user.id, deviceId)
     }
 </script>
 
@@ -63,7 +48,7 @@
         {#each users as user (user.id)}
             <UserCard
                 {user}
-                {agents}
+                {devices}
                 onAssign={assignDevice}
                 onRemove={removeDevice}
             />

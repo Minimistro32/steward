@@ -5,10 +5,8 @@
     import AgentSummary from "../components/agents/AgentSummary.svelte";
     import PageHeader from "../components/ui/PageHeader.svelte";
 
-    import { type Agent } from "../models/agents";
-    import type { User } from "../models/wards";
-    import { getAgents, refreshAgents } from "../api/agentApi";
-    import { getUsers } from "../api/wardApi";
+    import type { Agent, User } from "../models";
+    import { getAgents, refreshAgents, getUsers } from "../api";
 
     let agents = $state<Agent[]>([]);
     let users = $state<User[]>([]);
@@ -28,11 +26,12 @@
 
     const cardData = $derived(
         agents.map((agent): AgentCardData => {
+            const agentDeviceIds = new Set(
+                agent.devices.map((device) => device.id),
+            );
+
             const cardUsers = users.filter((user) =>
-                user.agentSelections[agent.agentId]?.deviceIds.some(
-                    (deviceId) =>
-                        agent.devices.some((device) => device.id === deviceId),
-                ),
+                user.deviceIds.some((deviceId) => agentDeviceIds.has(deviceId)),
             );
 
             return {
@@ -51,7 +50,8 @@
     let lastRefresh = $state(new Date());
 
     async function refresh() {
-        agents = await refreshAgents();
+        await refreshAgents();
+        // agents = getAgents;
         lastRefresh = new Date();
     }
 </script>

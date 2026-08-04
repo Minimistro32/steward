@@ -1,4 +1,4 @@
-import type { Agent } from "../models/agents";
+import type { Agent } from "../models";
 import { client } from "./client";
 
 

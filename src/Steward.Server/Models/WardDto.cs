@@ -12,14 +12,9 @@ public class WardDto
 
     public List<int> UserIds { get; set; } = [];
 
-    public Dictionary<string, WardAgentSelectionDto> AgentSelections { get; set; } = [];
+    public List<int> DeviceIds { get; set; } = [];
 
-    public class WardAgentSelectionDto
-    {
-        public List<int> DeviceIds { get; set; } = [];
-
-        public List<int> ResourceIds { get; set; } = [];
-    }
+    public List<int> ResourceIds { get; set; } = [];
 
     public static WardDto FromEntity(WardEntity ward) => new()
     {
@@ -31,19 +26,8 @@ public class WardDto
 
         UserIds = [.. ward.Users.Select(x => x.UserId)],
 
-        AgentSelections = ward.Devices
-            .GroupBy(x => x.Device.AgentId)
-            .ToDictionary(
-                group => group.Key,
-                group => new WardAgentSelectionDto
-                {
-                    DeviceIds = [.. group.Select(x => x.DeviceId)],
+        DeviceIds = [.. ward.Devices.Select(x => x.DeviceId)],
 
-                    ResourceIds = [.. ward.Resources
-                        .Where(resource =>
-                            resource.Resource.AgentId == group.Key)
-                        .Select(resource =>
-                            resource.ResourceId)]
-                })
+        ResourceIds = [.. ward.Resources.Select(x => x.ResourceId)],
     };
 }

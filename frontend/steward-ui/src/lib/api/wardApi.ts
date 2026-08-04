@@ -1,22 +1,5 @@
-import type { User, Ward } from "../models/wards";
+import type { Ward } from "../models/";
 import { client } from "./client";
-
-
-//
-// Users
-//
-
-export async function getUsers(): Promise<User[]> {
-    return client.get<User[]>("/users");
-}
-
-
-export async function getUser(
-    id: string,
-): Promise<User | undefined> {
-    return client.get<User>(`/users/${id}`);
-}
-
 
 //
 // Wards

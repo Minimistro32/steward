@@ -5,20 +5,24 @@
     import Card from "../components/ui/Card.svelte";
     import Checkbox from "../components/ui/Checkbox.svelte";
 
-    import type { Ward, User } from "../models/wards";
-    import { AgentStatus, type Agent } from "../models/agents";
+    import { type Ward, type User, type Agent, AgentStatus } from "../models";
 
-    import { createWard, getWard, updateWard, getUsers } from "../api/wardApi";
-    import { getAgents } from "../api/agentApi";
+    import {
+        createWard,
+        getWard,
+        updateWard,
+        getUsers,
+        getAgents,
+    } from "../api";
 
     let { params } = $props();
 
     let ward = $state<Ward>({
-        id: "",
         name: "",
         tags: [],
         userIds: [],
-        agentSelections: {},
+        deviceIds: [],
+        resourceIds: [],
     });
 
     let users = $state<User[]>([]);
@@ -49,105 +53,66 @@
         loading = false;
     });
 
-    const availableDevicesByAgent = $derived.by(() => {
-        return agents
+    const availableDevicesByAgent = $derived.by(() =>
+        agents
             .filter((agent) => agent.status !== AgentStatus.Disabled)
-            .map((agent) => {
-                const devices = agent.devices.filter((device) =>
+            .map((agent) => ({
+                agent,
+                devices: agent.devices.filter((device) =>
                     users.some(
                         (user) =>
                             ward.userIds.includes(user.id) &&
-                            user.agentSelections[
-                                agent.agentId
-                            ]?.deviceIds.includes(device.id),
+                            user.deviceIds.includes(device.id),
                     ),
+                ),
+            }))
+            .filter((group) => group.devices.length > 0),
+    );
+
+    const availableResourcesByAgent = $derived.by(() =>
+        agents
+            .filter((agent) => agent.status !== AgentStatus.Disabled)
+            .map((agent) => {
+                const hasDevice = agent.devices.some((device) =>
+                    ward.deviceIds.includes(device.id),
                 );
 
                 return {
                     agent,
-                    devices,
+                    resources: hasDevice ? agent.resources : [],
                 };
             })
-            .filter((group) => group.devices.length > 0);
-    });
+            .filter((group) => group.resources.length > 0),
+    );
 
-    const availableResourcesByAgent = $derived.by(() => {
-        return agents
-            .filter((agent) => agent.status !== AgentStatus.Disabled)
-            .map((agent) => {
-                const selectedDevices =
-                    ward.agentSelections[agent.agentId]?.deviceIds ?? [];
-
-                const hasDevices = selectedDevices.length > 0;
-
-                return {
-                    agent,
-                    resources: hasDevices ? agent.resources : [],
-                };
-            })
-            .filter((group) => group.resources.length > 0);
-    });
-
-    function getAgentSelection(agentId: string) {
-        return (ward.agentSelections[agentId] ??= {
-            deviceIds: [],
-            resourceIds: [],
-        });
-    }
-
-    function toggle(list: string[], id: string) {
+    function toggle(list: number[], id: number) {
         return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
     }
 
-    function toggleDevice(agentId: string, deviceId: string) {
-        const selection = getAgentSelection(agentId);
-
-        selection.deviceIds = toggle(selection.deviceIds, deviceId);
+    function toggleDevice(deviceId: number) {
+        ward.deviceIds = toggle(ward.deviceIds, deviceId);
     }
 
-    function toggleResource(agentId: string, resourceId: string) {
-        const selection = getAgentSelection(agentId);
-
-        selection.resourceIds = toggle(selection.resourceIds, resourceId);
+    function toggleResource(resourceId: number) {
+        ward.resourceIds = toggle(ward.resourceIds, resourceId);
     }
 
     function pruneSelections() {
-        const availableDevices = new Map(
-            availableDevicesByAgent.map((group) => [
-                group.agent.agentId,
-                new Set(group.devices.map((d) => d.id)),
-            ]),
+        const validDevices = new Set(
+            availableDevicesByAgent.flatMap((x) => x.devices.map((d) => d.id)),
         );
 
-        const availableResources = new Map(
-            availableResourcesByAgent.map((group) => [
-                group.agent.agentId,
-                new Set(group.resources.map((r) => r.id)),
-            ]),
+        ward.deviceIds = ward.deviceIds.filter((id) => validDevices.has(id));
+
+        const validResources = new Set(
+            availableResourcesByAgent.flatMap((x) =>
+                x.resources.map((r) => r.id),
+            ),
         );
 
-        for (const agentId of Object.keys(ward.agentSelections)) {
-            const selection = ward.agentSelections[agentId];
-
-            const validDevices = availableDevices.get(agentId) ?? new Set();
-
-            selection.deviceIds = selection.deviceIds.filter((id) =>
-                validDevices.has(id),
-            );
-
-            const validResources = availableResources.get(agentId) ?? new Set();
-
-            selection.resourceIds = selection.resourceIds.filter((id) =>
-                validResources.has(id),
-            );
-
-            if (
-                selection.deviceIds.length === 0 &&
-                selection.resourceIds.length === 0
-            ) {
-                delete ward.agentSelections[agentId];
-            }
-        }
+        ward.resourceIds = ward.resourceIds.filter((id) =>
+            validResources.has(id),
+        );
     }
 
     function validateWard() {
@@ -163,9 +128,7 @@
             errors.push("Select at least one user.");
         }
 
-        const hasDevices = Object.values(ward.agentSelections).some(
-            (selection) => selection.deviceIds.length > 0,
-        );
+        const hasDevices = ward.deviceIds.length > 0;
 
         if (!hasDevices) {
             errors.push("Select at least one device.");
@@ -185,7 +148,7 @@
             await updateWard(ward);
         }
 
-        // TODO navigate back
+        window.location.hash = "#/wards";
     }
 </script>
 
@@ -221,7 +184,15 @@
                 <label>
                     Tags
                     <input
-                        bind:value={ward.tags}
+                        value={ward.tags.join(", ")}
+                        onchange={(event) => {
+                            ward.tags = (
+                                event.currentTarget as HTMLInputElement
+                            ).value
+                                .split(",")
+                                .map((tag) => tag.trim())
+                                .filter(Boolean);
+                        }}
                         placeholder="gaming, family"
                     />
                 </label>
@@ -259,14 +230,9 @@
                             {#each group.devices as device}
                                 <Checkbox
                                     label={device.name}
-                                    checked={ward.agentSelections[
-                                        group.agent.agentId
-                                    ]?.deviceIds.includes(device.id) ?? false}
+                                    checked={ward.deviceIds.includes(device.id)}
                                     onchange={() => {
-                                        toggleDevice(
-                                            group.agent.agentId,
-                                            device.id,
-                                        );
+                                        toggleDevice(device.id);
                                         pruneSelections();
                                     }}
                                 />
@@ -291,15 +257,10 @@
                             {#each group.resources as resource}
                                 <Checkbox
                                     label={resource.name}
-                                    checked={ward.agentSelections[
-                                        group.agent.agentId
-                                    ]?.resourceIds.includes(resource.id) ??
-                                        false}
-                                    onchange={() =>
-                                        toggleResource(
-                                            group.agent.agentId,
-                                            resource.id,
-                                        )}
+                                    checked={ward.resourceIds.includes(
+                                        resource.id,
+                                    )}
+                                    onchange={() => toggleResource(resource.id)}
                                 />
                             {/each}
                         </div>

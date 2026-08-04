@@ -18,10 +18,12 @@
     let expanded = $state(false);
 
     // DRY up with the date formatter in AgentSummary?
-    function formatLastSeen(date?: Date) {
+    function formatLastSeen(date?: string | Date) {
         if (!date) return "Online";
 
-        const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
+        const parsed = date instanceof Date ? date : new Date(date);
+
+        const minutes = Math.floor((Date.now() - parsed.getTime()) / 60000);
 
         if (minutes < 1) return "Just now";
         if (minutes === 1) return "1 minute ago";

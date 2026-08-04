@@ -1,4 +1,4 @@
-import type { Policy } from "../models/policies";
+import type { Policy } from "../models";
 import { client } from "./client";
 
 

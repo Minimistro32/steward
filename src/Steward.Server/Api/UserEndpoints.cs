@@ -27,7 +27,7 @@ public static class UserEndpoints
 
 
         group.MapGet("/{id}", async (
-            string id,
+            int id,
             StewardDbContext db) =>
         {
             var user = await LoadUser(db, id);
@@ -65,7 +65,7 @@ public static class UserEndpoints
 
 
         group.MapPut("/{id}", async (
-            string id,
+            int id,
             UserDto dto,
             StewardDbContext db) =>
         {
@@ -76,7 +76,6 @@ public static class UserEndpoints
 
 
             user.Name = dto.Name;
-
 
             user.UserDevices.Clear();
 
@@ -91,6 +90,61 @@ public static class UserEndpoints
             );
         });
 
+        group.MapPut("/{id}/devices/{deviceId}", async (
+            int id,
+            int deviceId,
+            StewardDbContext db) =>
+        {
+            var user = await db.Users
+                .Include(u => u.UserDevices)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user is null)
+                return Results.NotFound();
+
+
+            var exists = user.UserDevices
+                .Any(ud => ud.DeviceId == deviceId);
+
+            if (exists)
+                return Results.NoContent();
+
+
+            user.UserDevices.Add(new UserDeviceEntity
+            {
+                UserId = id,
+                DeviceId = deviceId
+            });
+
+
+            await db.SaveChangesAsync();
+
+
+            return Results.NoContent();
+        });
+
+
+        group.MapDelete("/{id}/devices/{deviceId}", async (
+            int id,
+            int deviceId,
+            StewardDbContext db) =>
+        {
+            var userDevice = await db.UserDevices
+                .FirstOrDefaultAsync(ud =>
+                    ud.UserId == id &&
+                    ud.DeviceId == deviceId);
+
+            if (userDevice is null)
+                return Results.NotFound();
+
+
+            db.UserDevices.Remove(userDevice);
+
+            await db.SaveChangesAsync();
+
+
+            return Results.NoContent();
+        });
 
         group.MapDelete("/{id}", async (
             string id,
@@ -116,13 +170,13 @@ public static class UserEndpoints
 
     private static async Task<UserEntity?> LoadUser(
         StewardDbContext db,
-        string id)
+        int id)
     {
         return await db.Users
             .AsSplitQuery()
             .Include(u => u.UserDevices)
                 .ThenInclude(ud => ud.Device)
-            .FirstOrDefaultAsync(u => u.Id.ToString() == id);
+            .FirstOrDefaultAsync(u => u.Id == id);
     }
 
 
@@ -130,16 +184,13 @@ public static class UserEndpoints
         UserEntity user,
         UserDto dto)
     {
-        foreach (var selection in dto.AgentSelections)
+        foreach (var deviceId in dto.DeviceIds)
         {
-            foreach (var deviceId in selection.Value.DeviceIds)
+            user.UserDevices.Add(new UserDeviceEntity
             {
-                user.UserDevices.Add(new UserDeviceEntity
-                {
-                    UserId = user.Id,
-                    DeviceId = deviceId
-                });
-            }
+                UserId = user.Id,
+                DeviceId = deviceId
+            });
         }
     }
 }

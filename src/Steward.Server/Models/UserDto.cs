@@ -8,12 +8,7 @@ public class UserDto
 
     public string Name { get; set; } = "";
 
-    public Dictionary<string, UserAgentSelectionDto> AgentSelections { get; set; } = [];
-
-    public class UserAgentSelectionDto
-    {
-        public List<int> DeviceIds { get; set; } = [];
-    }
+    public List<int> DeviceIds { get; set; } = [];
 
     public static UserDto FromEntity(UserEntity user) => new()
     {
@@ -21,13 +16,6 @@ public class UserDto
 
         Name = user.Name,
 
-        AgentSelections = user.UserDevices
-            .GroupBy(x => x.Device.AgentId)
-            .ToDictionary(
-                group => group.Key,
-                group => new UserAgentSelectionDto
-                {
-                    DeviceIds = [.. group.Select(x => x.DeviceId)]
-                })
+        DeviceIds = [.. user.UserDevices.Select(x => x.DeviceId)]
     };
 }

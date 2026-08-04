@@ -1,8 +1,6 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
-    import type { Agent } from "../../models/agents";
-
-    import { getAgents } from "../../api/agentApi";
+    import type { Agent } from "../../models";
 
     type Props = {
         agents: Agent[];
@@ -14,10 +12,8 @@
         agents.filter((agent) => agent.devices.length > 0),
     );
 
-    function dragStart(event: DragEvent, agent: Agent, deviceId: string) {
-        event.dataTransfer?.setData("agentId", agent.agentId);
-
-        event.dataTransfer?.setData("deviceId", deviceId);
+    function dragStart(event: DragEvent, deviceId: number) {
+        event.dataTransfer?.setData("deviceId", deviceId.toString());
 
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = "copy";
@@ -41,7 +37,7 @@
                             draggable="true"
                             aria-label={`Drag ${device.name} to assign`}
                             ondragstart={(event) =>
-                                dragStart(event, agent, device.id)}
+                                dragStart(event, Number(device.id))}
                         >
                             {device.name}
                         </button>

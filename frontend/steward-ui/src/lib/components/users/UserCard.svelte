@@ -1,55 +1,29 @@
 <script lang="ts">
     import Card from "../ui/Card.svelte";
 
-    import type { User } from "../../models/wards";
-    import type { Agent } from "../../models/agents";
+    import type { User, Device } from "../../models";
 
     type Props = {
         user: User;
-        agents: Agent[];
-
-        onAssign: (user: User, agentId: string, deviceId: string) => void;
-
-        onRemove: (user: User, agentId: string, deviceId: string) => void;
+        devices: Device[];
+        onAssign: (user: User, deviceId: number) => void;
+        onRemove: (user: User, deviceId: number) => void;
     };
 
-    const { user, agents, onAssign, onRemove }: Props = $props();
+    const { user, devices, onAssign, onRemove }: Props = $props();
 
-    const assignedDevices = $derived.by(() => {
-        return Object.entries(user.agentSelections).flatMap(
-            ([agentId, selection]) => {
-                const agent = agents.find((a) => a.agentId === agentId);
-
-                if (!agent) {
-                    return [];
-                }
-
-                return selection.deviceIds.flatMap((deviceId) => {
-                    const device = agent.devices.find((d) => d.id === deviceId);
-
-                    return device
-                        ? [
-                              {
-                                  agentId,
-                                  agent,
-                                  device,
-                              },
-                          ]
-                        : [];
-                });
-            },
-        );
-    });
+    const assignedDevices = $derived.by(() =>
+        user.deviceIds
+            .map((id) => devices.find((d) => d.id === id))
+            .filter((device): device is Device => device !== undefined),
+    );
 
     function drop(event: DragEvent) {
         event.preventDefault();
 
-        const agentId = event.dataTransfer?.getData("agentId");
-
-        const deviceId = event.dataTransfer?.getData("deviceId");
-
-        if (agentId && deviceId) {
-            onAssign(user, agentId, deviceId);
+        const deviceId = Number(event.dataTransfer?.getData("deviceId"));
+        if (deviceId) {
+            onAssign(user, deviceId);
         }
     }
 
@@ -85,15 +59,14 @@
             {#if assignedDevices.length === 0}
                 <p class="empty">Drop devices here</p>
             {:else}
-                {#each assignedDevices as item}
+                {#each assignedDevices as device}
                     <div class="device-chip">
                         <span>
-                            {item.device.name}
+                            {device.name}
                         </span>
 
                         <button
-                            onclick={() =>
-                                onRemove(user, item.agentId, item.device.id)}
+                            onclick={() => onRemove(user, device.id)}
                             aria-label="Remove device"
                         >
                             &#215;

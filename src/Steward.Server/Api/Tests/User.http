@@ -6,9 +6,8 @@ POST http://localhost:5042/api/users
 Content-Type: application/json
 
 {
-  "id": "whit",
   "name": "Whitney",
-  "agentSelections": {}
+  "deviceIds": []
 }
 
 
@@ -29,7 +28,7 @@ Content-Type: application/json
 {
   "id": "alice",
   "name": "Alice Updated",
-  "agentSelections": {}
+  "deviceIds": []
 }
 
 
@@ -37,4 +36,4 @@ Content-Type: application/json
 # Delete user
 ###
 
-DELETE http://localhost:5042/api/users/alice
+DELETE http://localhost:5042/api/users/6
