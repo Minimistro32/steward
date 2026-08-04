@@ -28,7 +28,7 @@ export const client = {
         return request<T>(path);
     },
 
-    post<T>(path: string, body: unknown) {
+    post<T>(path: string, body?: unknown) {
         return request<T>(path, {
             method: "POST",
             body: JSON.stringify(body),

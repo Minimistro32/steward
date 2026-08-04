@@ -48,66 +48,6 @@ public class MqttMessageDispatcher(
         }
     }
 
-    // private async void HandleRegistration(string json)
-    // {
-    //     try
-    //     {
-    //         var registration = StewardMessage.Deserialize<RegistrationMessage>(json);
-
-    //         if (registration is null)
-    //         {
-    //             logger.LogWarning(
-    //                 "Failed to deserialize agent registration.");
-    //             return;
-    //         }
-
-    //         logger.LogInformation(
-    //             "Agent registered: {AgentId} ({Name}) with {Devices} devices and {ResourceCount} resources.",
-    //             registration.AgentId,
-    //             registration.Name,
-    //             registration.Devices.Count,
-    //             registration.Resources.Count);
-
-    //         await using var db = await dbFactory.CreateDbContextAsync();
-
-    //         var agent = await db.Agents
-    //             .Include(a => a.Devices)
-    //             .Include(a => a.Resources)
-    //             .SingleOrDefaultAsync(a =>
-    //                 a.AgentId == registration.AgentId);
-
-    //         if (agent is null)
-    //         {
-    //             agent = new Agent
-    //             {
-    //                 AgentId = registration.AgentId
-    //             };
-
-    //             db.Agents.Add(agent);
-    //         }
-
-    //         agent.Name = registration.Name;
-    //         agent.InstanceId = registration.InstanceId;
-    //         agent.Version = registration.Version;
-
-    //         SynchronizeDevices(agent, registration);
-    //         SynchronizeResources(agent, registration);
-
-    //         await db.SaveChangesAsync();
-
-    //         logger.LogInformation(
-    //             "Registered agent {AgentId}.",
-    //             agent.AgentId);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         logger.LogError(
-    //             ex,
-    //             "Exception while handling agent registration."
-    //         );
-    //     }
-    // }
-
     private void HandleStatus(string json)
     {
         var message = StewardMessage.Deserialize<StatusMessage>(json);

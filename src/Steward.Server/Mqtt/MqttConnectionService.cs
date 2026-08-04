@@ -2,11 +2,10 @@ using Microsoft.Extensions.Options;
 using System.Buffers;
 using MQTTnet;
 using Steward.Messaging;
-using Steward.Messaging.Messages.Steward;
 
 namespace Steward.Server.Mqtt;
 
-public class MqttConnectionService : BackgroundService
+public class MqttConnectionService : BackgroundService, IMqttConnectionService
 {
     private readonly IMqttClient mqttClient;
     private readonly ILogger<MqttConnectionService> logger;
@@ -61,15 +60,25 @@ public class MqttConnectionService : BackgroundService
         await mqttClient.SubscribeAsync(MqttTopics.AgentStatusWildcard, cancellationToken: stoppingToken);
         await mqttClient.SubscribeAsync(MqttTopics.AgentResponseWildcard, cancellationToken: stoppingToken);
 
+        logger.LogInformation("MQTT subscriptions established.");
+
         // Refresh Agents
-        await mqttClient.PublishStringAsync(
-            MqttTopics.AgentRefresh,
-            StewardMessage.Serialize(new RefreshAgentsMessage()),
-            cancellationToken: stoppingToken
-        );
+        await PublishRefreshRequestAsync(stoppingToken);
 
         // Keep alive
         await Task.Delay(Timeout.Infinite, stoppingToken);
+    }
+
+    public async Task PublishRefreshRequestAsync(
+    CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Publishing agent refresh request.");
+
+        var message = new MqttApplicationMessageBuilder()
+            .WithTopic(MqttTopics.AgentRefresh)
+            .Build();
+
+        await mqttClient.PublishAsync(message, cancellationToken);
     }
 
     public override async Task StopAsync(

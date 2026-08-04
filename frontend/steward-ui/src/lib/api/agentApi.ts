@@ -22,5 +22,5 @@ export async function getAgents(): Promise<Agent[]> {
 
 
 export async function refreshAgents(): Promise<void> {
-    await client.post<void>("/agents/refresh", {});
+    await client.post<void>("/agents/refresh");
 }

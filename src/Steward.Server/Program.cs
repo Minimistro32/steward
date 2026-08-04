@@ -26,7 +26,12 @@ builder.Services.AddSingleton<RegistrationMessageHandler>();
 
 builder.Services.AddSingleton<MqttMessageDispatcher>();
 
-builder.Services.AddHostedService<MqttConnectionService>();
+builder.Services.AddSingleton<MqttConnectionService>();
+builder.Services.AddSingleton<IMqttConnectionService>(sp =>
+    sp.GetRequiredService<MqttConnectionService>());
+
+builder.Services.AddHostedService(sp =>
+    sp.GetRequiredService<MqttConnectionService>());
 
 // TEMPORARY FOR DEVELOPMENT
 builder.Services.AddCors(options =>

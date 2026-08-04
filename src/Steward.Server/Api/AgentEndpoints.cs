@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
 using Steward.Server.Data.Entities;
 using Steward.Server.Models;
+using Steward.Server.Mqtt;
 
 namespace Steward.Server.Api;
 
@@ -48,12 +49,12 @@ public static class AgentEndpoints
             return Results.NoContent();
         });
 
-        // group.MapPost("/refresh", async (
-        //     IMqttConnectionService mqtt) =>
-        // {
-        //     await mqtt.PublishRefreshRequestAsync();
+        group.MapPost("/refresh", async (
+            IMqttConnectionService mqtt) =>
+        {
+            await mqtt.PublishRefreshRequestAsync();
 
-        //     return Results.Accepted();
-        // });
+            return Results.Accepted();
+        });
     }
 }
