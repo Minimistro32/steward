@@ -7,10 +7,10 @@ public sealed class StatusMessage
         "status": "online"
     }*/
 
-    public required AgentStatus State { get; init; }
+    public required AgentConnectionState State { get; init; }
 }
 
-public enum AgentStatus
+public enum AgentConnectionState
 {
     Offline,
     Online

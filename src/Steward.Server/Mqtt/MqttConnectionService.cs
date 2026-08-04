@@ -11,23 +11,23 @@ public class MqttConnectionService : BackgroundService
     private readonly IMqttClient mqttClient;
     private readonly ILogger<MqttConnectionService> logger;
     private readonly MqttOptions options;
-    private readonly MqttMessageHandler messageHandler;
+    private readonly MqttMessageDispatcher messageDispatcher;
 
     public MqttConnectionService(
         ILogger<MqttConnectionService> logger,
         IOptions<MqttOptions> options,
-        MqttMessageHandler messageHandler)
+        MqttMessageDispatcher messageDispatcher)
     {
         this.options = options.Value;
         this.logger = logger;
-        this.messageHandler = messageHandler;
+        this.messageDispatcher = messageDispatcher;
 
         var factory = new MqttClientFactory();
         mqttClient = factory.CreateMqttClient();
 
         mqttClient.ApplicationMessageReceivedAsync += async e =>
         {
-            await this.messageHandler.HandleAsync(
+            await this.messageDispatcher.HandleAsync(
                 e.ApplicationMessage.Topic,
                 e.ApplicationMessage.Payload.ToArray());
         };

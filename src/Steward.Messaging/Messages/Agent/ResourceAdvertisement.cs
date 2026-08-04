@@ -8,9 +8,7 @@ public sealed class ResourceAdvertisement
         "actions": ["block"]
     }*/
 
-    public required string Id { get; init; }
+    public required string ResourceId { get; init; }
 
     public required string Name { get; init; }
-
-    public List<string> Actions { get; init; } = [];
 }

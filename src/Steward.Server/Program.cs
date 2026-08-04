@@ -3,13 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
 using Steward.Server.Api;
 using System.Text.Json.Serialization;
+using Steward.Server.Mqtt.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<StewardDbContext>(options =>
-    options.UseSqlite(
-        builder.Configuration.GetConnectionString("Steward")
-    ));
+builder.Services.AddDbContextFactory<StewardDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("Steward"))
+);
 
 builder.Services.Configure<MqttOptions>(
     builder.Configuration.GetSection(MqttOptions.SectionName)
@@ -22,7 +22,10 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 // Add services to the container.
-builder.Services.AddSingleton<MqttMessageHandler>();
+builder.Services.AddSingleton<RegistrationMessageHandler>();
+
+builder.Services.AddSingleton<MqttMessageDispatcher>();
+
 builder.Services.AddHostedService<MqttConnectionService>();
 
 // TEMPORARY FOR DEVELOPMENT
