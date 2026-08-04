@@ -4,21 +4,21 @@ namespace Steward.Server.Models;
 
 public class WardDto
 {
-    public string Id { get; set; } = "";
+    public int Id { get; set; }
 
     public string Name { get; set; } = "";
 
     public List<string> Tags { get; set; } = [];
 
-    public List<string> UserIds { get; set; } = [];
+    public List<int> UserIds { get; set; } = [];
 
     public Dictionary<string, WardAgentSelectionDto> AgentSelections { get; set; } = [];
 
     public class WardAgentSelectionDto
     {
-        public List<string> DeviceIds { get; set; } = [];
+        public List<int> DeviceIds { get; set; } = [];
 
-        public List<string> ResourceIds { get; set; } = [];
+        public List<int> ResourceIds { get; set; } = [];
     }
 
     public static WardDto FromEntity(WardEntity ward) => new()

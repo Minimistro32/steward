@@ -5,7 +5,7 @@ namespace Steward.Server.Models;
 
 public class PolicyDto
 {
-    public string? Id { get; set; }
+    public int? Id { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
@@ -19,7 +19,7 @@ public class PolicyDto
     public bool Disabled { get; set; }
 
 
-    public string WardId { get; set; } = "";
+    public int WardId { get; set; }
 
 
     public ScheduleDto Schedule { get; set; } = new();

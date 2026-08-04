@@ -2,7 +2,9 @@ namespace Steward.Server.Data.Entities;
 
 public class AgentEntity
 {
-    public string Id { get; set; } = "";
+    public int Id { get; set; }
+    
+    public string Version { get; set; } = "";
     
     public string AgentId { get; set; } = "";
 

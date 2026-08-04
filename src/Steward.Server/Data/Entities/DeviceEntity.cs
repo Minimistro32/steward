@@ -2,7 +2,9 @@ namespace Steward.Server.Data.Entities;
 
 public class DeviceEntity
 {
-    public string Id { get; set; } = "";
+    public int Id { get; set; }
+    
+    public string DeviceId { get; set; } = "";
 
     public string Name { get; set; } = "";
 

@@ -4,7 +4,7 @@ namespace Steward.Server.Data.Entities;
 
 public class PolicyEntity
 {
-    public string Id { get; set; } = "";
+    public int Id { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
@@ -16,7 +16,7 @@ public class PolicyEntity
 
     public bool Disabled { get; set; }
 
-    public string WardId { get; set; } = "";
+    public int WardId { get; set; }
 
     public WardEntity Ward { get; set; } = null!;
 

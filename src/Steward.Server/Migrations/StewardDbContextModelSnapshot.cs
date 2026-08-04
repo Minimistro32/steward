@@ -22,8 +22,8 @@ namespace Steward.Server.Migrations
                     b.Property<string>("AgentId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("InstanceId")
                         .IsRequired()
@@ -40,6 +40,10 @@ namespace Steward.Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.HasKey("AgentId");
 
                     b.ToTable("Agents");
@@ -47,10 +51,15 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.DeviceEntity", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("AgentId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeviceId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -67,8 +76,9 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.PolicyEntity", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -87,9 +97,8 @@ namespace Steward.Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("WardId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("WardId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -100,14 +109,19 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.ResourceEntity", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("AgentId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResourceId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -120,11 +134,11 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.UserDeviceEntity", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("DeviceId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("UserId", "DeviceId");
 
@@ -135,8 +149,9 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.UserEntity", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -149,11 +164,11 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.WardDeviceEntity", b =>
                 {
-                    b.Property<string>("WardId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("WardId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("DeviceId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("WardId", "DeviceId");
 
@@ -164,8 +179,9 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.WardEntity", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -182,11 +198,11 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.WardResourceEntity", b =>
                 {
-                    b.Property<string>("WardId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("WardId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("ResourceId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("ResourceId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("WardId", "ResourceId");
 
@@ -197,11 +213,11 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.WardUserEntity", b =>
                 {
-                    b.Property<string>("WardId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("WardId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("WardId", "UserId");
 
@@ -231,8 +247,8 @@ namespace Steward.Server.Migrations
 
                     b.OwnsOne("Steward.Server.Data.Policies.Allowance", "Access", b1 =>
                         {
-                            b1.Property<string>("PolicyEntityId")
-                                .HasColumnType("TEXT");
+                            b1.Property<int>("PolicyEntityId")
+                                .HasColumnType("INTEGER");
 
                             b1.Property<int?>("DailyTimeMinutes")
                                 .HasColumnType("INTEGER");
@@ -253,8 +269,8 @@ namespace Steward.Server.Migrations
 
                     b.OwnsOne("Steward.Server.Data.Policies.OverridePolicy", "Override", b1 =>
                         {
-                            b1.Property<string>("PolicyEntityId")
-                                .HasColumnType("TEXT");
+                            b1.Property<int>("PolicyEntityId")
+                                .HasColumnType("INTEGER");
 
                             b1.Property<bool>("Allowed")
                                 .HasColumnType("INTEGER");
@@ -271,8 +287,8 @@ namespace Steward.Server.Migrations
 
                             b1.OwnsOne("Steward.Server.Data.Policies.Allowance", "Allowance", b2 =>
                                 {
-                                    b2.Property<string>("OverridePolicyPolicyEntityId")
-                                        .HasColumnType("TEXT");
+                                    b2.Property<int>("OverridePolicyPolicyEntityId")
+                                        .HasColumnType("INTEGER");
 
                                     b2.Property<int?>("DailyTimeMinutes")
                                         .HasColumnType("INTEGER");
@@ -297,8 +313,8 @@ namespace Steward.Server.Migrations
 
                     b.OwnsOne("Steward.Server.Data.Policies.Schedule", "Schedule", b1 =>
                         {
-                            b1.Property<string>("PolicyEntityId")
-                                .HasColumnType("TEXT");
+                            b1.Property<int>("PolicyEntityId")
+                                .HasColumnType("INTEGER");
 
                             b1.Property<int>("Days")
                                 .HasColumnType("INTEGER");

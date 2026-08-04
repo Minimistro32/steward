@@ -37,7 +37,7 @@ public static class PolicyEndpoints
         {
             var policy = await db.Policies
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id.ToString() == id);
 
             if (policy is null)
             {
@@ -61,8 +61,6 @@ public static class PolicyEndpoints
 
             var policy = new PolicyEntity
             {
-                Id = Guid.NewGuid().ToString(),
-
                 CreatedAt = now,
 
                 ModifiedAt = now,
@@ -109,7 +107,7 @@ public static class PolicyEndpoints
             StewardDbContext db) =>
         {
             var policy = await db.Policies
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id.ToString() == id);
 
             if (policy is null)
             {
@@ -155,7 +153,7 @@ public static class PolicyEndpoints
             StewardDbContext db) =>
         {
             var policy = await db.Policies
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id.ToString() == id);
 
             if (policy is null)
             {

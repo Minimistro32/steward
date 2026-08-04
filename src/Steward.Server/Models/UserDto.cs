@@ -4,7 +4,7 @@ namespace Steward.Server.Models;
 
 public class UserDto
 {
-    public string Id { get; set; } = "";
+    public int Id { get; set; }
 
     public string Name { get; set; } = "";
 
@@ -12,7 +12,7 @@ public class UserDto
 
     public class UserAgentSelectionDto
     {
-        public List<string> DeviceIds { get; set; } = [];
+        public List<int> DeviceIds { get; set; } = [];
     }
 
     public static UserDto FromEntity(UserEntity user) => new()

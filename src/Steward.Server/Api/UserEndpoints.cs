@@ -97,7 +97,7 @@ public static class UserEndpoints
             StewardDbContext db) =>
         {
             var user = await db.Users
-                .FirstOrDefaultAsync(u => u.Id == id);
+                .FirstOrDefaultAsync(u => u.Id.ToString() == id);
 
 
             if (user is null)
@@ -122,7 +122,7 @@ public static class UserEndpoints
             .AsSplitQuery()
             .Include(u => u.UserDevices)
                 .ThenInclude(ud => ud.Device)
-            .FirstOrDefaultAsync(u => u.Id == id);
+            .FirstOrDefaultAsync(u => u.Id.ToString() == id);
     }
 
 

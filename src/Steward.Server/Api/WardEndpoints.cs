@@ -31,7 +31,7 @@ public static class WardEndpoints
         {
             var ward = await db.Wards
                 .IncludeDetails()
-                .FirstOrDefaultAsync(w => w.Id == id);
+                .FirstOrDefaultAsync(w => w.Id.ToString() == id);
 
             if (ward is null)
             {
@@ -75,7 +75,7 @@ public static class WardEndpoints
         {
             var ward = await db.Wards
                 .IncludeDetails()
-                .FirstOrDefaultAsync(w => w.Id == id);
+                .FirstOrDefaultAsync(w => w.Id.ToString() == id);
 
 
             if (ward is null)
@@ -104,7 +104,7 @@ public static class WardEndpoints
             StewardDbContext db) =>
         {
             var ward = await db.Wards
-                .FirstOrDefaultAsync(w => w.Id == id);
+                .FirstOrDefaultAsync(w => w.Id.ToString() == id);
 
 
             if (ward is null)

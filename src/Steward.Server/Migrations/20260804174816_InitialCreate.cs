@@ -16,7 +16,8 @@ namespace Steward.Server.Migrations
                 columns: table => new
                 {
                     AgentId = table.Column<string>(type: "TEXT", nullable: false),
-                    Id = table.Column<string>(type: "TEXT", nullable: true),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false),
+                    Version = table.Column<string>(type: "TEXT", nullable: false),
                     InstanceId = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Status = table.Column<string>(type: "TEXT", nullable: false),
@@ -31,7 +32,8 @@ namespace Steward.Server.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -43,7 +45,8 @@ namespace Steward.Server.Migrations
                 name: "Wards",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Tags = table.Column<string>(type: "TEXT", nullable: false)
                 },
@@ -56,7 +59,9 @@ namespace Steward.Server.Migrations
                 name: "Devices",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    DeviceId = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     AgentId = table.Column<string>(type: "TEXT", nullable: false)
                 },
@@ -75,7 +80,9 @@ namespace Steward.Server.Migrations
                 name: "Resources",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ResourceId = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     AgentId = table.Column<string>(type: "TEXT", nullable: false)
                 },
@@ -94,13 +101,14 @@ namespace Steward.Server.Migrations
                 name: "Policies",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ModifiedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Tags = table.Column<string>(type: "TEXT", nullable: false),
                     Disabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    WardId = table.Column<string>(type: "TEXT", nullable: false),
+                    WardId = table.Column<int>(type: "INTEGER", nullable: false),
                     Schedule_Days = table.Column<int>(type: "INTEGER", nullable: false),
                     Schedule_StartTime = table.Column<TimeOnly>(type: "TEXT", nullable: true),
                     Schedule_EndTime = table.Column<TimeOnly>(type: "TEXT", nullable: true),
@@ -128,8 +136,8 @@ namespace Steward.Server.Migrations
                 name: "WardUsers",
                 columns: table => new
                 {
-                    WardId = table.Column<string>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false)
+                    WardId = table.Column<int>(type: "INTEGER", nullable: false),
+                    UserId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -152,8 +160,8 @@ namespace Steward.Server.Migrations
                 name: "UserDeviceEntity",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    DeviceId = table.Column<string>(type: "TEXT", nullable: false)
+                    UserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DeviceId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -176,8 +184,8 @@ namespace Steward.Server.Migrations
                 name: "WardDevices",
                 columns: table => new
                 {
-                    WardId = table.Column<string>(type: "TEXT", nullable: false),
-                    DeviceId = table.Column<string>(type: "TEXT", nullable: false)
+                    WardId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DeviceId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -200,8 +208,8 @@ namespace Steward.Server.Migrations
                 name: "WardResources",
                 columns: table => new
                 {
-                    WardId = table.Column<string>(type: "TEXT", nullable: false),
-                    ResourceId = table.Column<string>(type: "TEXT", nullable: false)
+                    WardId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ResourceId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
