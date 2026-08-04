@@ -1,0 +1,40 @@
+###
+# Create user
+###
+
+POST http://localhost:5042/api/users
+Content-Type: application/json
+
+{
+  "id": "whit",
+  "name": "Whitney",
+  "agentSelections": {}
+}
+
+
+###
+# Get users
+###
+
+GET http://localhost:5042/api/users
+
+
+###
+# Update user
+###
+
+PUT http://localhost:5042/api/users/alice
+Content-Type: application/json
+
+{
+  "id": "alice",
+  "name": "Alice Updated",
+  "agentSelections": {}
+}
+
+
+###
+# Delete user
+###
+
+DELETE http://localhost:5042/api/users/alice

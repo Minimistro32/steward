@@ -1,0 +1,18 @@
+###
+# Get agents
+###
+
+GET http://localhost:5042/api/agents
+
+
+###
+# Disable agent
+###
+
+PUT http://localhost:5042/api/agents/coldTurkey/toggle
+
+###
+# Refresh
+###
+
+PUT http://localhost:5042/api/agents/refresh

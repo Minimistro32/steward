@@ -1,11 +1,13 @@
 ###
 # Get all policies
+###
 
 GET http://localhost:5042/api/policies
 
 
 ###
 # Create policy
+###
 
 POST http://localhost:5042/api/policies
 Content-Type: application/json
@@ -96,116 +98,3 @@ Content-Type: application/json
 # Replace the id after creating
 
 DELETE http://localhost:5042/api/policies/3039e029-9352-4780-a178-d80a7fe54b37
-
-###
-# Get agents
-###
-
-GET http://localhost:5042/api/agents
-
-
-###
-# Disable agent
-###
-
-PUT http://localhost:5042/api/agents/coldTurkey/disable
-
-
-###
-# Create user
-###
-
-POST http://localhost:5042/api/users
-Content-Type: application/json
-
-{
-  "id": "alice",
-  "name": "Alice",
-  "agentSelections": {}
-}
-
-
-###
-# Get users
-###
-
-GET http://localhost:5042/api/users
-
-
-###
-# Update user
-###
-
-PUT http://localhost:5042/api/users/alice
-Content-Type: application/json
-
-{
-  "id": "alice",
-  "name": "Alice Updated",
-  "agentSelections": {}
-}
-
-
-###
-# Delete user
-###
-
-DELETE http://localhost:5042/api/users/alice
-
-###
-# Get all wards
-###
-
-GET http://localhost:5042/api/wards
-
-
-###
-# Create a ward
-###
-
-POST http://localhost:5042/api/wards
-Content-Type: application/json
-
-{
-  "id": "alice",
-  "name": "Kids Devices",
-  "tags": [
-    "family",
-    "screen-time"
-  ],
-  "userIds": [],
-  "agentSelections": {}
-}
-
-
-###
-# Get a specific ward
-###
-
-GET http://localhost:5042/api/wards/kids
-
-
-###
-# Update a ward
-###
-
-PUT http://localhost:5042/api/wards/kids
-Content-Type: application/json
-
-{
-  "id": "kids",
-  "name": "Updated Kids Devices",
-  "tags": [
-    "family",
-    "updated"
-  ],
-  "userIds": [],
-  "agentSelections": {}
-}
-
-
-###
-# Delete a ward
-###
-
-DELETE http://localhost:5042/api/wards/kids

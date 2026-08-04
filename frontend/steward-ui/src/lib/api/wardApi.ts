@@ -1,186 +1,63 @@
 import type { User, Ward } from "../models/wards";
+import { client } from "./client";
 
-const mockUsers: User[] = [
-    {
-        id: "alice",
-        name: "Alice",
-        agentSelections: {
-            coldTurkey: {
-                deviceIds: [
-                    "gaming-pc",
-                    "laptop",
-                ],
-            },
-        },
-    },
-
-    {
-        id: "bob",
-        name: "Bob",
-        agentSelections: {
-            pihole: {
-                deviceIds: [
-                    "desktop",
-                ],
-            },
-
-            esp32: {
-                deviceIds: [
-                    "switch",
-                ],
-            },
-        },
-    },
-
-    {
-        id: "charlie",
-        name: "Charlie",
-        agentSelections: {},
-    },
-];
-
-
-const mockWards: Ward[] = [
-    {
-        id: "alice",
-        name: "Alice",
-        tags: [
-            "gaming",
-            "school",
-        ],
-
-        userIds: [
-            "alice",
-        ],
-
-        agentSelections: {
-            coldTurkey: {
-                deviceIds: [
-                    "gaming-pc",
-                    "laptop",
-                ],
-                resourceIds: [
-                    "games",
-                    "media",
-                ],
-            },
-        },
-    },
-
-    {
-        id: "kids",
-        name: "Kids Devices",
-        tags: [
-            "family",
-        ],
-
-        userIds: [
-            "alice",
-            "bob",
-        ],
-
-        agentSelections: {
-            pihole: {
-                deviceIds: [
-                    "desktop",
-                ],
-                resourceIds: [
-                    "internet",
-                ],
-            },
-
-            esp32: {
-                deviceIds: [
-                    "switch",
-                ],
-                resourceIds: [
-                    "power",
-                    "network",
-                ],
-            },
-        },
-    },
-
-    {
-        id: "gaming",
-        name: "Gaming Consoles",
-        tags: [],
-
-        userIds: [],
-
-        agentSelections: {
-            esp32: {
-                deviceIds: [
-                    "xbox",
-                    "ps5",
-                ],
-                resourceIds: [
-                    "power",
-                    "network",
-                ],
-            },
-        },
-    },
-];
 
 //
 // Users
 //
 
 export async function getUsers(): Promise<User[]> {
-    return structuredClone(mockUsers);
+    return client.get<User[]>("/users");
 }
+
 
 export async function getUser(
     id: string,
 ): Promise<User | undefined> {
-    return structuredClone(
-        mockUsers.find((u) => u.id === id),
-    );
+    return client.get<User>(`/users/${id}`);
 }
+
 
 //
 // Wards
 //
 
 export async function getWards(): Promise<Ward[]> {
-    return structuredClone(mockWards);
+    return client.get<Ward[]>("/wards");
 }
+
 
 export async function getWard(
     id: string,
 ): Promise<Ward | undefined> {
-    return structuredClone(
-        mockWards.find((w) => w.id === id),
-    );
+    return client.get<Ward>(`/wards/${id}`);
 }
+
 
 export async function createWard(
     ward: Ward,
-): Promise<void> {
-    mockWards.push(structuredClone(ward));
+): Promise<Ward> {
+    return client.post<Ward>(
+        "/wards",
+        ward,
+    );
 }
+
 
 export async function updateWard(
     ward: Ward,
 ): Promise<void> {
-    const index = mockWards.findIndex(
-        (w) => w.id === ward.id,
+    await client.put(
+        `/wards/${ward.id}`,
+        ward,
     );
-
-    if (index >= 0) {
-        mockWards[index] = structuredClone(ward);
-    }
 }
+
 
 export async function deleteWard(
     id: string,
 ): Promise<void> {
-    const index = mockWards.findIndex(
-        (w) => w.id === id,
+    await client.delete(
+        `/wards/${id}`,
     );
-
-    if (index >= 0) {
-        mockWards.splice(index, 1);
-    }
 }

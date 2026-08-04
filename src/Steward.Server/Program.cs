@@ -25,11 +25,27 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddSingleton<MqttMessageHandler>();
 builder.Services.AddHostedService<MqttConnectionService>();
 
+// TEMPORARY FOR DEVELOPMENT
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("frontend", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:5173",
+                "https://localhost:5173"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors("frontend");
     // app.MapOpenApi();
 }
 
