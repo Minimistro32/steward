@@ -11,7 +11,7 @@ export interface Policy {
     tags: string[];
     disabled: boolean;
     
-    wardId: number;
+    wardId?: number;
 
     schedule: Schedule;
 
@@ -23,9 +23,7 @@ export interface Policy {
 export function createDefaultPolicy(): Policy {
     return {
         name: "",
-
-        wardId: -1,
-
+        
         tags: [],
 
         disabled: false,

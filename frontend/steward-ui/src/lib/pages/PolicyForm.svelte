@@ -154,7 +154,7 @@
                         bind:value={policy.wardId}
                         class:placeholder={!policy.wardId}
                     >
-                        <option value="" disabled hidden>Select a ward</option>
+                        <option value={undefined} disabled hidden>Select a ward</option>
                         {#each wards as ward}
                             <option value={ward.id}>
                                 {ward.name}

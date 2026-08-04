@@ -1,14 +1,14 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-
     import Card from "../ui/Card.svelte";
     import { DayOfWeek, Schedule, type Policy } from "../../models";
     import { getPolicies } from "../../api";
 
-    let policies: Policy[] = [];
+    let policies = $state<Policy[]>([]);
 
-    onMount(async () => {
-        policies = await getPolicies();
+    $effect(() => {
+        getPolicies().then((result) => {
+            policies = result;
+        });
     });
 
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

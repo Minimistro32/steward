@@ -25,7 +25,7 @@
 
     onMount(loadData);
 
-    function wardName(id: number): string {
+    function wardName(id?: number): string {
         return wards.find((ward) => ward.id === id)?.name ?? "Unknown Ward";
     }
 
