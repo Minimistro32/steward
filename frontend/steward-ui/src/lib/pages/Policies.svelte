@@ -4,6 +4,7 @@
     import PageHeader from "../components/ui/PageHeader.svelte";
     import AllowanceSummary from "../components/policies/AllowanceSummary.svelte";
     import StatusDot from "../components/ui/StatusDot.svelte";
+    import EmptyState from "../components/ui/EmptyState.svelte";
 
     import {
         type Policy,
@@ -123,7 +124,7 @@
 
 <PageHeader title="Policies">
     {#snippet subtitle()}
-        Define how wards access their resources and request additional access.
+        Define how wards access their technology and request additional access.
     {/snippet}
     {#snippet actions()}
         <a href="#/policies/new">
@@ -132,99 +133,113 @@
     {/snippet}
 </PageHeader>
 
-<div class="table-container">
-    <table>
-        <thead>
-            <tr>
-                <th> Name </th>
-                <th> Ward </th>
-                <th> Schedule </th>
-                <th> Access </th>
-                <th> Override </th>
-                <th> Allowing </th>
-                <th></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {#each policies as policy}
-                {@const summary = scheduleSummary(policy.schedule)}
-
+{#if policies.length === 0}
+    <EmptyState
+        icon="scale.svg"
+        title="No Policies"
+        description="Create a policy to determine how a ward can access their technology."
+    ></EmptyState>
+{:else}
+    <div class="table-container">
+        <table>
+            <thead>
                 <tr>
-                    <td>
-                        <strong>
-                            {policy.name}
-                        </strong>
+                    <th> Name </th>
+                    <th> Ward </th>
+                    <th> Schedule </th>
+                    <th> Access </th>
+                    <th> Override </th>
+                    <th> Allowing </th>
+                    <th></th>
+                </tr>
+            </thead>
 
-                        <div class="status">
-                            <StatusDot
-                                label={policy.disabled ? "Disabled" : "Active"}
-                                color={policy.disabled
-                                    ? "var(--color-text-muted)"
-                                    : "var(--color-success)"}
-                                --font-size="0.85rem"
-                            />
-                        </div>
-                    </td>
+            <tbody>
+                {#each policies as policy}
+                    {@const summary = scheduleSummary(policy.schedule)}
 
-                    <td>{wardName(policy.wardId)}</td>
+                    <tr>
+                        <td>
+                            <strong>
+                                {policy.name}
+                            </strong>
 
-                    <td>
-                        <div class="schedule">
-                            <strong>{summary.days}</strong>
+                            <div class="status">
+                                <StatusDot
+                                    label={policy.disabled
+                                        ? "Disabled"
+                                        : "Active"}
+                                    color={policy.disabled
+                                        ? "var(--color-text-muted)"
+                                        : "var(--color-success)"}
+                                    --font-size="0.85rem"
+                                />
+                            </div>
+                        </td>
 
-                            {#if summary.time}
-                                <div class="time">
-                                    {summary.time}
-                                </div>
-                            {/if}
-                        </div>
-                    </td>
+                        <td>{wardName(policy.wardId)}</td>
 
-                    <td>
-                        <AllowanceSummary
-                            dailyTime={minutes(policy.access.dailyTimeMinutes)}
-                            sessionLength={minutes(
-                                policy.access.maxSessionMinutes,
-                            )}
-                            unlocks={unlocks(policy.access.dailyUnlocks)}
-                        />
-                    </td>
+                        <td>
+                            <div class="schedule">
+                                <strong>{summary.days}</strong>
 
-                    <td>
-                        <span class:text-muted={!policy.override.allowed}>
-                            {overrideLabel(policy.override.requirement) ||
-                                "Disabled"}
-                        </span>
-                    </td>
+                                {#if summary.time}
+                                    <div class="time">
+                                        {summary.time}
+                                    </div>
+                                {/if}
+                            </div>
+                        </td>
 
-                    <td>
-                        {#if policy.override.allowance}
+                        <td>
                             <AllowanceSummary
-                                extension
                                 dailyTime={minutes(
-                                    policy.override.allowance.dailyTimeMinutes,
+                                    policy.access.dailyTimeMinutes,
                                 )}
                                 sessionLength={minutes(
-                                    policy.override.allowance.maxSessionMinutes,
+                                    policy.access.maxSessionMinutes,
                                 )}
-                                unlocks={unlocks(
-                                    policy.override.allowance.dailyUnlocks,
-                                )}
+                                unlocks={unlocks(policy.access.dailyUnlocks)}
                             />
-                        {/if}
-                    </td>
+                        </td>
 
-                    <td>
-                        <a href="#/policies/{policy.id}">
-                            <button class="cta-button"> Edit </button>
-                        </a>
-                    </td>
-                </tr>
-            {/each}
-        </tbody>
-    </table>
-</div>
+                        <td>
+                            <span class:text-muted={!policy.override.allowed}>
+                                {overrideLabel(policy.override.requirement) ||
+                                    "Disabled"}
+                            </span>
+                        </td>
+
+                        <td>
+                            {#if policy.override.allowance}
+                                <AllowanceSummary
+                                    extension
+                                    dailyTime={minutes(
+                                        policy.override.allowance
+                                            .dailyTimeMinutes,
+                                    )}
+                                    sessionLength={minutes(
+                                        policy.override.allowance
+                                            .maxSessionMinutes,
+                                    )}
+                                    unlocks={unlocks(
+                                        policy.override.allowance.dailyUnlocks,
+                                    )}
+                                />
+                            {/if}
+                        </td>
+
+                        <td>
+                            <a href="#/policies/{policy.id}">
+                                <button class="cta-button"> Edit </button>
+                            </a>
+                        </td>
+                    </tr>
+                {/each}
+            </tbody>
+        </table>
+    </div>
+{/if}
 
 <style>
     .table-container {

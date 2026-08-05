@@ -4,6 +4,7 @@
     import PageHeader from "../components/ui/PageHeader.svelte";
     import CurrentWard from "../components/wards/CurrentWard.svelte";
     import WardCard from "../components/wards/WardCard.svelte";
+    import EmptyState from "../components/ui/EmptyState.svelte";
 
     import { type Ward } from "../models/wards/Ward";
     import { getWards } from "../api/wardApi";
@@ -37,7 +38,7 @@
 
 <PageHeader title="Wards">
     {#snippet subtitle()}
-        Group users, devices, and resources into reusable policy targets.
+        Wards are groups of users, devices, and resources that share policies.
     {/snippet}
 
     {#snippet actions()}
@@ -49,27 +50,33 @@
 
 {#if loading}
     <p>Loading wards...</p>
-{:else if selectedWard}
+{:else if wards.length === 0}
+    <EmptyState
+        icon="rectangle-group.svg"
+        title="No Wards"
+        description="Create a ward so you can manage the screen time of users, devices, and resources. You'll be able to see it here."
+    ></EmptyState>
+{:else}
     <div class="currentWard">
-        <CurrentWard ward={selectedWard} />
+        <CurrentWard ward={selectedWard!} />
+    </div>
+
+    <h2>Wards</h2>
+
+    <div class="masonry">
+        {#each columns as column}
+            <div class="column">
+                {#each column as ward (ward.id)}
+                    <WardCard
+                        {ward}
+                        selected={selectedWard?.id === ward.id}
+                        onclick={() => selectWard(ward)}
+                    />
+                {/each}
+            </div>
+        {/each}
     </div>
 {/if}
-
-<h2>Wards</h2>
-
-<div class="masonry">
-    {#each columns as column}
-        <div class="column">
-            {#each column as ward (ward.id)}
-                <WardCard
-                    {ward}
-                    selected={selectedWard?.id === ward.id}
-                    onclick={() => selectWard(ward)}
-                />
-            {/each}
-        </div>
-    {/each}
-</div>
 
 <style>
     h2 {

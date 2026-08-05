@@ -89,7 +89,7 @@
         </div>
 
         <div class="management-group">
-            <h4>Managed Users</h4>
+            <h4>Associated Users</h4>
 
             <ul>
                 {#each managedUsers as user}

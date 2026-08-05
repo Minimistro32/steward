@@ -167,8 +167,7 @@
             --margin-bottom="var(--space-4)"
         >
             {#snippet subtitle()}
-                Group users, devices, and resources into a reusable policy
-                target.
+                Create a group of users, devices, and resources that will share policies.
             {/snippet}
         </PageHeader>
 
@@ -201,7 +200,7 @@
             <Card>
                 <h2>Users</h2>
 
-                <p class="text-muted">Select the users managed by this ward.</p>
+                <p class="text-muted">Select users who will have independent access to this ward.</p>
 
                 {#each users as user}
                     <Checkbox
@@ -289,8 +288,6 @@
 
 <style>
     h3 {
-        color: var(--color-text-muted);
-
         margin: var(--space-4) 0 var(--space-1);
         color: var(--color-text-muted);
         font-size: 0.9rem;

@@ -6,7 +6,7 @@
 <nav class="sidebar">
     <img
         class="logo"
-        src="/src/assets/steward-logo.svg"
+        src="/steward-logo.svg"
         alt="Green steward logo with budding leaf"
     />
 

@@ -7,6 +7,7 @@
 
     import type { Agent, User } from "../models";
     import { getAgents, refreshAgents, getUsers } from "../api";
+    import EmptyState from "../components/ui/EmptyState.svelte";
 
     let agents = $state<Agent[]>([]);
     let users = $state<User[]>([]);
@@ -58,7 +59,7 @@
 
 <PageHeader title="Agents">
     {#snippet subtitle()}
-        Agents watch over wards, discover resources, and enforce policies.
+        Agents watch over wards by enforcing policies.
     {/snippet}
     {#snippet actions()}
         <button class="cta-button" onclick={refresh}> ↻ Refresh </button>
@@ -69,15 +70,23 @@
 
 <h2>Registered Agents</h2>
 
-<div class="masonry">
-    {#each columns as column}
-        <div class="column">
-            {#each column as data (data.agent.agentId)}
-                <AgentCard {data} />
-            {/each}
-        </div>
-    {/each}
-</div>
+{#if agents.length === 0}
+    <EmptyState
+        icon="server-stack.svg"
+        title="No Agents"
+        description="Connect a Steward agent via MQTT and hit refresh."
+    ></EmptyState>
+{:else}
+    <div class="masonry">
+        {#each columns as column}
+            <div class="column">
+                {#each column as data (data.agent.agentId)}
+                    <AgentCard {data} />
+                {/each}
+            </div>
+        {/each}
+    </div>
+{/if}
 
 <style>
     h2 {
