@@ -23,6 +23,7 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
 
     // Policy
     public DbSet<PolicyEntity> Policies => Set<PolicyEntity>();
+    public DbSet<PolicyAccessEntity> PolicyAccess => Set<PolicyAccessEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -81,6 +82,13 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
             .OwnsOne(x => x.Override, overrideBuilder =>
             {
                 overrideBuilder.OwnsOne(x => x.Allowance);
+            });
+
+        modelBuilder.Entity<PolicyAccessEntity>()
+            .HasKey(x => new
+            {
+                x.PolicyId,
+                x.UserId
             });
     }
 }
