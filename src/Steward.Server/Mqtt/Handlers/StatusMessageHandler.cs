@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Steward.Messaging;
-using Steward.Messaging.Messages.Agent;
+using Steward.Messaging.Messages;
 using Steward.Server.Data;
 using Steward.Server.Data.Entities;
 

@@ -1,6 +1,6 @@
-﻿namespace Steward.Messaging.Messages.Agent;
+﻿namespace Steward.Messaging.Messages;
 
-public sealed class ResponseMessage
+public sealed class AccessResponseMessage
 {
     /* steward/agents/test-agent/response
     {
@@ -10,12 +10,12 @@ public sealed class ResponseMessage
 
     public required string RequestId { get; init; }
 
-    public required AgentCommandStatus CommandStatus { get; init; }
+    public required AccessRequestStatus RequestStatus { get; init; }
 
     public string? Message { get; init; }
 }
 
-public enum AgentCommandStatus
+public enum AccessRequestStatus
 {
     Accepted,
     Completed,

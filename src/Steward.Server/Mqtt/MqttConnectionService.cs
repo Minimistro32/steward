@@ -58,7 +58,7 @@ public class MqttConnectionService : BackgroundService, IMqttConnectionService
         // Subscriptions
         await mqttClient.SubscribeAsync(MqttTopics.AgentRegister, cancellationToken: stoppingToken);
         await mqttClient.SubscribeAsync(MqttTopics.AgentStatusWildcard, cancellationToken: stoppingToken);
-        await mqttClient.SubscribeAsync(MqttTopics.AgentResponseWildcard, cancellationToken: stoppingToken);
+        await mqttClient.SubscribeAsync(MqttTopics.AccessResponseWildcard, cancellationToken: stoppingToken);
 
         logger.LogInformation("MQTT subscriptions established.");
 

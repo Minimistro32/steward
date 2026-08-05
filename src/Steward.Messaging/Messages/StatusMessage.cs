@@ -1,4 +1,4 @@
-﻿namespace Steward.Messaging.Messages.Agent;
+﻿namespace Steward.Messaging.Messages;
 
 public sealed class StatusMessage
 {

@@ -1,4 +1,4 @@
-﻿namespace Steward.Messaging.Messages.Agent;
+﻿namespace Steward.Messaging.Messages;
 
 public sealed class RegistrationMessage
 {
@@ -41,4 +41,18 @@ public sealed class RegistrationMessage
     public List<DeviceAdvertisement> Devices { get; init; } = [];
 
     public List<ResourceAdvertisement> Resources { get; init; } = [];
+}
+
+public sealed class DeviceAdvertisement
+{
+    public required string DeviceId { get; init; }
+
+    public required string Name { get; init; }
+}
+
+public sealed class ResourceAdvertisement
+{
+    public required string ResourceId { get; init; }
+
+    public required string Name { get; init; }
 }

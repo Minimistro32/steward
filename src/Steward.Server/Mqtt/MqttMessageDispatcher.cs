@@ -1,6 +1,6 @@
 using System.Text;
 using Steward.Messaging;
-using Steward.Messaging.Messages.Agent;
+using Steward.Messaging.Messages;
 using Steward.Server.Mqtt.Handlers;
 
 namespace Steward.Server.Mqtt;
@@ -36,7 +36,7 @@ public class MqttMessageDispatcher(
         {
             HandleStatus(json);
         }
-        else if (MqttTopics.IsAgentResponse(topic))
+        else if (MqttTopics.IsAccessResponse(topic))
         {
             HandleResponse(json);
         }
@@ -67,7 +67,7 @@ public class MqttMessageDispatcher(
 
     private void HandleResponse(string json)
     {
-        var message = StewardMessage.Deserialize<ResponseMessage>(json);
+        var message = StewardMessage.Deserialize<AccessResponseMessage>(json);
 
         if (message is null)
         {
@@ -79,7 +79,7 @@ public class MqttMessageDispatcher(
         logger.LogInformation(
             "Response {RequestId}: {Status}",
             message.RequestId,
-            message.CommandStatus
+            message.RequestStatus
         );
     }
 }

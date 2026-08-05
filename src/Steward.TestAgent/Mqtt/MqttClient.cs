@@ -1,7 +1,7 @@
 using System.Buffers;
 using MQTTnet;
 using Steward.Messaging;
-using Steward.Messaging.Messages.Agent;
+using Steward.Messaging.Messages;
 
 namespace Steward.TestAgent.Mqtt;
 
@@ -9,6 +9,7 @@ public class MqttClient
 {
     private readonly IMqttClient mqttClient;
     private readonly MqttOptions options;
+    private static readonly string version = "0.1.0";
 
     public MqttClient(MqttOptions options)
     {
@@ -29,7 +30,7 @@ public class MqttClient
     {
         var lastWillTestament = new StatusMessage
         {
-            State = AgentStatus.Offline
+            State = AgentConnectionState.Offline
         };
 
         var clientOptions =
@@ -65,6 +66,7 @@ public class MqttClient
     {
         var message = new RegistrationMessage
         {
+            Version = version,
             AgentId = options.AgentId,
             InstanceId = options.InstanceId,
             Name = options.Name
@@ -82,7 +84,7 @@ public class MqttClient
     {
         var message = new StatusMessage
         {
-            State = AgentStatus.Online
+            State = AgentConnectionState.Online
         };
 
         await mqttClient.PublishAsync(
