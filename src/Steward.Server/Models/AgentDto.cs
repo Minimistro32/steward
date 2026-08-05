@@ -4,9 +4,7 @@ namespace Steward.Server.Models;
 
 public class AgentDto
 {
-    public int Id { get; set; }
-
-    public string AgentId { get; set; } = "";
+    public string Id { get; set; } = "";
 
     public string InstanceId { get; set; } = "";
 
@@ -14,7 +12,7 @@ public class AgentDto
 
     public AgentStatus Status { get; set; }
 
-    public DateTime? LastSeen { get; set; }
+    public DateTime? LastContact { get; set; }
 
     public List<DeviceDto> Devices { get; set; } = [];
 
@@ -24,11 +22,10 @@ public class AgentDto
     public static AgentDto FromEntity(AgentEntity agent) => new()
     {
         Id = agent.Id,
-        AgentId = agent.AgentId,
         InstanceId = agent.InstanceId,
         Name = agent.Name,
-        Status = agent.Status,
-        LastSeen = agent.LastSeen,
+        Status = agent.Status?.State ?? AgentStatus.Offline,
+        LastContact = agent.Status?.LastContact,
 
         Devices =
         [

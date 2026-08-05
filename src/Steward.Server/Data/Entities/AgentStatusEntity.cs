@@ -8,7 +8,7 @@ public class AgentStatusEntity
 
     public AgentStatus State { get; set; }
 
-    public DateTime LastSeen { get; set; }
+    public DateTime LastContact { get; set; }
 }
 
 public enum AgentStatus

@@ -36,6 +36,9 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
             .HasForeignKey<AgentStatusEntity>(s => s.AgentId);
 
         modelBuilder.Entity<AgentStatusEntity>()
+            .HasKey(s => s.AgentId);
+
+        modelBuilder.Entity<AgentStatusEntity>()
             .Property(x => x.State)
             .HasConversion<string>();
 

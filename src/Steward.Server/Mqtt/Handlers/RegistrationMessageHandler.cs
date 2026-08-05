@@ -50,23 +50,35 @@ public sealed class RegistrationMessageHandler(
             .Include(a => a.Devices)
             .Include(a => a.Resources)
             .SingleOrDefaultAsync(a =>
-                a.AgentId == registration.AgentId);
+                a.Id == registration.AgentId);
+
+        if (agent is not null &&
+            agent.InstanceId != registration.InstanceId)
+        {
+            logger.LogWarning(
+                "Rejected registration for {AgentId}. Instance conflict. Existing: {ExistingInstance}, Incoming: {IncomingInstance}",
+                registration.AgentId,
+                agent.InstanceId,
+                registration.InstanceId);
+
+            // TODO: publish rejection here
+
+            return;
+        }
 
         if (agent is null)
         {
             agent = new AgentEntity
             {
-                AgentId = registration.AgentId
+                Id = registration.AgentId,
+                InstanceId = registration.InstanceId
             };
 
             db.Agents.Add(agent);
         }
 
-        agent.InstanceId = registration.InstanceId;
         agent.Name = registration.Name;
         agent.Version = registration.Version;
-        agent.Status = AgentStatus.Online;
-        agent.LastSeen = DateTime.UtcNow;
 
         SynchronizeDevices(agent, registration);
 
@@ -76,7 +88,7 @@ public sealed class RegistrationMessageHandler(
 
         logger.LogInformation(
             "Saved agent {AgentId} to database.",
-            agent.AgentId);
+            agent.Id);
     }
 
     private static void SynchronizeDevices(

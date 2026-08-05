@@ -9,7 +9,7 @@ export interface Agent {
     status: AgentStatus;
     resources: Resource[];
     devices: Device[];
-    lastSeen?: Date;
+    lastContact?: Date;
 }
 
 export enum AgentStatus {

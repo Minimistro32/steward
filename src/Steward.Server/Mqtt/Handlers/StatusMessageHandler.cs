@@ -31,7 +31,7 @@ public sealed class StatusMessageHandler(
             {
                 AgentId = agentId,
                 State = getAgentStatus(),
-                LastSeen = DateTime.UtcNow
+                LastContact = DateTime.UtcNow
             };
 
             db.AgentStatuses.Add(status);
@@ -41,7 +41,7 @@ public sealed class StatusMessageHandler(
             if (status.State != AgentStatus.Disabled) {
                 status.State = getAgentStatus();
             }
-            status.LastSeen = DateTime.UtcNow;
+            status.LastContact = DateTime.UtcNow;
         }
 
         await db.SaveChangesAsync();

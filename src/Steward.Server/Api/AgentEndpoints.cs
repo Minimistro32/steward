@@ -31,14 +31,14 @@ public static class AgentEndpoints
             StewardDbContext db) =>
         {
             var agent = await db.Agents
-                .FirstOrDefaultAsync(a => a.AgentId == id);
+                .FirstOrDefaultAsync(a => a.Id == id);
 
             if (agent is null)
             {
                 return Results.NotFound();
             }
 
-            agent.Status = agent.Status switch
+            agent.Status?.State = agent.Status.State switch
             {
                 AgentStatus.Disabled => AgentStatus.Offline,
                 _ => AgentStatus.Disabled
