@@ -15,17 +15,14 @@ namespace Steward.Server.Migrations
                 name: "Agents",
                 columns: table => new
                 {
-                    AgentId = table.Column<string>(type: "TEXT", nullable: false),
-                    Id = table.Column<int>(type: "INTEGER", nullable: false),
-                    Version = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
                     InstanceId = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", nullable: false),
-                    LastSeen = table.Column<DateTime>(type: "TEXT", nullable: true)
+                    Version = table.Column<string>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Agents", x => x.AgentId);
+                    table.PrimaryKey("PK_Agents", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -56,6 +53,25 @@ namespace Steward.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AgentStatuses",
+                columns: table => new
+                {
+                    AgentId = table.Column<string>(type: "TEXT", nullable: false),
+                    State = table.Column<string>(type: "TEXT", nullable: false),
+                    LastContact = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AgentStatuses", x => x.AgentId);
+                    table.ForeignKey(
+                        name: "FK_AgentStatuses_Agents_AgentId",
+                        column: x => x.AgentId,
+                        principalTable: "Agents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Devices",
                 columns: table => new
                 {
@@ -72,7 +88,7 @@ namespace Steward.Server.Migrations
                         name: "FK_Devices_Agents_AgentId",
                         column: x => x.AgentId,
                         principalTable: "Agents",
-                        principalColumn: "AgentId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -93,7 +109,7 @@ namespace Steward.Server.Migrations
                         name: "FK_Resources_Agents_AgentId",
                         column: x => x.AgentId,
                         principalTable: "Agents",
-                        principalColumn: "AgentId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -228,6 +244,39 @@ namespace Steward.Server.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "PolicyAccess",
+                columns: table => new
+                {
+                    PolicyId = table.Column<int>(type: "INTEGER", nullable: false),
+                    UserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    LastAccessed = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    MinutesUsed = table.Column<int>(type: "INTEGER", nullable: false),
+                    UnlocksUsed = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PolicyAccess", x => new { x.PolicyId, x.UserId });
+                    table.ForeignKey(
+                        name: "FK_PolicyAccess_Policies_PolicyId",
+                        column: x => x.PolicyId,
+                        principalTable: "Policies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PolicyAccess_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agents_InstanceId",
+                table: "Agents",
+                column: "InstanceId",
+                unique: true);
+
             migrationBuilder.CreateIndex(
                 name: "IX_Devices_AgentId",
                 table: "Devices",
@@ -237,6 +286,11 @@ namespace Steward.Server.Migrations
                 name: "IX_Policies_WardId",
                 table: "Policies",
                 column: "WardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PolicyAccess_UserId",
+                table: "PolicyAccess",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Resources_AgentId",
@@ -268,7 +322,10 @@ namespace Steward.Server.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Policies");
+                name: "AgentStatuses");
+
+            migrationBuilder.DropTable(
+                name: "PolicyAccess");
 
             migrationBuilder.DropTable(
                 name: "UserDevices");
@@ -281,6 +338,9 @@ namespace Steward.Server.Migrations
 
             migrationBuilder.DropTable(
                 name: "WardUsers");
+
+            migrationBuilder.DropTable(
+                name: "Policies");
 
             migrationBuilder.DropTable(
                 name: "Devices");

@@ -19,24 +19,14 @@ namespace Steward.Server.Migrations
 
             modelBuilder.Entity("Steward.Server.Data.Entities.AgentEntity", b =>
                 {
-                    b.Property<string>("AgentId")
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Id")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("InstanceId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("LastSeen")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -44,9 +34,29 @@ namespace Steward.Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.HasKey("AgentId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstanceId")
+                        .IsUnique();
 
                     b.ToTable("Agents");
+                });
+
+            modelBuilder.Entity("Steward.Server.Data.Entities.AgentStatusEntity", b =>
+                {
+                    b.Property<string>("AgentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastContact")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("AgentId");
+
+                    b.ToTable("AgentStatuses");
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.DeviceEntity", b =>
@@ -72,6 +82,30 @@ namespace Steward.Server.Migrations
                     b.HasIndex("AgentId");
 
                     b.ToTable("Devices");
+                });
+
+            modelBuilder.Entity("Steward.Server.Data.Entities.PolicyAccessEntity", b =>
+                {
+                    b.Property<int>("PolicyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("LastAccessed")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MinutesUsed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UnlocksUsed")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("PolicyId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PolicyAccess");
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.PolicyEntity", b =>
@@ -226,6 +260,17 @@ namespace Steward.Server.Migrations
                     b.ToTable("WardUsers");
                 });
 
+            modelBuilder.Entity("Steward.Server.Data.Entities.AgentStatusEntity", b =>
+                {
+                    b.HasOne("Steward.Server.Data.Entities.AgentEntity", "Agent")
+                        .WithOne("Status")
+                        .HasForeignKey("Steward.Server.Data.Entities.AgentStatusEntity", "AgentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agent");
+                });
+
             modelBuilder.Entity("Steward.Server.Data.Entities.DeviceEntity", b =>
                 {
                     b.HasOne("Steward.Server.Data.Entities.AgentEntity", "Agent")
@@ -235,6 +280,25 @@ namespace Steward.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("Agent");
+                });
+
+            modelBuilder.Entity("Steward.Server.Data.Entities.PolicyAccessEntity", b =>
+                {
+                    b.HasOne("Steward.Server.Data.Entities.PolicyEntity", "Policy")
+                        .WithMany()
+                        .HasForeignKey("PolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Steward.Server.Data.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Policy");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.PolicyEntity", b =>
@@ -437,6 +501,8 @@ namespace Steward.Server.Migrations
                     b.Navigation("Devices");
 
                     b.Navigation("Resources");
+
+                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.UserEntity", b =>
