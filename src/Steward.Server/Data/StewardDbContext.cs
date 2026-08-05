@@ -7,6 +7,7 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
 {
     // Agent
     public DbSet<AgentEntity> Agents => Set<AgentEntity>();
+    public DbSet<AgentStatusEntity> AgentStatuses => Set<AgentStatusEntity>();
     public DbSet<DeviceEntity> Devices => Set<DeviceEntity>();
     public DbSet<ResourceEntity> Resources => Set<ResourceEntity>();
 
@@ -26,10 +27,16 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AgentEntity>()
-            .HasKey(x => x.AgentId);
+            .HasIndex(a => a.InstanceId)
+            .IsUnique();
 
         modelBuilder.Entity<AgentEntity>()
-            .Property(a => a.Status)
+            .HasOne(a => a.Status)
+            .WithOne(s => s.Agent)
+            .HasForeignKey<AgentStatusEntity>(s => s.AgentId);
+
+        modelBuilder.Entity<AgentStatusEntity>()
+            .Property(x => x.State)
             .HasConversion<string>();
 
         modelBuilder.Entity<UserDeviceEntity>()

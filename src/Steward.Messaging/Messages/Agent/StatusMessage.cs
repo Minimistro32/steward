@@ -4,7 +4,7 @@ public sealed class StatusMessage
 {
     /* steward/agents/test-agent/status
     {
-        "status": "online"
+        "state": "online"
     }*/
 
     public required AgentConnectionState State { get; init; }
