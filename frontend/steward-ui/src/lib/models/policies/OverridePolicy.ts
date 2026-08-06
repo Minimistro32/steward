@@ -1,4 +1,4 @@
-import type { Allowance } from "./Allowance";
+import type { Allowance } from "..";
 
 export interface OverridePolicy {
     allowed: boolean;

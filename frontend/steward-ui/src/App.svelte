@@ -10,7 +10,7 @@
   import WardForm from "./lib/pages/WardForm.svelte";
   import Policies from "./lib/pages/Policies.svelte";
   import PolicyForm from "./lib/pages/PolicyForm.svelte";
-  // import Requests from "./lib/pages/Requests.svelte";
+  import Requests from "./lib/pages/Requests.svelte";
 
   const routes = {
     "/": Overview,
@@ -22,7 +22,7 @@
     "/policies": Policies,
     "/policies/new": PolicyForm,
     "/policies/:id": PolicyForm,
-    // "/requests": Requests,
+    "/requests": Requests,
   };
 </script>
 

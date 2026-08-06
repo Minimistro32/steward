@@ -15,6 +15,7 @@
         gap: var(--space-2);
         color: var(--color-text-muted);
         font-size: var(--font-size, 1rem);
+        justify-content: var(--justified, left);
     }
 
     .dot {

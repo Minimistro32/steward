@@ -1,4 +1,4 @@
-import type { Ward } from "../models/";
+import type { Ward } from "../models";
 import { client } from "./client";
 
 //

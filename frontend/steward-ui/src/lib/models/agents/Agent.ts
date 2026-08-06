@@ -1,5 +1,4 @@
-import type { Device } from "../";
-import type { Resource } from "./Resource";
+import type { Device, Resource } from "..";
 
 export interface Agent {
     id: number

@@ -1,6 +1,4 @@
-import type { Allowance } from "./Allowance";
-import type { OverridePolicy } from "./OverridePolicy";
-import type { Schedule } from "./Schedule";
+import type { Allowance, OverridePolicy, Schedule } from "../";
 
 export interface Policy {
     id?: number;
