@@ -18,6 +18,6 @@ export interface AccessOption {
 }
 
 export type AccessState =
-    | "Available"
-    | "OverrideAvailable"
-    | "Unavailable";
+    | "available"
+    | "overrideAvailable"
+    | "unavailable";

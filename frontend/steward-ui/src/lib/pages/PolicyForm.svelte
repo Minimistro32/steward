@@ -50,6 +50,12 @@
             return;
         }
 
+        if (!policy.override.allowed) {
+            console.log("Clear override ran");
+            policy.override.requirement = undefined;
+            policy.override.allowance = {};
+        }
+
         if (isNew) {
             await createPolicy(policy);
         } else {

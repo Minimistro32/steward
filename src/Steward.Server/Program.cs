@@ -5,6 +5,7 @@ using Steward.Server.Api;
 using Steward.Server.Application;
 using System.Text.Json.Serialization;
 using Steward.Server.Mqtt.Handlers;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ builder.Services.Configure<MqttOptions>(
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(
-        new JsonStringEnumConverter());
+        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 });
 
 // Add services to the container.

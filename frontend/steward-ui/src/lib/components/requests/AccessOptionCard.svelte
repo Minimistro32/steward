@@ -32,7 +32,7 @@
 
     const status = $derived.by(() => {
         switch (option.state) {
-            case "Available":
+            case "available":
                 return {
                     label: "Available",
                     color: "var(--color-success)",
@@ -40,7 +40,7 @@
                     disabled: false,
                 };
 
-            case "OverrideAvailable":
+            case "overrideAvailable":
                 return {
                     label: "Override Available",
                     color: "var(--color-warning)",
@@ -48,7 +48,7 @@
                     disabled: false,
                 };
 
-            case "Unavailable":
+            case "unavailable":
                 return {
                     label: "Unavailable",
                     color: "var(--color-danger)",

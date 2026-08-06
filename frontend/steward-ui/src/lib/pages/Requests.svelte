@@ -33,7 +33,6 @@
 
         try {
             options = await getAccessOptions(userId);
-            options[0].state = "Unavailable";
         } finally {
             loadingOptions = false;
         }

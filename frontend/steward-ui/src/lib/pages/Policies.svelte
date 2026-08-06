@@ -8,9 +8,9 @@
 
     import {
         type Policy,
-        type OverrideRequirement,
         DayOfWeek,
         Schedule,
+        type OverridePolicy,
     } from "../models/policies";
     import type { Ward } from "../models/wards/Ward";
 
@@ -30,22 +30,29 @@
         return wards.find((ward) => ward.id === id)?.name ?? "Unknown Ward";
     }
 
-    function minutes(value?: number) {
-        return value == null ? "∞" : `${value} min`;
+    // TODO: Move these functions into AllowanceSummary
+    function minutes(allowed: boolean, value?: number) {
+        return value == null ? (allowed ? "∞" : "—") : `${value} min`;
     }
 
-    function unlocks(value?: number) {
-        return value == null ? "∞" : value.toString();
+    function unlocks(allowed: boolean, value?: number) {
+        return value == null ? (allowed ? "∞" : "—") : value.toString();
     }
 
     function overrideLabel(
-        requirement: OverrideRequirement | undefined,
+        override: OverridePolicy | undefined,
     ): string | undefined {
-        if (requirement === "userApproval") return "User Approval";
-        if (requirement === "randomText") return "Random Text";
-        if (requirement === "delay") return "Delay";
+        if (override?.allowed) {
+            let requirement = override.requirement;
 
-        return requirement;
+            if (requirement === "userApproval") return "User Approval";
+            if (requirement === "randomText") return "Random Text";
+            if (requirement === "delay") return "Delay";
+
+            return "Enabled";
+        } else {
+            return "Disabled";
+        }
     }
 
     // scheduleSummary
@@ -77,7 +84,7 @@
     }
 
     function summarizeDays(days: number[]): string {
-        let shortDayNames = DayOfWeek.all.map((n) => n.substring(0, 3));
+        let shortDayNames = DayOfWeek.all.map((n) => n.substring(0, 1).toUpperCase() +  n.substring(1, 3));
         const ranges: string[] = [];
 
         let start = days[0];
@@ -194,19 +201,23 @@
                         <td>
                             <AllowanceSummary
                                 dailyTime={minutes(
+                                    true,
                                     policy.access.dailyTimeMinutes,
                                 )}
                                 sessionLength={minutes(
+                                    true,
                                     policy.access.maxSessionMinutes,
                                 )}
-                                unlocks={unlocks(policy.access.dailyUnlocks)}
+                                unlocks={unlocks(
+                                    true,
+                                    policy.access.dailyUnlocks,
+                                )}
                             />
                         </td>
 
                         <td>
                             <span class:text-muted={!policy.override.allowed}>
-                                {overrideLabel(policy.override.requirement) ||
-                                    "Disabled"}
+                                {overrideLabel(policy.override)}
                             </span>
                         </td>
 
@@ -215,14 +226,17 @@
                                 <AllowanceSummary
                                     extension
                                     dailyTime={minutes(
+                                        policy.override.allowed,
                                         policy.override.allowance
                                             .dailyTimeMinutes,
                                     )}
                                     sessionLength={minutes(
+                                        policy.override.allowed,
                                         policy.override.allowance
                                             .maxSessionMinutes,
                                     )}
                                     unlocks={unlocks(
+                                        policy.override.allowed,
                                         policy.override.allowance.dailyUnlocks,
                                     )}
                                 />
