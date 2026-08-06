@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { AccessOption } from "../../models";
+    import type { AccessOption, AccessState } from "../../models";
     import Card from "../ui/Card.svelte";
     import StatusDot from "../ui/StatusDot.svelte";
 
@@ -29,6 +29,34 @@
             minute: "2-digit",
         });
     }
+
+    const status = $derived.by(() => {
+        switch (option.state) {
+            case "Available":
+                return {
+                    label: "Available",
+                    color: "var(--color-success)",
+                    button: "Request Access",
+                    disabled: false,
+                };
+
+            case "OverrideAvailable":
+                return {
+                    label: "Override Available",
+                    color: "var(--color-warning)",
+                    button: "Request Override",
+                    disabled: false,
+                };
+
+            case "Unavailable":
+                return {
+                    label: "Unavailable",
+                    color: "var(--color-danger)",
+                    button: "Daily Limits Reached",
+                    disabled: true,
+                };
+        }
+    });
 </script>
 
 <div class="access-option-card">
@@ -42,12 +70,8 @@
                 </strong>
 
                 <StatusDot
-                    label={option.requiresOverride
-                        ? "Override Available"
-                        : "Available"}
-                    color={option.requiresOverride
-                        ? "var(--color-warning)"
-                        : "var(--color-success)"}
+                    label={status.label}
+                    color={status.color}
                     --font-size="0.85rem"
                     --justified="right"
                 />
@@ -96,8 +120,8 @@
             </div>
         {/if}
 
-        <button class="cta-button" {onclick}>
-            {option.requiresOverride ? "Request Override" : "Request Access"}
+        <button class="cta-button" {onclick} disabled={status.disabled}>
+            {status.button}
         </button>
     </Card>
 </div>

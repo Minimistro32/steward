@@ -142,7 +142,7 @@
     }
 
     button:hover {
-        color: var(--color-failure);
+        color: var(--color-danger);
     }
 
     .empty {

@@ -341,7 +341,7 @@
 
     .errors {
         background: rgba(229, 83, 83, 0.1);
-        border: 1px solid var(--color-failure);
+        border: 1px solid var(--color-danger);
         border-radius: var(--radius-md);
 
         padding: var(--space-4);
@@ -350,7 +350,7 @@
     }
 
     .errors p {
-        color: var(--color-failure);
+        color: var(--color-danger);
         margin: 0;
     }
 </style>

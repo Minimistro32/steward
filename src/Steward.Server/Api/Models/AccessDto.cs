@@ -1,3 +1,5 @@
+using Steward.Server.Application;
+
 namespace Steward.Server.Api.Models;
 
 public sealed class AccessDto
@@ -11,8 +13,8 @@ public sealed class AccessOptionDto
 
     public required IReadOnlyCollection<DeviceDto> Devices { get; init; }
 
-    public required bool RequiresOverride { get; init; }
-    
+    public required AccessState State { get; init; }
+
     public required int? MaxRequestMinutes { get; init; }
 
     public required DateTimeOffset? ScheduleEndsAt { get; init; }

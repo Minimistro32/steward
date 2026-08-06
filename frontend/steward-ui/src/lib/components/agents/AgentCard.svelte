@@ -185,7 +185,7 @@
     }
 
     .dot.offline {
-        background: var(--color-failure);
+        background: var(--color-danger);
     }
 
     .dot.disabled {

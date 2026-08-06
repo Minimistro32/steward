@@ -11,7 +11,7 @@ using Steward.Server.Data;
 namespace Steward.Server.Migrations
 {
     [DbContext(typeof(StewardDbContext))]
-    [Migration("20260806171529_InitialCreate")]
+    [Migration("20260806223207_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

@@ -1,4 +1,4 @@
-import type { AccessOption, AccessResponse, User } from "../models";
+import type { AccessOption, User } from "../models";
 import { client } from "./client";
 
 export async function getUsers(): Promise<User[]> {
@@ -14,6 +14,7 @@ export async function getUser(
 export async function getAccessOptions(
     userId: number,
 ): Promise<AccessOption[]> {
+    type AccessResponse = { options: AccessOption[]; }
     return (await client.get<AccessResponse>(`/users/${userId}/access`)).options ?? [];
 }
 

@@ -89,7 +89,7 @@ public sealed class AccessService(
             // Policies that are not currently active
             // should not appear as available access options.
             //
-            if (!evaluation.ScheduleActive)
+            if (!evaluation.IsScheduled)
                 continue;
 
 
@@ -116,7 +116,7 @@ public sealed class AccessService(
                                     Name = wd.Device.Name
                                 })],
 
-                    RequiresOverride = evaluation.RequiresOverride,
+                    State = evaluation.State,
 
                     MaxRequestMinutes = evaluation.MaxRequestMinutes,
 

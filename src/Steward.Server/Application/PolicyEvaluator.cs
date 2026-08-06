@@ -22,8 +22,8 @@ public sealed class PolicyEvaluator
         {
             return new PolicyEvaluation
             {
-                ScheduleActive = false,
-                RequiresOverride = false,
+                IsScheduled = false,
+                State = AccessState.Unavailable,
                 MaxRequestMinutes = 0,
                 ScheduleEndsAt = scheduleEndsAt,
                 EffectiveMinutesRemaining = 0,
@@ -107,21 +107,32 @@ public sealed class PolicyEvaluator
 
 
         //
-        // User is blocked if allowance has been exhausted.
+        // Access is unavailable if allowance is exhausted and not override eligible.
         //
-        var requiresOverride = effectiveMinutesRemaining == 0;
+        AccessState state;
+        if (effectiveMinutesRemaining == 0)
+        {
+            state = policy.Override.Allowed
+                ? AccessState.OverrideAvailable
+                : AccessState.Unavailable;
+        }
+        else
+        {
+            state = AccessState.Available;
+        }
 
         return new PolicyEvaluation
         {
-            ScheduleActive = true,
+            IsScheduled = true,
 
-            RequiresOverride = requiresOverride,
+                State = state,
 
             ScheduleEndsAt = scheduleEndsAt,
 
-            MaxRequestMinutes = requiresOverride
-                ? 0
-                : maxSessionMinutes,
+            MaxRequestMinutes =
+                state == AccessState.Available
+                    ? maxRequestMinutes
+                    : 0,
 
             DailyMinutesRemaining = dailyMinutesRemaining,
 

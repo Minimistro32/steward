@@ -52,7 +52,7 @@
     }
 
     .dot.denied {
-        background: var(--color-failure);
+        background: var(--color-danger);
     }
 
     .resource {

@@ -1,14 +1,10 @@
 import type { Device, Resource } from "..";
 
-export interface AccessResponse {
-    options: AccessOption[];
-}
-
 export interface AccessOption {
     grantedResources: Resource[];
     devices: Device[];
 
-    requiresOverride: boolean;
+    state: AccessState;
 
     maxRequestMinutes: number | null;
 
@@ -20,3 +16,8 @@ export interface AccessOption {
 
     unlocksRemaining: number | null;
 }
+
+export type AccessState =
+    | "Available"
+    | "OverrideAvailable"
+    | "Unavailable";

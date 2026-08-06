@@ -2,10 +2,10 @@ namespace Steward.Server.Application;
 
 public sealed class PolicyEvaluation
 {
-    public required bool ScheduleActive { get; init; }
+    public required bool IsScheduled { get; init; }
 
     // ACTIONABLE
-    public required bool RequiresOverride { get; init; }
+    public required AccessState State { get; init; }
     public required int? MaxRequestMinutes { get; init; }
 
     // EXPLANATORY
@@ -14,4 +14,11 @@ public sealed class PolicyEvaluation
     public required int? DailyMinutesRemaining { get; init; }
     public required int? UnlocksRemaining { get; init; }
 
+}
+
+public enum AccessState
+{
+    Available,
+    OverrideAvailable,
+    Unavailable
 }

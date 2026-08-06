@@ -7,7 +7,6 @@
 
     import { getAccessOptions, getUsers } from "../api";
     import type { AccessOption, User } from "../models";
-    import Card from "../components/ui/Card.svelte";
 
     let selectedUserId = $state<number | undefined>(undefined);
     let users = $state<User[]>([]);
@@ -34,6 +33,7 @@
 
         try {
             options = await getAccessOptions(userId);
+            options[0].state = "Unavailable";
         } finally {
             loadingOptions = false;
         }
