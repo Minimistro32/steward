@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
 using Steward.Server.Data.Entities;
-using Steward.Server.Models;
+using Steward.Server.Api.Models;
 using Steward.Server.Mqtt;
 
 namespace Steward.Server.Api;
@@ -11,7 +11,6 @@ public static class AgentEndpoints
     public static void MapAgentEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/agents");
-
 
         group.MapGet("/", async (StewardDbContext db) =>
         {
@@ -50,7 +49,7 @@ public static class AgentEndpoints
         });
 
         group.MapPost("/refresh", async (
-            IMqttConnectionService mqtt) =>
+            MqttConnectionService mqtt) =>
         {
             await mqtt.PublishRefreshRequestAsync();
 

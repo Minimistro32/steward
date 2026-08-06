@@ -1,6 +1,6 @@
 ﻿namespace Steward.Messaging.Messages;
 
-public sealed class AgentRequestMessage
+public sealed class AccessRequestMessage
 {
     public required string RequestId { get; init; }
 

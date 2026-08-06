@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
 using Steward.Server.Data.Entities;
-using Steward.Server.Models;
+using Steward.Server.Api.Models;
+using Steward.Server.Application;
 
 namespace Steward.Server.Api;
 
@@ -10,7 +11,6 @@ public static class UserEndpoints
     public static void MapUserEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/users");
-
 
         group.MapGet("/", async (StewardDbContext db) =>
         {
@@ -38,6 +38,71 @@ public static class UserEndpoints
             return Results.Ok(UserDto.FromEntity(user));
         });
 
+        group.MapGet("/{id}/access", async (
+            int id,
+            AccessService access) =>
+        {
+            var response = await access.GetAccessAsync(id);
+
+            return response is null
+                ? Results.NotFound()
+                : Results.Ok(response);
+        });
+
+        /*
+        {
+            "options": [
+                {
+                "grantedResources": [
+                    {
+                    "id": 17,
+                    "name": "PlayStation 5"
+                    },
+                    {
+                    "id": 18,
+                    "name": "Nintendo Switch"
+                    },
+                    {
+                    "id": 19,
+                    "name": "Steam"
+                    }
+                ],
+                "devices": [
+                    {
+                    "id": 3,
+                    "name": "Living Room Console"
+                    },
+                    {
+                    "id": 4,
+                    "name": "Gaming PC"
+                    }
+                ],
+                "blocked": true,
+                "allowedUntil": null,
+                "maxRequestMinutes": 20,
+                "unlocksRemaining": 4
+                },
+                {
+                "grantedResources": [
+                    {
+                    "id": 42,
+                    "name": "YouTube"
+                    }
+                ],
+                "devices": [
+                    {
+                    "id": 7,
+                    "name": "Kids Tablet"
+                    }
+                ],
+                "blocked": false,
+                "allowedUntil": "2026-08-05T17:00:00Z",
+                "maxRequestMinutes": 10,
+                "unlocksRemaining": 1
+                }
+            ]
+        }
+        */
 
         group.MapPost("/", async (
             UserDto dto,

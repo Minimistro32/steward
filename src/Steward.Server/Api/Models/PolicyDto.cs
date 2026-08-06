@@ -1,7 +1,7 @@
 using Steward.Server.Data.Entities;
 using Steward.Server.Data.Policies;
 
-namespace Steward.Server.Models;
+namespace Steward.Server.Api.Models;
 
 public class PolicyDto
 {
@@ -50,9 +50,15 @@ public class PolicyDto
         {
             Days = [.. policy.Schedule.Days.ToDayList()],
 
-            StartTime = policy.Schedule.StartTime?.ToString("HH:mm") ?? "",
+            StartTime =
+                policy.Schedule.StartTime == TimeOnly.MinValue
+                    ? ""
+                    : policy.Schedule.StartTime.ToString("HH:mm"),
 
-            EndTime = policy.Schedule.EndTime?.ToString("HH:mm") ?? ""
+            EndTime =
+                policy.Schedule.EndTime == TimeOnly.MaxValue
+                    ? ""
+                    : policy.Schedule.EndTime.ToString("HH:mm")
         },
 
         Access = AllowanceDto.FromEntity(policy.Access),
@@ -85,23 +91,29 @@ public class ScheduleDto
         {
             Days = Days.ToWeekDays(),
 
-            StartTime = ParseTime(StartTime),
+            StartTime = ParseStartTime(StartTime),
 
-            EndTime = ParseTime(EndTime)
+            EndTime = ParseEndTime(EndTime)
         };
     }
 
-    private static TimeOnly? ParseTime(string value)
+    private static TimeOnly ParseStartTime(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
+            return TimeOnly.MinValue;
+
+        return TimeOnly.Parse(value);
+    }
+
+
+    private static TimeOnly ParseEndTime(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return TimeOnly.MaxValue;
 
         return TimeOnly.Parse(value);
     }
 }
-
 
 public class AllowanceDto
 {

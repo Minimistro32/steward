@@ -6,7 +6,7 @@ POST http://localhost:5042/api/users
 Content-Type: application/json
 
 {
-  "name": "Whitney",
+  "name": "Tyson",
   "deviceIds": []
 }
 
@@ -16,6 +16,14 @@ Content-Type: application/json
 ###
 
 GET http://localhost:5042/api/users
+
+
+###
+# Get user access
+###
+
+GET http://localhost:5042/api/users/1/access
+
 
 
 ###

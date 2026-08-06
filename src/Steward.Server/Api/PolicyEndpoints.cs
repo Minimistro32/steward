@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
 using Steward.Server.Data.Entities;
-using Steward.Server.Models;
+using Steward.Server.Api.Models;
 using Steward.Server.Data.Policies;
 
 namespace Steward.Server.Api;
@@ -11,7 +11,6 @@ public static class PolicyEndpoints
     public static void MapPolicyEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/policies");
-
 
         //
         // Get all policies

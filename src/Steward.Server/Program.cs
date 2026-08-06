@@ -2,6 +2,7 @@ using Steward.Server.Mqtt;
 using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
 using Steward.Server.Api;
+using Steward.Server.Application;
 using System.Text.Json.Serialization;
 using Steward.Server.Mqtt.Handlers;
 
@@ -22,16 +23,18 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 // Add services to the container.
+// MQTT
 builder.Services.AddSingleton<RegistrationMessageHandler>();
 
 builder.Services.AddSingleton<MqttMessageDispatcher>();
 
 builder.Services.AddSingleton<MqttConnectionService>();
-builder.Services.AddSingleton<IMqttConnectionService>(sp =>
-    sp.GetRequiredService<MqttConnectionService>());
-
 builder.Services.AddHostedService(sp =>
     sp.GetRequiredService<MqttConnectionService>());
+
+// Application
+builder.Services.AddScoped<PolicyEvaluator>();
+builder.Services.AddScoped<AccessService>();
 
 // TEMPORARY FOR DEVELOPMENT
 builder.Services.AddCors(options =>

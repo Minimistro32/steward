@@ -11,7 +11,7 @@ using Steward.Server.Data;
 namespace Steward.Server.Migrations
 {
     [DbContext(typeof(StewardDbContext))]
-    [Migration("20260805035651_InitialCreate")]
+    [Migration("20260806171529_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -386,10 +386,10 @@ namespace Steward.Server.Migrations
                             b1.Property<int>("Days")
                                 .HasColumnType("INTEGER");
 
-                            b1.Property<TimeOnly?>("EndTime")
+                            b1.Property<TimeOnly>("EndTime")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<TimeOnly?>("StartTime")
+                            b1.Property<TimeOnly>("StartTime")
                                 .HasColumnType("TEXT");
 
                             b1.HasKey("PolicyEntityId");

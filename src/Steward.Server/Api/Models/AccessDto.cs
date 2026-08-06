@@ -1,0 +1,25 @@
+namespace Steward.Server.Api.Models;
+
+public sealed class AccessDto
+{
+    public required IReadOnlyCollection<AccessOptionDto> Options { get; init; }
+}
+
+public sealed class AccessOptionDto
+{
+    public required IReadOnlyCollection<ResourceDto> GrantedResources { get; init; }
+
+    public required IReadOnlyCollection<DeviceDto> Devices { get; init; }
+
+    public required bool RequiresOverride { get; init; }
+    
+    public required int? MaxRequestMinutes { get; init; }
+
+    public required DateTimeOffset? ScheduleEndsAt { get; init; }
+
+    public required int? EffectiveMinutesRemaining { get; init; }
+
+    public required int? DailyMinutesRemaining { get; init; }
+
+    public required int? UnlocksRemaining { get; init; }
+}

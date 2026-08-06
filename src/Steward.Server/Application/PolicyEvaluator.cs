@@ -1,0 +1,214 @@
+using Steward.Server.Data.Entities;
+using Steward.Server.Data.Policies;
+
+namespace Steward.Server.Application;
+
+public sealed class PolicyEvaluator
+{
+    public PolicyEvaluation Evaluate(
+        PolicyEntity policy,
+        PolicyAccessEntity? access)
+    {
+        var now = DateTimeOffset.Now;
+
+        var scheduleEndsAt = GetScheduleEnd(
+            policy.Schedule,
+            now);
+
+        //
+        // Policy is not currently applicable.
+        //
+        if (!IsScheduleActive(policy.Schedule, now))
+        {
+            return new PolicyEvaluation
+            {
+                ScheduleActive = false,
+                RequiresOverride = false,
+                MaxRequestMinutes = 0,
+                ScheduleEndsAt = scheduleEndsAt,
+                EffectiveMinutesRemaining = 0,
+                DailyMinutesRemaining = 0,
+                UnlocksRemaining = 0
+            };
+        }
+
+        //
+        // Usage resets automatically each day.
+        //
+        var today = DateOnly.FromDateTime(now.Date);
+
+        var minutesUsed =
+            access?.LastAccessed == today
+                ? access.MinutesUsed
+                : 0;
+
+        var unlocksUsed =
+            access?.LastAccessed == today
+                ? access.UnlocksUsed
+                : 0;
+
+        //
+        // Daily time allowance.
+        //
+        int? dailyMinutesRemaining =
+            policy.Access.DailyTimeMinutes is int dailyMinutes
+                ? Math.Max(
+                    0,
+                    dailyMinutes - minutesUsed)
+                : null;
+
+        //
+        // Daily unlock allowance.
+        //
+        int? unlocksRemaining =
+            policy.Access.DailyUnlocks is int dailyUnlocks
+                ? Math.Max(
+                    0,
+                    dailyUnlocks - unlocksUsed)
+                : null;
+
+        //
+        // Maximum request duration.
+        //
+        var maxSessionMinutes = policy.Access.MaxSessionMinutes;
+
+        //
+        // Schedule remaining time.
+        //
+        var scheduleRemainingMinutes =
+            GetRemainingScheduleMinutes(
+                scheduleEndsAt,
+                now);
+
+        //
+        // How much time can actually be consumed today?
+        //
+        // This accounts for:
+        // - daily minute allowance
+        // - number of remaining unlocks
+        // - maximum session length
+        // - schedule end
+        //
+        var effectiveMinutesRemaining =
+            MinNullable(
+                dailyMinutesRemaining,
+                CalculateUnlockCapacity(
+                    unlocksRemaining,
+                    maxSessionMinutes),
+                scheduleRemainingMinutes);
+
+        //
+        // Maximum request right now.
+        //
+        var maxRequestMinutes =
+            MinNullable(
+                effectiveMinutesRemaining,
+                maxSessionMinutes);
+
+
+        //
+        // User is blocked if allowance has been exhausted.
+        //
+        var requiresOverride = effectiveMinutesRemaining == 0;
+
+        return new PolicyEvaluation
+        {
+            ScheduleActive = true,
+
+            RequiresOverride = requiresOverride,
+
+            ScheduleEndsAt = scheduleEndsAt,
+
+            MaxRequestMinutes = requiresOverride
+                ? 0
+                : maxSessionMinutes,
+
+            DailyMinutesRemaining = dailyMinutesRemaining,
+
+            EffectiveMinutesRemaining = effectiveMinutesRemaining,
+
+            UnlocksRemaining = unlocksRemaining
+        };
+    }
+
+    private static int? CalculateUnlockCapacity(
+        int? unlocksRemaining,
+        int? maxSessionMinutes)
+    {
+        if (unlocksRemaining == 0)
+            return 0;
+
+        if (unlocksRemaining is null || maxSessionMinutes is null)
+            return null;
+
+        return unlocksRemaining.Value *
+               maxSessionMinutes.Value;
+    }
+
+
+    private static int? MinNullable(
+        params int?[] values)
+    {
+        var constrained =
+            values
+                .Where(v => v.HasValue)
+                .Cast<int>()
+                .ToList();
+
+        return constrained.Count == 0
+            ? null
+            : constrained.Min();
+    }
+
+
+    private static bool IsScheduleActive(
+        Schedule schedule,
+        DateTimeOffset now)
+    {
+        if (!schedule.Days.Includes(now.DayOfWeek))
+            return false;
+
+        var currentTime =
+            TimeOnly.FromDateTime(now.DateTime);
+
+        // TODO: Support schedules that cross midnight.
+        // Current assumption:
+        // StartTime <= EndTime and both occur on the same day.
+
+        return currentTime >= schedule.StartTime &&
+               currentTime <= schedule.EndTime;
+    }
+
+
+    private static DateTimeOffset? GetScheduleEnd(
+        Schedule schedule,
+        DateTimeOffset now)
+    {
+        if (schedule.EndTime == TimeOnly.MaxValue)
+            return null;
+
+        return new DateTimeOffset(
+            now.Year,
+            now.Month,
+            now.Day,
+            schedule.EndTime.Hour,
+            schedule.EndTime.Minute,
+            schedule.EndTime.Second,
+            now.Offset);
+    }
+
+
+    private static int? GetRemainingScheduleMinutes(
+        DateTimeOffset? scheduleEndsAt,
+        DateTimeOffset now)
+    {
+        if (scheduleEndsAt is null)
+            return null;
+
+        return Math.Max(
+            0,
+            (int)Math.Ceiling(
+                (scheduleEndsAt.Value - now)
+                    .TotalMinutes));
+    }
+}

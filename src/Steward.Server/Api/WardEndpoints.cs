@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
-using Steward.Server.Models;
+using Steward.Server.Api.Models;
 using Steward.Server.Data.Entities;
 
 namespace Steward.Server.Api;

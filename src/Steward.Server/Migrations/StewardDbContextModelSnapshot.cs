@@ -383,10 +383,10 @@ namespace Steward.Server.Migrations
                             b1.Property<int>("Days")
                                 .HasColumnType("INTEGER");
 
-                            b1.Property<TimeOnly?>("EndTime")
+                            b1.Property<TimeOnly>("EndTime")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<TimeOnly?>("StartTime")
+                            b1.Property<TimeOnly>("StartTime")
                                 .HasColumnType("TEXT");
 
                             b1.HasKey("PolicyEntityId");

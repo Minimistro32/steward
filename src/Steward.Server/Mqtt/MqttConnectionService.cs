@@ -5,7 +5,7 @@ using Steward.Messaging;
 
 namespace Steward.Server.Mqtt;
 
-public class MqttConnectionService : BackgroundService, IMqttConnectionService
+public class MqttConnectionService : BackgroundService
 {
     private readonly IMqttClient mqttClient;
     private readonly ILogger<MqttConnectionService> logger;

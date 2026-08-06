@@ -1,6 +1,6 @@
 using Steward.Server.Data.Entities;
 
-namespace Steward.Server.Models;
+namespace Steward.Server.Api.Models;
 
 public class UserDto
 {
