@@ -347,10 +347,6 @@
         font-size: 0.9rem;
     }
 
-    select.placeholder {
-        color: var(--color-text-muted);
-    }
-
     .allowance-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
