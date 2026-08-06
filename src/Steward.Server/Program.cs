@@ -19,8 +19,7 @@ builder.Services.Configure<MqttOptions>(
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
-    options.SerializerOptions.Converters.Add(
-        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 });
 
 // Add services to the container.

@@ -11,17 +11,21 @@ export async function getUser(
     return client.get<User>(`/users/${id}`);
 }
 
-export async function getAccessOptions(
-    userId: number,
-): Promise<AccessOption[]> {
+// Access
+export async function getAccessOptions(userId: number): Promise<AccessOption[]> {
     type AccessResponse = { options: AccessOption[]; }
     return (await client.get<AccessResponse>(`/users/${userId}/access`)).options ?? [];
 }
 
-export async function assignUserDevice(id: number, deviceId: number): Promise<void> {
-    return client.put<void>(`/users/${id}/devices/${deviceId}`)
+export async function postAccessRequest(userId: number) {
+    // return await client.post<>(`/users/${userId}/access/request`)
 }
 
-export async function removeUserDevice(id: number, deviceId: number): Promise<void> {
-    return client.delete<void>(`/users/${id}/devices/${deviceId}`)
+// Devices
+export async function assignUserDevice(userId: number, deviceId: number): Promise<void> {
+    return client.put<void>(`/users/${userId}/devices/${deviceId}`)
+}
+
+export async function removeUserDevice(userId: number, deviceId: number): Promise<void> {
+    return client.delete<void>(`/users/${userId}/devices/${deviceId}`)
 }

@@ -12,7 +12,7 @@ export interface Agent {
 }
 
 export enum AgentStatus {
-    Offline = "Offline",
-    Online = "Online",
-    Disabled = "Disabled"
+    Offline = "offline",
+    Online = "online",
+    Disabled = "disabled"
 }

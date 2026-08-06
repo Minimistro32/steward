@@ -1,8 +1,7 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import Card from "../ui/Card.svelte";
-    import { type Agent, AgentStatus } from "../../models/agents";
-    import type { User } from "../../models/wards";
+    import { type Agent, type User, AgentStatus } from "../../models";
 
     type AgentCardData = {
         agent: Agent;

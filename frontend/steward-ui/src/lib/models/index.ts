@@ -1,6 +1,4 @@
 export * from "./agents"
-export * from "./device/Device"
 export * from "./policies"
-export * from "./requests/Access"
-export * from "./users/User"
+export * from "./users"
 export * from "./wards/Ward"
