@@ -12,6 +12,10 @@ public class PolicyAccessEntity
 
     public int UnlocksUsed { get; set; }
 
+    public int OverrideMinutesUsed { get; set; }
+
+    public int OverrideUnlocksUsed { get; set; }
+
     public PolicyEntity Policy { get; set; } = null!;
 
     public UserEntity User { get; set; } = null!;

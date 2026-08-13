@@ -62,6 +62,7 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 
+app.MapAccessEndpoints();
 app.MapAgentEndpoints();
 app.MapPolicyEndpoints();
 app.MapUserEndpoints();

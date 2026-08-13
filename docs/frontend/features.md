@@ -130,3 +130,38 @@ Defines the maximum exception a user may request.
 
 ## Administrative Overrides
 Manual exceptions granted outside normal policy enforcement.
+
+## Request Flow
+```
+                     ACCESS
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+       /request        ┌───────▶ /override
+          │            │            │
+          ▼            │         ┌──┴────────┐
+    Normal decision    │      Deny   Create OverrideRequest
+          │            │                     │
+     ┌────┼────┐       │                     │
+     ▼    ▼    ▼       │                     │
+  grant  req.  deny    │                  Pending
+       override        │                     │
+          │            │                     │
+          └────────────┘      ┌────────┬─────┴────┐
+                              ▼        ▼          ▼
+                          Delay  RandomText  Approval
+                              │        │          ├──────────┐
+                              ▼        ▼          ▼          ▼
+                          /complete /complete  /approve    /reject
+```
+
+```
+GET  /access/{userId}
+
+POST /access/{userId}/request
+POST /access/{userId}/override
+
+POST /access/requests/{requestId}/complete
+POST /access/requests/{requestId}/approve
+POST /access/requests/{requestId}/reject
+```

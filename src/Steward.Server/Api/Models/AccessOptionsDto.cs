@@ -2,7 +2,7 @@ using Steward.Server.Application;
 
 namespace Steward.Server.Api.Models;
 
-public sealed class AccessDto
+public sealed class AccessOptionsDto
 {
     public required IReadOnlyCollection<AccessOptionDto> Options { get; init; }
 }

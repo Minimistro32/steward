@@ -25,6 +25,9 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
     public DbSet<PolicyEntity> Policies => Set<PolicyEntity>();
     public DbSet<PolicyAccessEntity> PolicyAccess => Set<PolicyAccessEntity>();
 
+    // Request
+    public DbSet<OverrideRequestEntity> OverrideRequests => Set<OverrideRequestEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AgentEntity>()
@@ -90,5 +93,14 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
                 x.PolicyId,
                 x.UserId
             });
+
+        modelBuilder.Entity<OverrideRequestEntity>()
+            .HasIndex(x => new
+            {
+                x.UserId,
+                x.PolicyId
+            })
+            .IsUnique()
+            .HasFilter($"Status = {(int)OverrideRequestStatus.Pending}");
     }
 }
