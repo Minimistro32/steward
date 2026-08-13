@@ -16,3 +16,32 @@ PUT http://localhost:5042/api/agents/coldTurkey/toggle
 ###
 
 PUT http://localhost:5042/api/agents/refresh
+
+
+# steward/agents/register
+{
+    "version": "0.1.0",
+    "agentId": "test-agent",
+    "instanceId": "abc123",
+    "name": "Test Agent",
+    "devices": [
+        {
+            "deviceId": "desktop",
+            "name": "Gaming PC"
+        },
+        {
+            "deviceId": "laptop",
+            "name": "Work Laptop"
+        }
+    ],
+    "resources": [
+        {
+            "resourceId": "youtube",
+            "name": "YouTube"
+        },
+        {
+            "resourceId": "reddit",
+            "name": "Reddit"
+        }
+    ]
+}

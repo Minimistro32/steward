@@ -11,7 +11,6 @@ export async function getAccessOptions(userId: number): Promise<AccessOption[]> 
     return (await client.get<{ options: AccessOption[] }>(`/access/${userId}`)).options ?? [];
 }
 
-
 export async function postAccessRequest(
     userId: number,
     request: AccessRequest,

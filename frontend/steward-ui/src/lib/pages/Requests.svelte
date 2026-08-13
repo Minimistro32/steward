@@ -4,6 +4,7 @@
     import PageHeader from "../components/ui/PageHeader.svelte";
     import EmptyState from "../components/ui/EmptyState.svelte";
     import AccessOptionCard from "../components/requests/AccessOptionCard.svelte";
+    import AccessRequestDialog from "../components/requests/AccessRequestDialog.svelte";
 
     import { getAccessOptions, getUsers } from "../api";
     import type { AccessOption, User } from "../models";
@@ -14,6 +15,11 @@
     let loadingUsers = $state(true);
     let loadingOptions = $state(false);
 
+    // The option currently being requested.
+    // null means the dialog is closed.
+    let selectedOption = $state<AccessOption | null>(null);
+
+
     onMount(async () => {
         users = await getUsers();
         loadingUsers = false;
@@ -22,6 +28,7 @@
     $effect(() => {
         if (!selectedUserId) {
             options = [];
+            selectedOption = null;
             return;
         }
 
@@ -36,6 +43,25 @@
         } finally {
             loadingOptions = false;
         }
+    }
+
+
+    function openRequestDialog(option: AccessOption) {
+        selectedOption = option;
+    }
+
+
+    function closeRequestDialog() {
+        selectedOption = null;
+    }
+
+
+    async function requestCompleted() {
+        if (selectedUserId === undefined) {
+            return;
+        }
+
+        await loadOptions(selectedUserId);
     }
 </script>
 
@@ -79,9 +105,25 @@
 {:else}
     <div class="access-grid">
         {#each options as option}
-            <AccessOptionCard {option} />
+            <AccessOptionCard
+                {option}
+                onclick={openRequestDialog}
+            />
         {/each}
     </div>
+
+{/if}
+
+
+{#if selectedUserId !== undefined && selectedOption !== null}
+
+    <AccessRequestDialog
+        userId={selectedUserId}
+        option={selectedOption}
+        onclose={closeRequestDialog}
+        oncomplete={requestCompleted}
+    />
+
 {/if}
 
 <style>

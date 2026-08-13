@@ -11,7 +11,7 @@ using Steward.Server.Data;
 namespace Steward.Server.Migrations
 {
     [DbContext(typeof(StewardDbContext))]
-    [Migration("20260806223207_InitialCreate")]
+    [Migration("20260813212046_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -87,6 +87,52 @@ namespace Steward.Server.Migrations
                     b.ToTable("Devices");
                 });
 
+            modelBuilder.Entity("Steward.Server.Data.Entities.OverrideRequestEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ApprovedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("AvailableAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ChallengeText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PolicyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RequestedMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Requirement")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedByUserId");
+
+                    b.HasIndex("PolicyId");
+
+                    b.HasIndex("UserId", "PolicyId")
+                        .IsUnique()
+                        .HasFilter("Status = 0");
+
+                    b.ToTable("OverrideRequests");
+                });
+
             modelBuilder.Entity("Steward.Server.Data.Entities.PolicyAccessEntity", b =>
                 {
                     b.Property<int>("PolicyId")
@@ -99,6 +145,12 @@ namespace Steward.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("MinutesUsed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OverrideMinutesUsed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OverrideUnlocksUsed")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("UnlocksUsed")
@@ -283,6 +335,31 @@ namespace Steward.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("Agent");
+                });
+
+            modelBuilder.Entity("Steward.Server.Data.Entities.OverrideRequestEntity", b =>
+                {
+                    b.HasOne("Steward.Server.Data.Entities.UserEntity", "ApprovedByUser")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByUserId");
+
+                    b.HasOne("Steward.Server.Data.Entities.PolicyEntity", "Policy")
+                        .WithMany()
+                        .HasForeignKey("PolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Steward.Server.Data.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApprovedByUser");
+
+                    b.Navigation("Policy");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.PolicyAccessEntity", b =>

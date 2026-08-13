@@ -80,6 +80,15 @@ input[type="time"]::-webkit-calendar-picker-indicator {
    filter: invert(0.5) sepia(1) saturate(5) hue-rotate(35deg)
 }
 
+input[type="range"] {
+    width: 100%;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border: 0;
+    accent-color: var(--color-brand);
+}
+
 input::placeholder {
     color: var(--color-text-muted);
 }
@@ -126,4 +135,8 @@ select:focus {
     color: var(--color-text-muted);
     background: var(--color-surface);
     border-color: var(--color-border);
+}
+
+dialog {
+    color: var(--color-text);
 }

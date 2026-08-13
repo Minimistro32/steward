@@ -245,6 +245,44 @@ namespace Steward.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "OverrideRequests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    UserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PolicyId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RequestedMinutes = table.Column<int>(type: "INTEGER", nullable: false),
+                    Requirement = table.Column<int>(type: "INTEGER", nullable: true),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    AvailableAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ChallengeText = table.Column<string>(type: "TEXT", nullable: true),
+                    ApprovedByUserId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OverrideRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OverrideRequests_Policies_PolicyId",
+                        column: x => x.PolicyId,
+                        principalTable: "Policies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OverrideRequests_Users_ApprovedByUserId",
+                        column: x => x.ApprovedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_OverrideRequests_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PolicyAccess",
                 columns: table => new
                 {
@@ -252,7 +290,9 @@ namespace Steward.Server.Migrations
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
                     LastAccessed = table.Column<DateOnly>(type: "TEXT", nullable: false),
                     MinutesUsed = table.Column<int>(type: "INTEGER", nullable: false),
-                    UnlocksUsed = table.Column<int>(type: "INTEGER", nullable: false)
+                    UnlocksUsed = table.Column<int>(type: "INTEGER", nullable: false),
+                    OverrideMinutesUsed = table.Column<int>(type: "INTEGER", nullable: false),
+                    OverrideUnlocksUsed = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -281,6 +321,23 @@ namespace Steward.Server.Migrations
                 name: "IX_Devices_AgentId",
                 table: "Devices",
                 column: "AgentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OverrideRequests_ApprovedByUserId",
+                table: "OverrideRequests",
+                column: "ApprovedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OverrideRequests_PolicyId",
+                table: "OverrideRequests",
+                column: "PolicyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OverrideRequests_UserId_PolicyId",
+                table: "OverrideRequests",
+                columns: new[] { "UserId", "PolicyId" },
+                unique: true,
+                filter: "Status = 0");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Policies_WardId",
@@ -323,6 +380,9 @@ namespace Steward.Server.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AgentStatuses");
+
+            migrationBuilder.DropTable(
+                name: "OverrideRequests");
 
             migrationBuilder.DropTable(
                 name: "PolicyAccess");

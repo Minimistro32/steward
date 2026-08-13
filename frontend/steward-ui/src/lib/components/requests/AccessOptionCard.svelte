@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { AccessOption, AccessState } from "../../models";
+    import type { AccessOption } from "../../models";
     import Card from "../ui/Card.svelte";
     import StatusDot from "../ui/StatusDot.svelte";
 
@@ -8,7 +8,7 @@
         onclick,
     }: {
         option: AccessOption;
-        onclick?: () => void;
+        onclick?: (option: AccessOption) => void;
     } = $props();
 
     function minutes(value: number | null): string {
@@ -120,7 +120,11 @@
             </div>
         {/if}
 
-        <button class="cta-button" {onclick} disabled={status.disabled}>
+        <button
+            class="cta-button"
+            onclick={() => onclick?.(option)}
+            disabled={status.disabled}
+        >
             {status.button}
         </button>
     </Card>

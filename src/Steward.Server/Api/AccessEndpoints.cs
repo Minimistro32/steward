@@ -27,11 +27,8 @@ public static class AccessEndpoints
             AccessRequestDto dto,
             AccessService access) =>
         {
-            var response = await access.RequestAccessAsync(userId, dto);
-
-            return response is null
-                ? Results.NotFound()
-                : Results.Ok(response);
+            var result = await access.RequestAccessAsync(userId, dto);
+            return ToHttpResult(result);
         });
 
 
@@ -40,11 +37,8 @@ public static class AccessEndpoints
             AccessRequestDto dto,
             AccessService access) =>
         {
-            var response = await access.RequestOverrideAsync(userId, dto);
-
-            return response is null
-                ? Results.NotFound()
-                : Results.Ok(response);
+            var result = await access.RequestOverrideAsync(userId, dto);
+            return ToHttpResult(result);
         });
 
 
@@ -55,12 +49,8 @@ public static class AccessEndpoints
                 OverrideActionDto dto,
                 AccessService access) =>
         {
-            var response =
-                await access.CompleteOverrideAsync(requestId, dto);
-
-            return response is null
-                ? Results.NotFound()
-                : Results.Ok(response);
+            var result = await access.CompleteOverrideAsync(requestId, dto);
+            return ToHttpResult(result);
         });
 
 
@@ -71,12 +61,8 @@ public static class AccessEndpoints
                 OverrideActionDto dto,
                 AccessService access) =>
         {
-            var response =
-                await access.ApproveOverrideAsync(requestId, dto.UserId);
-
-            return response is null
-                ? Results.NotFound()
-                : Results.Ok(response);
+            var result = await access.ApproveOverrideAsync(requestId, dto.UserId);
+            return ToHttpResult(result);
         });
 
 
@@ -87,12 +73,35 @@ public static class AccessEndpoints
                 OverrideActionDto dto,
                 AccessService access) =>
         {
-            var response =
-                await access.RejectOverrideAsync(requestId);
-
-            return response is null
-                ? Results.NotFound()
-                : Results.Ok(response);
+            var result = await access.RejectOverrideAsync(requestId);
+            return ToHttpResult(result);
         });
+    }
+
+    private static IResult ToHttpResult(AccessOperationResult result)
+    {
+        return result.Status switch
+        {
+            AccessOperationStatus.Success =>
+                Results.Ok(result.Response),
+
+            AccessOperationStatus.NotFound =>
+                Results.NotFound(),
+
+            AccessOperationStatus.Unauthorized =>
+                Results.Unauthorized(),
+
+            AccessOperationStatus.Forbidden =>
+                Results.Forbid(),
+
+            AccessOperationStatus.Invalid =>
+                Results.BadRequest(),
+
+            AccessOperationStatus.Conflict =>
+                Results.Conflict(),
+
+            _ =>
+                Results.StatusCode(StatusCodes.Status500InternalServerError)
+        };
     }
 }
