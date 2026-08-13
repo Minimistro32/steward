@@ -201,29 +201,12 @@ public sealed class AccessService(
         //
         // Update or create today's usage record.
         //
-        var today = DateOnly.FromDateTime(
-            DateTimeOffset.Now.Date);
-
-        if (access is null)
-        {
-            access = new PolicyAccessEntity
-            {
-                UserId = userId,
-                PolicyId = policy.Id,
-                LastAccessed = today,
-                MinutesUsed = dto.RequestedMinutes,
-                UnlocksUsed = 1
-            };
-
-            db.PolicyAccess.Add(access);
-        }
-        else
-        {
-            ResetDailyUsageIfNeeded(access, today);
-
-            access.MinutesUsed += dto.RequestedMinutes;
-            access.UnlocksUsed += 1;
-        }
+        GrantAccess(
+            access,
+            userId,
+            policy.Id,
+            dto.RequestedMinutes,
+            AccessGrantType.Normal);
 
 
         await db.SaveChangesAsync();
@@ -273,13 +256,16 @@ public sealed class AccessService(
         //
         var evaluation = evaluator.Evaluate(policy, access);
 
+        if (evaluation.State == AccessState.Available)
+        {
+            return AccessOperationResult.Success(
+                new AccessResponseDto
+                {
+                    State = AccessRequestStatus.AccessAvailable
+                });
+        }
 
-        //
-        // An explicit override request is only valid when
-        // normal access is currently unavailable because
-        // an override is available.
-        //
-        if (evaluation.State != AccessState.OverrideAvailable)
+        if (evaluation.State == AccessState.Unavailable)
         {
             return AccessOperationResult.Success(
                 new AccessResponseDto
@@ -297,20 +283,6 @@ public sealed class AccessService(
             dto.RequestedMinutes > maxRequestMinutes)
         {
             return AccessOperationResult.Invalid();
-        }
-
-
-        //
-        // Overrides must be explicitly allowed and must have
-        // a configured requirement.
-        //
-        if (!policy.Override.Allowed)
-        {
-            return AccessOperationResult.Success(
-                new AccessResponseDto
-                {
-                    State = AccessRequestStatus.Unavailable
-                });
         }
 
         var request = new OverrideRequestEntity
@@ -369,7 +341,9 @@ public sealed class AccessService(
         return AccessOperationResult.Success(
             new AccessResponseDto
             {
-                State = AccessRequestStatus.Pending,
+                State = request.Status == OverrideRequestStatus.Granted
+                    ? AccessRequestStatus.Granted
+                    : AccessRequestStatus.Pending,
                 OverrideRequestId = request.Id,
                 Requirement = request.Requirement,
                 AvailableAt = request.AvailableAt,
@@ -421,31 +395,7 @@ public sealed class AccessService(
         //
         // Re-evaluate the policy at completion time.
         //
-        var evaluation = evaluator.Evaluate(
-            request.Policy,
-            access);
-
-
-        //
-        // The policy must still permit an override.
-        //
-        if (evaluation.State != AccessState.OverrideAvailable)
-        {
-            return AccessOperationResult.Success(
-                new AccessResponseDto
-                {
-                    State = AccessRequestStatus.Unavailable,
-                    OverrideRequestId = request.Id
-                });
-        }
-
-
-        //
-        // The request's original requested duration must
-        // still fit within the current override allowance.
-        //
-        if (evaluation.MaxRequestMinutes is int maxRequestMinutes &&
-            request.RequestedMinutes > maxRequestMinutes)
+        if (!CanGrantOverride(request, access))
         {
             return AccessOperationResult.Success(
                 new AccessResponseDto
@@ -535,8 +485,10 @@ public sealed class AccessService(
             return AccessOperationResult.NotFound();
 
 
-        // Requester cannot approve their own request.
-        if (request.UserId == userId)
+        var userExists = await db.Users
+            .AnyAsync(u => u.Id == userId);
+
+        if (!userExists || request.UserId == userId)
             return AccessOperationResult.Unauthorized();
 
 
@@ -566,25 +518,7 @@ public sealed class AccessService(
 
 
         // Re-evaluate before granting.
-        var evaluation = evaluator.Evaluate(
-            request.Policy,
-            access);
-
-
-        if (evaluation.State != AccessState.OverrideAvailable)
-        {
-            return AccessOperationResult.Success(
-                new AccessResponseDto
-                {
-                    State = AccessRequestStatus.Unavailable,
-                    OverrideRequestId = request.Id
-                });
-        }
-
-
-        // Make sure the requested amount is still permitted.
-        if (evaluation.MaxRequestMinutes is int maxRequestMinutes &&
-            request.RequestedMinutes > maxRequestMinutes)
+        if (!CanGrantOverride(request, access))
         {
             return AccessOperationResult.Success(
                 new AccessResponseDto
@@ -712,6 +646,20 @@ public sealed class AccessService(
     {
         // TODO: Generate a random challenge text.
         return "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+    }
+
+    private bool CanGrantOverride(OverrideRequestEntity request, PolicyAccessEntity? access)
+    {
+        var evaluation = evaluator.Evaluate(request.Policy, access);
+
+        if (evaluation.State != AccessState.OverrideAvailable)
+            return false;
+
+        if (evaluation.MaxRequestMinutes is int maxRequestMinutes &&
+            request.RequestedMinutes > maxRequestMinutes)
+            return false;
+
+        return true;
     }
 
     private void GrantAccess(PolicyAccessEntity? access, int userId, int policyId, int requestedMinutes, AccessGrantType grantType)

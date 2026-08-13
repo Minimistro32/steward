@@ -5,6 +5,7 @@ using Steward.Server.Data.Policies;
 public enum AccessRequestStatus
 {
     Granted,
+    AccessAvailable,
     OverrideRequired,
     Pending,
     Unavailable
