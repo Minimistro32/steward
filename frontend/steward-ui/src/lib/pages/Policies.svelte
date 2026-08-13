@@ -12,7 +12,7 @@
         Schedule,
         type OverridePolicy,
     } from "../models/policies";
-    import type { Ward } from "../models/wards/Ward";
+    import type { Ward } from "../models/Ward";
 
     import { getPolicies } from "../api/policyApi";
     import { getWards } from "../api/wardApi";

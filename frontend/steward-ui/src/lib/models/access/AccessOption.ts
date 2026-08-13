@@ -1,6 +1,8 @@
 import type { Device, Resource } from "..";
 
 export interface AccessOption {
+    policyId: number;
+
     grantedResources: Resource[];
     devices: Device[];
 

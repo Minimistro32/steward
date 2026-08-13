@@ -11,16 +11,6 @@ export async function getUser(
     return client.get<User>(`/users/${id}`);
 }
 
-// Access
-export async function getAccessOptions(userId: number): Promise<AccessOption[]> {
-    type AccessResponse = { options: AccessOption[]; }
-    return (await client.get<AccessResponse>(`/users/${userId}/access`)).options ?? [];
-}
-
-export async function postAccessRequest(userId: number) {
-    // return await client.post<>(`/users/${userId}/access/request`)
-}
-
 // Devices
 export async function assignUserDevice(userId: number, deviceId: number): Promise<void> {
     return client.put<void>(`/users/${userId}/devices/${deviceId}`)

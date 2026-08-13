@@ -98,6 +98,8 @@ public sealed class AccessService(
             options.Add(
                 new AccessOptionDto
                 {
+                    PolicyId = policy.Id,
+
                     GrantedResources =
                         [.. policy.Ward.Resources
                             .Select(wr =>

@@ -6,7 +6,7 @@
     import WardCard from "../components/wards/WardCard.svelte";
     import EmptyState from "../components/ui/EmptyState.svelte";
 
-    import { type Ward } from "../models/wards/Ward";
+    import { type Ward } from "../models/Ward";
     import { getWards } from "../api/wardApi";
 
     let wards = $state<Ward[]>([]);

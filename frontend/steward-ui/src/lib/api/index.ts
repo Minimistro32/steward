@@ -1,3 +1,4 @@
+export * from "./accessApi";
 export * from "./agentApi";
 export * from "./policyApi";
 export * from "./userApi";
