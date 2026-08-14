@@ -14,7 +14,7 @@ export interface AccessResponse {
 
 export enum AccessRequestStatus {
     Granted = "granted",
-    AccessAvailable = "accessAvailable",
+    Invalid = "invalid",
     OverrideRequired = "overrideRequired",
     Pending = "pending",
     Unavailable = "unavailable",

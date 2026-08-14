@@ -5,7 +5,7 @@ using Steward.Server.Data.Policies;
 public enum AccessRequestStatus
 {
     Granted,
-    AccessAvailable,
+    Invalid,
     OverrideRequired,
     Pending,
     Unavailable
@@ -19,7 +19,7 @@ public sealed class AccessResponseDto
 
     public OverrideRequirement? Requirement { get; init; }
 
-    public DateTime? AvailableAt { get; init; }
+    public DateTimeOffset? AvailableAt { get; init; }
 
     public string? ChallengeText { get; init; }
 }

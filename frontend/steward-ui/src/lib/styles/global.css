@@ -70,14 +70,39 @@ select.placeholder {
     color: var(--color-text-muted);
 }
 
-input[type=number]::-webkit-inner-spin-button, 
+textarea {
+    font: inherit;
+
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+
+    resize: vertical;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+textarea::placeholder {
+    color: var(--color-text-muted);
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--color-brand);
+}
+
+input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {
-   filter: invert(0.5) sepia(1) saturate(5) hue-rotate(35deg)
+    filter: invert(0.5) sepia(1) saturate(5) hue-rotate(35deg)
 }
 
 input[type="range"] {
@@ -86,6 +111,10 @@ input[type="range"] {
     padding-left: 0;
     padding-right: 0;
     border: 0;
+    accent-color: var(--color-brand);
+}
+
+input[type="range"]::hover {
     accent-color: var(--color-brand);
 }
 

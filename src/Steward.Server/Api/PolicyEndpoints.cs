@@ -113,6 +113,22 @@ public static class PolicyEndpoints
                 return Results.NotFound();
             }
 
+            var oldRequirement = policy.Override.Requirement;
+            var newRequirement = dto.Override.Requirement;
+
+            if (oldRequirement != newRequirement)
+            {
+                var pendingRequests = await db.OverrideRequests
+                    .Where(r =>
+                        r.PolicyId == policy.Id &&
+                        r.Status == OverrideRequestStatus.Pending)
+                    .ToListAsync();
+
+                foreach (var request in pendingRequests)
+                {
+                    request.Status = OverrideRequestStatus.Rejected;
+                }
+            }
 
             policy.Name = dto.Name;
 
@@ -129,9 +145,7 @@ public static class PolicyEndpoints
             policy.Override = new OverridePolicy
             {
                 Allowed = dto.Override.Allowed,
-
-                Requirement = dto.Override.Requirement,
-
+                Requirement = newRequirement,
                 Allowance = dto.Override.Allowance.ToAllowance()
             };
 

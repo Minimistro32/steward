@@ -3,10 +3,12 @@
         AccessOption,
         AccessRequest,
         AccessResponse,
+        OverrideAction,
     } from "../../models";
     import {
         postAccessRequest,
         postOverrideRequest,
+        completeOverrideRequest,
     } from "../../api/accessApi";
 
     let {
@@ -27,6 +29,13 @@
     let response = $state<AccessResponse | null>(null);
     let error = $state<string | null>(null);
 
+    let challengeInput = $state("");
+    let challengeMismatch = $state(false);
+    let submittedChallengeInput = $state<string | null>(null);
+
+    let remainingSeconds = $state(0);
+    let countdownInterval: ReturnType<typeof setInterval> | null = null;
+
     const isOverride = $derived(option.state === "overrideAvailable");
 
     $effect(() => {
@@ -34,6 +43,35 @@
             dialogElement.showModal();
         }
     });
+
+    // $effect(() => {
+    //     if (dialogElement && !dialogElement.open) {
+    //         dialogElement.showModal();
+    //     }
+
+    //     const handleVisibilityChange = () => {
+    //         if (document.hidden && dialogElement?.open) {
+    //             close();
+    //         }
+    //     };
+
+    //     const handleBlur = () => {
+    //         if (dialogElement?.open) {
+    //             close();
+    //         }
+    //     };
+
+    //     document.addEventListener("visibilitychange", handleVisibilityChange);
+    //     window.addEventListener("blur", handleBlur);
+
+    //     return () => {
+    //         document.removeEventListener(
+    //             "visibilitychange",
+    //             handleVisibilityChange,
+    //         );
+    //         window.removeEventListener("blur", handleBlur);
+    //     };
+    // });
 
     function submit() {
         if (loading || requestedMinutes <= 0) {
@@ -56,6 +94,10 @@
             response = isOverride
                 ? await postOverrideRequest(userId, body)
                 : await postAccessRequest(userId, body);
+
+            if (response.requirement === "delay" && response.availableAt) {
+                startDelayCountdown(response.availableAt);
+            }
         } catch (e) {
             error = e instanceof Error ? e.message : "Something went wrong.";
         } finally {
@@ -63,9 +105,90 @@
         }
     }
 
+    async function completeOverride() {
+        if (loading || !response?.overrideRequestId) {
+            return;
+        }
+
+        if (response.requirement === "randomText") {
+            submittedChallengeInput = challengeInput;
+
+            if (challengeInput !== response.challengeText) {
+                challengeMismatch = true;
+                return;
+            }
+        }
+
+        loading = true;
+        error = null;
+
+        try {
+            const action: OverrideAction = {
+                userId,
+                ...(response.requirement === "randomText"
+                    ? { challengeText: challengeInput }
+                    : {}),
+            };
+
+            response = await completeOverrideRequest(
+                response.overrideRequestId,
+                action,
+            );
+        } catch (e) {
+            error = e instanceof Error ? e.message : "Something went wrong.";
+        } finally {
+            loading = false;
+        }
+    }
+
+    function startDelayCountdown(availableAt: string) {
+        stopDelayCountdown();
+
+        const update = () => {
+            const remaining = Math.max(
+                0,
+                new Date(availableAt).getTime() - Date.now(),
+            );
+
+            remainingSeconds = Math.floor(remaining / 1000);
+
+            if (remaining <= 0) {
+                stopDelayCountdown();
+            }
+        };
+
+        update();
+
+        countdownInterval = setInterval(update, 250);
+    }
+
+    function stopDelayCountdown() {
+        if (countdownInterval !== null) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+        }
+    }
+
+    function formatCountdown(totalSeconds: number): string {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (hours > 0) {
+            return `${hours}:${String(minutes).padStart(2, "0")}:${String(
+                seconds,
+            ).padStart(2, "0")}`;
+        }
+
+        return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
     function close() {
         response = null;
         error = null;
+        challengeInput = "";
+        submittedChallengeInput = null;
+        challengeMismatch = false;
         requestedMinutes = 1;
         onclose?.();
     }
@@ -77,7 +200,9 @@
 
         switch (response.requirement) {
             case "delay":
-                return "You need to wait before access can be granted.";
+                return remainingSeconds > 0
+                    ? "You need to wait before access can be granted."
+                    : "The wait is over. Hit continue to grant the override.";
 
             case "randomText":
                 return "Type the following text exactly to continue.";
@@ -180,24 +305,96 @@
                         <p>{requirementText()}</p>
 
                         {#if response.requirement === "delay" && response.availableAt}
-                            <p>
-                                Available at
-                                {new Date(
-                                    response.availableAt,
-                                ).toLocaleTimeString([], {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                })}
-                            </p>
+                            <div class="delay-section">
+                                {#if remainingSeconds > 0}
+                                    <p class="delay-countdown">
+                                        {formatCountdown(remainingSeconds)}
+                                    </p>
+
+                                    <p>
+                                        You can submit at {new Date(
+                                            response.availableAt,
+                                        ).toLocaleTimeString([], {
+                                            hour: "numeric",
+                                            minute: "2-digit",
+                                        })}
+                                    </p>
+                                {:else}
+                                    <button
+                                        type="button"
+                                        class="cta-button"
+                                        onclick={completeOverride}
+                                        disabled={loading}
+                                    >
+                                        {loading ? "Checking..." : "Continue"}
+                                    </button>
+                                {/if}
+                            </div>
                         {:else if response.requirement === "randomText"}
-                            <p class="challenge">
-                                {response.challengeText}
-                            </p>
-                        {:else if response.requirement === "userApproval"}
-                            <p>
-                                The people who can approve this request have
-                                been notified.
-                            </p>
+                            <div class="challenge-section">
+                                <p
+                                    class:error-challenge={challengeMismatch}
+                                    class="challenge"
+                                    aria-label="Challenge text"
+                                    oncopy={(event) => event.preventDefault()}
+                                    oncut={(event) => event.preventDefault()}
+                                    oncontextmenu={(event) =>
+                                        event.preventDefault()}
+                                >
+                                    {#each response.challengeText as character, index}
+                                        <span
+                                            class:mismatch={challengeMismatch &&
+                                                submittedChallengeInput !==
+                                                    null &&
+                                                submittedChallengeInput[
+                                                    index
+                                                ] !== character}
+                                        >
+                                            {character === " "
+                                                ? "\u00A0"
+                                                : character}
+                                        </span>
+                                    {/each}
+                                </p>
+
+                                <textarea
+                                    class="challenge-input"
+                                    bind:value={challengeInput}
+                                    autocomplete="off"
+                                    autocapitalize="off"
+                                    spellcheck="false"
+                                    placeholder="Type the text above"
+                                    onpaste={(event) => event.preventDefault()}
+                                    ondrop={(event) => event.preventDefault()}
+                                    rows="3"
+                                    onkeydown={(event) => {
+                                        if (
+                                            event.key === "Enter" &&
+                                            !event.shiftKey
+                                        ) {
+                                            event.preventDefault();
+                                            completeOverride();
+                                        }
+                                    }}
+                                ></textarea>
+
+                                {#if error}
+                                    <p class="error">{error}</p>
+                                {/if}
+
+                                <button
+                                    type="button"
+                                    class="cta-button"
+                                    onclick={completeOverride}
+                                    disabled={loading || !challengeInput.trim()}
+                                >
+                                    {#if loading}
+                                        Checking...
+                                    {:else}
+                                        Submit
+                                    {/if}
+                                </button>
+                            </div>
                         {/if}
                     {:else}
                         <p>Your override has been requested.</p>
@@ -373,7 +570,17 @@
     }
 
     .challenge {
-        padding: var(--space-4);
+        box-sizing: border-box;
+
+        width: 100%;
+        max-height: 10rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        margin: 0;
+        padding: var(--space-4) var(--space-6);
+
+        text-align: left;
 
         border: 1px solid var(--color-border);
         border-radius: var(--radius-md);
@@ -382,7 +589,74 @@
         font-family: monospace;
         font-size: 0.95rem;
         line-height: 1.5;
-        word-break: break-word;
+
+        white-space: normal;
+        overflow-wrap: anywhere;
+
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: default;
+    }
+
+    .challenge .mismatch {
+        color: var(--color-danger);
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 2px;
+    }
+
+    .challenge-section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+
+        margin-top: var(--space-2);
+    }
+
+    .challenge-input {
+        box-sizing: border-box;
+
+        width: 100%;
+        max-height: 15rem;
+
+        padding: var(--space-3) var(--space-6);
+
+        font-family: monospace;
+        font-size: 0.95rem;
+        line-height: 1.5;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        resize: vertical;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .delay-countdown {
+        margin: var(--space-4) 0 var(--space-8);
+
+        font-family: monospace;
+        font-size: 2rem;
+        font-weight: 600;
+        line-height: 1.2;
+
+        color: var(--color-text);
+        text-align: center;
+        letter-spacing: 0.05em;
+    }
+
+    .delay-section {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-3);
+        text-align: center;
+    }
+
+    .delay-section p {
+        margin: 0;
+        color: var(--color-text-muted);
     }
 
     @media (max-width: 600px) {

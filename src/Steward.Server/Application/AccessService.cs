@@ -236,22 +236,6 @@ public sealed class AccessService(
         var policy = context.Value.Policy;
         var access = context.Value.Access;
 
-        //
-        // There should only be one active override request
-        // for a user/policy at a time.
-        //
-        var existingRequest = await db.OverrideRequests
-            .FirstOrDefaultAsync(r =>
-                r.UserId == userId &&
-                r.PolicyId == policy.Id &&
-                r.Status == OverrideRequestStatus.Pending);
-
-        if (existingRequest is not null)
-        {
-            return AccessOperationResult.Success(
-                ToPendingResponse(existingRequest));
-        }
-
 
         //
         // Re-evaluate the policy at request time.
@@ -263,7 +247,7 @@ public sealed class AccessService(
             return AccessOperationResult.Success(
                 new AccessResponseDto
                 {
-                    State = AccessRequestStatus.AccessAvailable
+                    State = AccessRequestStatus.Invalid
                 });
         }
 
@@ -285,6 +269,55 @@ public sealed class AccessService(
             dto.RequestedMinutes > maxRequestMinutes)
         {
             return AccessOperationResult.Invalid();
+        }
+
+
+        //
+        // There should only be one active override request
+        // for a user/policy at a time.
+        //
+        var existingRequest = await db.OverrideRequests
+            .FirstOrDefaultAsync(r =>
+                r.UserId == userId &&
+                r.PolicyId == policy.Id &&
+                r.Status == OverrideRequestStatus.Pending);
+
+        if (existingRequest is not null)
+        {
+            //
+            // A repeat request updates the requested duration.
+            //
+            existingRequest.RequestedMinutes = dto.RequestedMinutes;
+
+            switch (existingRequest.Requirement)
+            {
+                case OverrideRequirement.Delay:
+                    //
+                    // Restart the delay.
+                    //
+                    existingRequest.AvailableAt =
+                        DateTimeOffset.UtcNow.AddMinutes(
+                            // TODO: Replace with the configured
+                            // override delay.
+                            0.25);
+                    break;
+
+                case OverrideRequirement.RandomText:
+                    //
+                    // Generate a new challenge.
+                    //
+                    existingRequest.ChallengeText =
+                        GenerateChallengeText();
+                    break;
+
+                default:
+                    break;
+            }
+
+            await db.SaveChangesAsync();
+
+            return AccessOperationResult.Success(
+                ToPendingResponse(existingRequest));
         }
 
         var request = new OverrideRequestEntity
@@ -318,10 +351,10 @@ public sealed class AccessService(
             {
                 case OverrideRequirement.Delay:
                     request.AvailableAt =
-                        DateTime.UtcNow.AddMinutes(
+                        DateTimeOffset.UtcNow.AddMinutes(
                             // TODO: Replace with the configured
                             // override delay.
-                            5);
+                            0.25);
                     break;
 
                 case OverrideRequirement.RandomText:
@@ -416,7 +449,7 @@ public sealed class AccessService(
             case OverrideRequirement.Delay:
 
                 if (request.AvailableAt is null ||
-                    DateTime.UtcNow < request.AvailableAt.Value)
+                    DateTimeOffset.UtcNow < request.AvailableAt.Value)
                 {
                     return AccessOperationResult.Success(
                         new AccessResponseDto

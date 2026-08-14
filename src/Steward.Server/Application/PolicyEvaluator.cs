@@ -5,9 +5,7 @@ namespace Steward.Server.Application;
 
 public sealed class PolicyEvaluator
 {
-    public PolicyEvaluation Evaluate(
-        PolicyEntity policy,
-        PolicyAccessEntity? access)
+    public PolicyEvaluation Evaluate(PolicyEntity policy, PolicyAccessEntity? access)
     {
         var now = DateTimeOffset.Now;
 
@@ -35,42 +33,24 @@ public sealed class PolicyEvaluator
         //
         // Usage resets automatically each day.
         //
-        var today = DateOnly.FromDateTime(now.Date);
-
-        var minutesUsed =
-            access?.LastAccessed == today
-                ? access.MinutesUsed
-                : 0;
-
-        var unlocksUsed =
-            access?.LastAccessed == today
-                ? access.UnlocksUsed
-                : 0;
+        var minutesUsed = GetUsageFor(access?.LastAccessed, access?.MinutesUsed);
+        var unlocksUsed = GetUsageFor(access?.LastAccessed, access?.UnlocksUsed);
+        var overrideMinutesUsed = GetUsageFor(access?.LastAccessed, access?.OverrideMinutesUsed);
+        var overrideUnlocksUsed = GetUsageFor(access?.LastAccessed, access?.OverrideUnlocksUsed);
 
         //
-        // Daily time allowance.
+        // Daily allowances remaining.
         //
-        int? dailyMinutesRemaining =
-            policy.Access.DailyTimeMinutes is int dailyMinutes
-                ? Math.Max(
-                    0,
-                    dailyMinutes - minutesUsed)
-                : null;
-
-        //
-        // Daily unlock allowance.
-        //
-        int? unlocksRemaining =
-            policy.Access.DailyUnlocks is int dailyUnlocks
-                ? Math.Max(
-                    0,
-                    dailyUnlocks - unlocksUsed)
-                : null;
+        int? dailyMinutesRemaining = GetRemainingFor(policy.Access.DailyTimeMinutes, minutesUsed);
+        int? unlocksRemaining = GetRemainingFor(policy.Access.DailyUnlocks, unlocksUsed);
+        int? overrideMinutesRemaining = GetRemainingFor(policy.Override.Allowance.DailyTimeMinutes, overrideMinutesUsed);
+        int? overrideUnlocksRemaining = GetRemainingFor(policy.Override.Allowance.DailyUnlocks, overrideUnlocksUsed);
 
         //
         // Maximum request duration.
         //
         var maxSessionMinutes = policy.Access.MaxSessionMinutes;
+        var overrideMaxSessionMinutes = policy.Override.Allowance.MaxSessionMinutes;
 
         //
         // Schedule remaining time.
@@ -97,13 +77,19 @@ public sealed class PolicyEvaluator
                     maxSessionMinutes),
                 scheduleRemainingMinutes);
 
+        var effectiveOverrideMinutesRemaining =
+            MinNullable(
+                overrideMinutesRemaining,
+                CalculateUnlockCapacity(
+                    overrideUnlocksRemaining,
+                    overrideMaxSessionMinutes),
+                scheduleRemainingMinutes);
+
         //
         // Maximum request right now.
         //
-        var maxRequestMinutes =
-            MinNullable(
-                effectiveMinutesRemaining,
-                maxSessionMinutes);
+        var maxRequestMinutes = MinNullable(effectiveMinutesRemaining, maxSessionMinutes);
+        var overrideMaxRequestMinutes = MinNullable(effectiveOverrideMinutesRemaining, overrideMaxSessionMinutes);
 
 
         //
@@ -112,7 +98,7 @@ public sealed class PolicyEvaluator
         AccessState state;
         if (effectiveMinutesRemaining == 0)
         {
-            state = policy.Override.Allowed
+            state = policy.Override.Allowed && effectiveOverrideMinutesRemaining != 0
                 ? AccessState.OverrideAvailable
                 : AccessState.Unavailable;
         }
@@ -125,26 +111,36 @@ public sealed class PolicyEvaluator
         {
             IsScheduled = true,
 
-                State = state,
+            State = state,
 
             ScheduleEndsAt = scheduleEndsAt,
 
             MaxRequestMinutes =
-                state == AccessState.Available
-                    ? maxRequestMinutes
-                    : 0,
+                state switch
+                {
+                    AccessState.Available => maxRequestMinutes,
+                    AccessState.OverrideAvailable => overrideMaxRequestMinutes,
+                    _ => 0
+                },
 
-            DailyMinutesRemaining = dailyMinutesRemaining,
+            DailyMinutesRemaining =
+                state == AccessState.OverrideAvailable
+                    ? overrideMinutesRemaining
+                    : dailyMinutesRemaining,
 
-            EffectiveMinutesRemaining = effectiveMinutesRemaining,
+            EffectiveMinutesRemaining =
+                state == AccessState.OverrideAvailable
+                    ? effectiveOverrideMinutesRemaining
+                    : effectiveMinutesRemaining,
 
-            UnlocksRemaining = unlocksRemaining
+            UnlocksRemaining =
+                state == AccessState.OverrideAvailable
+                    ? overrideUnlocksRemaining
+                    : unlocksRemaining
         };
     }
 
-    private static int? CalculateUnlockCapacity(
-        int? unlocksRemaining,
-        int? maxSessionMinutes)
+    private static int? CalculateUnlockCapacity(int? unlocksRemaining, int? maxSessionMinutes)
     {
         if (unlocksRemaining == 0)
             return 0;
@@ -157,8 +153,7 @@ public sealed class PolicyEvaluator
     }
 
 
-    private static int? MinNullable(
-        params int?[] values)
+    private static int? MinNullable(params int?[] values)
     {
         var constrained =
             values
@@ -172,9 +167,7 @@ public sealed class PolicyEvaluator
     }
 
 
-    private static bool IsScheduleActive(
-        Schedule schedule,
-        DateTimeOffset now)
+    private static bool IsScheduleActive(Schedule schedule, DateTimeOffset now)
     {
         if (!schedule.Days.Includes(now.DayOfWeek))
             return false;
@@ -191,9 +184,7 @@ public sealed class PolicyEvaluator
     }
 
 
-    private static DateTimeOffset? GetScheduleEnd(
-        Schedule schedule,
-        DateTimeOffset now)
+    private static DateTimeOffset? GetScheduleEnd(Schedule schedule, DateTimeOffset now)
     {
         if (schedule.EndTime == TimeOnly.MaxValue)
             return null;
@@ -209,9 +200,7 @@ public sealed class PolicyEvaluator
     }
 
 
-    private static int? GetRemainingScheduleMinutes(
-        DateTimeOffset? scheduleEndsAt,
-        DateTimeOffset now)
+    private static int? GetRemainingScheduleMinutes(DateTimeOffset? scheduleEndsAt, DateTimeOffset now)
     {
         if (scheduleEndsAt is null)
             return null;
@@ -221,5 +210,17 @@ public sealed class PolicyEvaluator
             (int)Math.Ceiling(
                 (scheduleEndsAt.Value - now)
                     .TotalMinutes));
+    }
+
+    private static int GetUsageFor(DateOnly? lastAccessed, int? usage)
+    {
+        var now = DateTimeOffset.Now;
+        var today = DateOnly.FromDateTime(now.Date);
+        return lastAccessed == today ? (usage ?? 0) : 0;
+    }
+
+    private static int? GetRemainingFor(int? limit, int usage)
+    {
+        return limit is int limitInt ? Math.Max(0, limitInt - usage) : null;
     }
 }

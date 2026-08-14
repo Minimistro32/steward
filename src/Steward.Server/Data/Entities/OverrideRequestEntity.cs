@@ -21,7 +21,7 @@ public class OverrideRequestEntity
 
     // Used by Delay requirements.
     // Null for other requirement types.
-    public DateTime? AvailableAt { get; set; }
+    public DateTimeOffset? AvailableAt { get; set; }
 
     // Used by RandomText requirements.
     // Null for other requirement types.
