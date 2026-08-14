@@ -3,6 +3,7 @@ using Steward.Server.Api.Models;
 using Steward.Server.Data;
 using Steward.Server.Data.Entities;
 using Steward.Server.Data.Policies;
+using System.Text;
 
 namespace Steward.Server.Application;
 
@@ -677,10 +678,79 @@ public sealed class AccessService(
         };
     }
 
-    private static string GenerateChallengeText()
+    private static string GenerateChallengeText(int minimumCharacters = 30)
     {
-        // TODO: Generate a random challenge text.
-        return "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+        ArgumentOutOfRangeException.ThrowIfLessThan(minimumCharacters, 3);
+        // random words
+        // random gibberish
+        // custom text
+
+        string[] words = [
+            "weather", "salad", "space", "sense", "shirt", "heart", "scene",
+            "safety", "tension", "quality", "future", "priority", "issue",
+            "career", "membership", "aspect", "winner", "stock", "medium",
+            "society", "period", "metal", "school", "desk", "speaker",
+            "breath", "location", "year", "difference", "chance", "matter",
+            "engine", "sympathy", "area", "mixture", "insurance", "story",
+            "figure", "attitude", "income", "advantage", "plan", "risk",
+            "concept", "program", "review", "question", "sport", "arrival",
+            "average", "context", "painting", "wind", "guest", "memory",
+            "football", "library", "item", "effect", "steak", "fun", "thanks",
+            "page", "people", "freedom", "discipline", "restaurant", "purpose",
+            "session", "science", "reality", "article", "boss", "tax",
+            "strategy", "hair", "exercise", "level", "payment", "childhood",
+            "topic", "food", "device", "selection", "addition", "church",
+            "statement", "record", "television", "morning", "place", "security",
+            "study", "map", "benefit", "performance", "scale", "importance",
+            "client", "mind", "cash", "network", "language", "transportation",
+            "thought", "task", "screen", "effort", "county", "editor", "hand",
+            "potato", "teacher", "soil", "reason", "activity", "size", "song",
+            "buyer", "delivery", "opinion", "construction", "leadership", "post",
+            "obligation", "gate", "form", "population", "trainer", "inspection",
+            "phone", "cycle", "protection", "preparation", "environment",
+            "manager", "result", "technology", "weakness", "requirement",
+            "director", "earth", "version", "coast", "mood", "material",
+            "length", "quantity", "range", "chicken", "decision", "beginning",
+            "height", "resource", "culture", "understanding", "marketing",
+            "measurement", "discussion", "guidance", "meat", "consequence",
+            "enthusiasm", "address", "share", "position", "emotion", "proposal",
+            "imagination", "community", "method", "course", "ball", "training",
+            "confusion", "honey", "board", "table", "classroom", "impact",
+            "dinner", "tea", "newspaper", "pressure", "wealth", "theory",
+            "camera", "comparison", "profession", "condition", "number", "movie",
+            "craft", "room", "boat", "drawer", "action", "airport", "organization",
+            "hall", "signature", "equipment", "hat", "case", "culture", "mode",
+            "recommendation", "tale", "solution", "field", "software", "garden",
+            "note", "rock", "possibility", "car", "examination", "importance",
+            "diamond", "name", "charity", "category", "choice", "historian",
+            "ear", "property", "age", "sun", "internet", "response", "piece",
+            "money", "type", "building", "term", "site", "student", "disease",
+            "analysis", "warning", "care", "education", "mouse", "meal",
+            "energy", "system", "impression", "price", "injury", "university",
+            "leader", "answer", "nature", "dirt", "highway", "cause", "card",
+            "audience", "river", "connection", "reputation", "definition",
+            "driver", "assignment", "singer", "interaction", "personality",
+            "maintenance", "college", "photo", "fact", "standard", "opportunity",
+            "assumption", "presentation", "weakness", "development", "feature",
+            "significance", "bus", "expression", "member", "revenue", "instance",
+            "addition", "atmosphere", "investment", "bank", "growth", "pollution",
+            "setting", "research", "gift", "orange", "industry", "company",
+            "promotion", "drawing", "book", "rule", "administration", "union"
+        ];
+
+        var result = new StringBuilder();
+
+        while (result.Length < minimumCharacters)
+        {
+            var word = words[Random.Shared.Next(words.Length)];
+
+            if (result.Length > 0)
+                result.Append(' ');
+
+            result.Append(word);
+        }
+
+        return result.ToString();
     }
 
     private bool CanGrantOverride(OverrideRequestEntity request, PolicyAccessEntity? access)
