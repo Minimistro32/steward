@@ -17,7 +17,7 @@ public class OverrideRequestEntity
 
     public OverrideRequestStatus Status { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 
     // Used by Delay requirements.
     // Null for other requirement types.

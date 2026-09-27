@@ -372,7 +372,7 @@ public sealed class AccessService(
             RequestedMinutes = dto.RequestedMinutes,
             Requirement = policy.Override.Requirement,
             Status = OverrideRequestStatus.Pending,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
 
@@ -672,6 +672,44 @@ public sealed class AccessService(
                 OverrideRequestId = request.Id
             });
     }
+
+public async Task<List<RequestActivityDto>> GetRequestActivityAsync()
+{
+    var requests = await db.OverrideRequests
+        .Select(request => new RequestActivityDto
+        {
+            Id = request.Id,
+
+            UserId = request.UserId,
+            UserName = request.User.Name,
+
+            Requirement = request.Requirement,
+            Status = request.Status,
+
+            CreatedAt = request.CreatedAt,
+            RequestedMinutes = request.RequestedMinutes,
+
+            Resources = request.Policy.Ward.Resources
+                .Select(wardResource => wardResource.Resource.Name)
+                .ToList()
+        })
+        .ToListAsync();
+
+    var pending = requests
+        .Where(request =>
+            request.Status == OverrideRequestStatus.Pending);
+
+    var recent = requests
+        .Where(request =>
+            request.Status != OverrideRequestStatus.Pending)
+        .OrderByDescending(request => request.CreatedAt)
+        .Take(15);
+
+    return pending
+        .Concat(recent)
+        .OrderByDescending(request => request.CreatedAt)
+        .ToList();
+}
 
     // HELPERS
     private async Task<(PolicyEntity Policy, PolicyAccessEntity? Access)?> LoadPolicyContextAsync(int userId, int policyId)

@@ -1,70 +1,58 @@
-<script>
+<script lang="ts">
+    import { link } from "svelte-spa-router";
+    import { onMount } from "svelte";
+
     import Card from "../ui/Card.svelte";
     import RequestTimelineElement from "./RequestTimelineElement.svelte";
 
-    let requests = [
-        {
-            id: "REQ-1042",
-            person: "Sarah",
-            resource: "YouTube Research",
-            reason: "Need time for YouTube research.",
-            age: "5 minutes ago",
-            status: "pending",
-        },
-        {
-            id: "REQ-1041",
-            person: "Marcus",
-            resource: "GitHub Access",
-            reason: "Need access to review open source dependencies.",
-            age: "2 hours ago",
-            status: "pending",
-        },
-        {
-            id: "REQ-1040",
-            person: "Jamie",
-            resource: "AWS Console",
-            reason: "Needed to verify production configuration.",
-            age: "Yesterday",
-            status: "approved",
-        },
-        {
-            id: "REQ-1039",
-            person: "Taylor",
-            resource: "Production Deploy",
-            reason: "Deployment violated freeze policy.",
-            age: "Yesterday",
-            status: "denied",
-        },
-        {
-            id: "REQ-1039",
-            person: "Taylor",
-            resource: "Production Deploy",
-            reason: "Deployment violated freeze policy.",
-            age: "Yesterday",
-            status: "denied",
-        },
-        {
-            id: "REQ-1039",
-            person: "Taylor",
-            resource: "Production Deploy",
-            reason: "Deployment violated freeze policy.",
-            age: "Yesterday",
-            status: "denied",
-        },
-    ];
+    import {
+        approveOverrideRequest,
+        rejectOverrideRequest,
+        getRequestActivity,
+    } from "../../api";
+    import type { RequestActivity as RequestActivityModel } from "../../models";
+
+    let requests = $state<RequestActivityModel[]>([]);
+
+    // TODO: Temporary until Steward has actual authentication/current-user context.
+    let currentUserId = 2;
 
     let pendingRequests = $derived(
-        requests.filter((r) => r.status === "pending"),
+        requests.filter((request) => request.status === "pending"),
     );
 
     let historyRequests = $derived(
-        requests.filter((r) => r.status !== "pending"),
+        requests.filter((request) => request.status !== "pending"),
     );
+
+    async function loadRequests() {
+        requests = await getRequestActivity();
+    }
+
+    async function approveRequest(request: RequestActivityModel) {
+        await approveOverrideRequest(request.id, {
+            userId: currentUserId,
+        });
+
+        await loadRequests();
+    }
+
+    async function rejectRequest(request: RequestActivityModel) {
+        await rejectOverrideRequest(request.id, {
+            userId: currentUserId,
+        });
+
+        await loadRequests();
+    }
+
+    onMount(loadRequests);
 </script>
 
 <Card title="Request Activity">
     {#snippet actions()}
-        <button class="cta-button">+ New Request</button>
+        <a use:link href="/requests">
+            <button class="cta-button">Make Request</button>
+        </a>
     {/snippet}
 
     {#if pendingRequests.length || historyRequests.length}
@@ -75,7 +63,12 @@
                         <h4>Pending</h4>
 
                         {#each pendingRequests as request}
-                            <RequestTimelineElement {request} />
+                            <RequestTimelineElement
+                                {request}
+                                {currentUserId}
+                                onapprove={approveRequest}
+                                onreject={rejectRequest}
+                            />
                         {/each}
                     </section>
                 {/if}

@@ -3,6 +3,7 @@ import type {
     AccessRequest,
     AccessResponse,
     OverrideAction,
+    RequestActivity
 } from "../models";
 
 import { client } from "./client";
@@ -63,4 +64,9 @@ export async function rejectOverrideRequest(
         `/access/requests/${requestId}/reject`,
         action,
     );
+}
+
+
+export async function getRequestActivity(): Promise<RequestActivity[]> {
+    return client.get<RequestActivity[]>("/access/requests");
 }

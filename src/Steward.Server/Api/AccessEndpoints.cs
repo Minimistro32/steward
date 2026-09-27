@@ -76,6 +76,16 @@ public static class AccessEndpoints
             var result = await access.RejectOverrideAsync(requestId);
             return ToHttpResult(result);
         });
+
+        group.MapGet(
+            "/requests",
+            async (AccessService access) =>
+        {
+            var requests =
+                await access.GetRequestActivityAsync();
+
+            return Results.Ok(requests);
+        });
     }
 
     private static IResult ToHttpResult(AccessOperationResult result)

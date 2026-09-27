@@ -100,3 +100,12 @@ Content-Type: application/json
 {
     "userId": 2
 }
+
+###
+# Get request activity
+#
+# Returns all pending requests plus the
+# 15 most recent completed requests.
+###
+
+GET http://localhost:5042/api/access/requests
