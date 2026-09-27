@@ -273,6 +273,15 @@ public sealed class AccessService(
         var access = context.Value.Access;
 
 
+        if (access?.UnlockedUntil > DateTimeOffset.UtcNow)
+        {
+            return AccessOperationResult.Success(
+                new AccessResponseDto
+                {
+                    State = AccessRequestStatus.AlreadyUnlocked
+                });
+        }
+
         //
         // Re-evaluate the policy at request time.
         //
