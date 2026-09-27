@@ -114,7 +114,7 @@ input[type="range"] {
     accent-color: var(--color-brand);
 }
 
-input[type="range"]::hover {
+input[type="range"]:hover {
     accent-color: var(--color-brand);
 }
 

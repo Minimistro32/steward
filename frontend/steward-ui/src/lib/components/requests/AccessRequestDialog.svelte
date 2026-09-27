@@ -44,6 +44,7 @@
         }
     });
 
+    // TODO: UNCOMMENT TO FORCE DIALOG FOCUS
     // $effect(() => {
     //     if (dialogElement && !dialogElement.open) {
     //         dialogElement.showModal();

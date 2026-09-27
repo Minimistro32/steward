@@ -20,5 +20,7 @@ public enum AccessState
 {
     Available,
     OverrideAvailable,
+    OverridePending,
+    Unlocked,
     Unavailable
 }

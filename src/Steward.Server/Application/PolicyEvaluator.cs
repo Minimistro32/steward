@@ -33,10 +33,10 @@ public sealed class PolicyEvaluator
         //
         // Usage resets automatically each day.
         //
-        var minutesUsed = GetUsageFor(access?.LastAccessed, access?.MinutesUsed);
-        var unlocksUsed = GetUsageFor(access?.LastAccessed, access?.UnlocksUsed);
-        var overrideMinutesUsed = GetUsageFor(access?.LastAccessed, access?.OverrideMinutesUsed);
-        var overrideUnlocksUsed = GetUsageFor(access?.LastAccessed, access?.OverrideUnlocksUsed);
+        var minutesUsed = GetUsageFor(access?.UsageDate, access?.MinutesUsed);
+        var unlocksUsed = GetUsageFor(access?.UsageDate, access?.UnlocksUsed);
+        var overrideMinutesUsed = GetUsageFor(access?.UsageDate, access?.OverrideMinutesUsed);
+        var overrideUnlocksUsed = GetUsageFor(access?.UsageDate, access?.OverrideUnlocksUsed);
 
         //
         // Daily allowances remaining.

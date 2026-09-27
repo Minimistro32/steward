@@ -48,6 +48,22 @@
                     disabled: false,
                 };
 
+            case "overridePending":
+                return {
+                    label: "Approval Pending",
+                    color: "var(--color-warning)",
+                    button: "Waiting for Approval",
+                    disabled: true,
+                };
+
+            case "unlocked":
+                return {
+                    label: "Unlocked until",
+                    color: "var(--color-success)",
+                    button: "Already Unlocked",
+                    disabled: true,
+                };
+
             case "unavailable":
                 return {
                     label: "Unavailable",
@@ -65,9 +81,15 @@
             <h2>{option.devices.map((d) => d.name).join(", ")}</h2>
 
             <div class="primary-stat">
-                <strong>
-                    {minutes(option.effectiveMinutesRemaining)}
-                </strong>
+                {#if option.state === "unlocked" && option.unlockedUntil}
+                    <strong class="strongish">
+                        {scheduleEnd(option.unlockedUntil)}
+                    </strong>
+                {:else}
+                    <strong>
+                        {minutes(option.effectiveMinutesRemaining)}
+                    </strong>
+                {/if}
 
                 <StatusDot
                     label={status.label}
@@ -75,7 +97,6 @@
                     --font-size="0.85rem"
                     --justified="right"
                 />
-                <!-- <span> Remaining </span> -->
             </div>
         </div>
 
@@ -87,31 +108,38 @@
             {/each}
         </div>
 
-        <div class="details">
-            <div class="stat">
-                <span>Daily Remaining</span>
-
-                <strong>
-                    {minutes(option.dailyMinutesRemaining)}
-                </strong>
+        <!-- {#if option.state === "unlocked" && option.unlockedUntil}
+        <div class="unlocked">
+            Unlocked until {scheduleEnd(option.unlockedUntil)}
             </div>
+            {:else} -->
+        {#if !(option.state === "unlocked" && option.unlockedUntil)}
+            <div class="details">
+                <div class="stat">
+                    <span>Daily Remaining</span>
 
-            <div class="stat">
-                <span>Session Length</span>
+                    <strong>
+                        {minutes(option.dailyMinutesRemaining)}
+                    </strong>
+                </div>
 
-                <strong>
-                    {minutes(option.maxRequestMinutes)}
-                </strong>
+                <div class="stat">
+                    <span>Session Length</span>
+
+                    <strong>
+                        {minutes(option.maxRequestMinutes)}
+                    </strong>
+                </div>
+
+                <div class="stat">
+                    <span>Unlocks</span>
+
+                    <strong>
+                        {unlocks(option.unlocksRemaining)}
+                    </strong>
+                </div>
             </div>
-
-            <div class="stat">
-                <span>Unlocks</span>
-
-                <strong>
-                    {unlocks(option.unlocksRemaining)}
-                </strong>
-            </div>
-        </div>
+        {/if}
 
         {#if option.scheduleEndsAt}
             <div class="schedule">
@@ -162,6 +190,13 @@
         font-size: 0.85rem;
     }
 
+    /* .unlocked {
+        text-align: center;
+        margin: var(--space-4);
+        font-size: larger;
+        font-weight: bolder;
+    } */
+
     .primary-stat {
         display: flex;
         flex-direction: column;
@@ -173,6 +208,11 @@
 
     .primary-stat strong {
         font-size: 2.25rem;
+        line-height: 1;
+    }
+
+    .strongish {
+        font-size: 1.75rem;
         line-height: 1;
     }
 

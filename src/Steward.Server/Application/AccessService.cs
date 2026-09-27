@@ -73,6 +73,13 @@ public sealed class AccessService(
                 policyIds.Contains(pa.PolicyId))
             .ToDictionaryAsync(pa => pa.PolicyId);
 
+        var pendingOverrides = await db.OverrideRequests
+            .Where(r =>
+                r.UserId == userId &&
+                policyIds.Contains(r.PolicyId) &&
+                r.Status == OverrideRequestStatus.Pending &&
+                r.Requirement == OverrideRequirement.UserApproval)
+            .ToDictionaryAsync(r => r.PolicyId);
 
         var options = new List<AccessOptionDto>();
 
@@ -87,7 +94,6 @@ public sealed class AccessService(
                 policy,
                 access);
 
-
             //
             // Policies that are not currently active
             // should not appear as available access options.
@@ -96,6 +102,24 @@ public sealed class AccessService(
                 continue;
 
 
+            // Update the state if unlocked or pending an override
+            var state = evaluation.State;
+
+            var unlockedUntil =
+                access?.UnlockedUntil > DateTimeOffset.UtcNow
+                    ? access.UnlockedUntil
+                    : null;
+
+            if (unlockedUntil is not null)
+            {
+                state = AccessState.Unlocked;
+            }
+            else if (pendingOverrides.ContainsKey(policy.Id))
+            {
+                state = AccessState.OverridePending;
+            }
+
+            // Create the access option
             options.Add(
                 new AccessOptionDto
                 {
@@ -121,7 +145,7 @@ public sealed class AccessService(
                                     Name = wd.Device.Name
                                 })],
 
-                    State = evaluation.State,
+                    State = state,
 
                     MaxRequestMinutes = evaluation.MaxRequestMinutes,
 
@@ -131,7 +155,9 @@ public sealed class AccessService(
 
                     DailyMinutesRemaining = evaluation.DailyMinutesRemaining,
 
-                    UnlocksRemaining = evaluation.UnlocksRemaining
+                    UnlocksRemaining = evaluation.UnlocksRemaining,
+
+                    UnlockedUntil = unlockedUntil
                 });
         }
 
@@ -159,6 +185,15 @@ public sealed class AccessService(
 
         var policy = context.Value.Policy;
         var access = context.Value.Access;
+
+        if (access?.UnlockedUntil > DateTimeOffset.UtcNow)
+        {
+            return AccessOperationResult.Success(
+                new AccessResponseDto
+                {
+                    State = AccessRequestStatus.AlreadyUnlocked
+                });
+        }
 
 
         // IMPORTANT:
@@ -655,10 +690,10 @@ public sealed class AccessService(
 
     private static void ResetDailyUsageIfNeeded(PolicyAccessEntity access, DateOnly today)
     {
-        if (access.LastAccessed == today)
+        if (access.UsageDate == today)
             return;
 
-        access.LastAccessed = today;
+        access.UsageDate = today;
 
         access.MinutesUsed = 0;
         access.UnlocksUsed = 0;
@@ -778,7 +813,7 @@ public sealed class AccessService(
             {
                 UserId = userId,
                 PolicyId = policyId,
-                LastAccessed = today
+                UsageDate = today
             };
 
             db.PolicyAccess.Add(access);
@@ -800,6 +835,9 @@ public sealed class AccessService(
             access.MinutesUsed += requestedMinutes;
             access.UnlocksUsed += 1;
         }
+
+        access.UnlockedUntil =
+            DateTimeOffset.UtcNow.AddMinutes(requestedMinutes);
     }
 
     private enum AccessGrantType

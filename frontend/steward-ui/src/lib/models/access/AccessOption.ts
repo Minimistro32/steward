@@ -17,9 +17,13 @@ export interface AccessOption {
     dailyMinutesRemaining: number | null;
 
     unlocksRemaining: number | null;
+
+    unlockedUntil: string | null;
 }
 
 export type AccessState =
     | "available"
     | "overrideAvailable"
+    | "overridePending"
+    | "unlocked"
     | "unavailable";

@@ -8,7 +8,8 @@ public enum AccessRequestStatus
     Invalid,
     OverrideRequired,
     Pending,
-    Unavailable
+    Unavailable,
+    AlreadyUnlocked
 }
 
 public sealed class AccessResponseDto

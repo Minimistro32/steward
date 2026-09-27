@@ -6,7 +6,9 @@ public class PolicyAccessEntity
 
     public int UserId { get; set; }
 
-    public DateOnly LastAccessed { get; set; }
+    public DateOnly UsageDate { get; set; }
+
+    public DateTimeOffset? UnlockedUntil { get; set; }
 
     public int MinutesUsed { get; set; }
 

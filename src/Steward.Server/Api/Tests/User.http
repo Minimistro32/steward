@@ -19,14 +19,6 @@ GET http://localhost:5042/api/users
 
 
 ###
-# Get user access
-###
-
-GET http://localhost:5042/api/users/1/access
-
-
-
-###
 # Update user
 ###
 

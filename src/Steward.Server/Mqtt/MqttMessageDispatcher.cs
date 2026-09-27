@@ -6,10 +6,12 @@ using Steward.Server.Mqtt.Handlers;
 namespace Steward.Server.Mqtt;
 
 public class MqttMessageDispatcher(
-        ILogger<MqttMessageDispatcher> logger,
-        RegistrationMessageHandler registrationHandler)
+    ILogger<MqttMessageDispatcher> logger,
+    RegistrationMessageHandler registrationHandler,
+    StatusMessageHandler statusHandler)
 {
     private readonly RegistrationMessageHandler registrationHandler = registrationHandler;
+    private readonly StatusMessageHandler statusHandler = statusHandler;
     private readonly ILogger<MqttMessageDispatcher> logger = logger;
 
     public async Task HandleAsync(
@@ -34,7 +36,7 @@ public class MqttMessageDispatcher(
         }
         else if (MqttTopics.IsAgentStatus(topic))
         {
-            HandleStatus(json);
+            await HandleStatusAsync(topic, json);
         }
         else if (MqttTopics.IsAccessResponse(topic))
         {
@@ -48,7 +50,7 @@ public class MqttMessageDispatcher(
         }
     }
 
-    private void HandleStatus(string json)
+    private async Task HandleStatusAsync(string topic, string json)
     {
         var message = StewardMessage.Deserialize<StatusMessage>(json);
 
@@ -59,10 +61,19 @@ public class MqttMessageDispatcher(
             return;
         }
 
-        logger.LogInformation(
-            "Agent status: {Status}",
-            message.State
-        );
+        var parts = topic.Split('/');
+
+        if (parts.Length != 4)
+        {
+            logger.LogWarning(
+                "Invalid agent status topic: {Topic}",
+                topic);
+            return;
+        }
+
+        var agentId = parts[2];
+
+        await statusHandler.HandleAsync(agentId, message);
     }
 
     private void HandleResponse(string json)

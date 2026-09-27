@@ -9,15 +9,16 @@ GET http://localhost:5042/api/agents
 # Disable agent
 ###
 
-PUT http://localhost:5042/api/agents/coldTurkey/toggle
+PUT http://localhost:5042/api/agents/test-agent/toggle
 
 ###
 # Refresh
 ###
 
-PUT http://localhost:5042/api/agents/refresh
+POST http://localhost:5042/api/agents/refresh
 
 
+# SAMPLES FOR MQTT
 # steward/agents/register
 {
     "version": "0.1.0",
@@ -44,4 +45,10 @@ PUT http://localhost:5042/api/agents/refresh
             "name": "Reddit"
         }
     ]
+}
+
+# steward/agents/test-agent/status
+# - retained
+{
+    "state": "online"
 }

@@ -26,4 +26,6 @@ public sealed class AccessOptionDto
     public required int? DailyMinutesRemaining { get; init; }
 
     public required int? UnlocksRemaining { get; init; }
+    
+    public required DateTimeOffset? UnlockedUntil { get; init; }
 }

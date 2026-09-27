@@ -1,0 +1,102 @@
+###
+# Get access options for user
+#
+# Replace user id as needed
+###
+
+GET http://localhost:5042/api/access/1
+
+
+###
+# Request access
+#
+# Replace user id and policy id as needed
+###
+
+POST http://localhost:5042/api/access/1/request
+Content-Type: application/json
+
+{
+    "policyId": 1,
+    "requestedMinutes": 15
+}
+
+
+###
+# Request override
+#
+# Use when the policy is in overrideAvailable state.
+# Replace user id and policy id as needed.
+###
+
+POST http://localhost:5042/api/access/1/override
+Content-Type: application/json
+
+{
+    "policyId": 1,
+    "requestedMinutes": 15
+}
+
+
+###
+# Complete override
+#
+# Used for delay and random text requirements.
+# Replace request id and user id as needed.
+#
+# challengeText may be omitted/null for a delay override.
+###
+
+POST http://localhost:5042/api/access/requests/1/complete
+Content-Type: application/json
+
+{
+    "userId": 1,
+    "challengeText": null
+}
+
+
+###
+# Complete random text override
+#
+# Replace challengeText with the challenge returned
+# when the override request was created.
+###
+
+POST http://localhost:5042/api/access/requests/1/complete
+Content-Type: application/json
+
+{
+    "userId": 1,
+    "challengeText": "example challenge text"
+}
+
+
+###
+# Approve user approval override
+#
+# userId is the approving user, not the requesting user.
+###
+
+POST http://localhost:5042/api/access/requests/1/approve
+Content-Type: application/json
+
+{
+    "userId": 2
+}
+
+
+###
+# Reject override
+#
+# The current endpoint still expects OverrideActionDto,
+# so userId is required by model binding even though the
+# service currently only uses the request id for rejection.
+###
+
+POST http://localhost:5042/api/access/requests/1/reject
+Content-Type: application/json
+
+{
+    "userId": 2
+}

@@ -24,9 +24,9 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 // Add services to the container.
 // MQTT
-builder.Services.AddSingleton<RegistrationMessageHandler>();
-
 builder.Services.AddSingleton<MqttMessageDispatcher>();
+builder.Services.AddSingleton<RegistrationMessageHandler>();
+builder.Services.AddSingleton<StatusMessageHandler>();
 
 builder.Services.AddSingleton<MqttConnectionService>();
 builder.Services.AddHostedService(sp =>

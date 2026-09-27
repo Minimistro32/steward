@@ -16,6 +16,7 @@ public static class AgentEndpoints
         {
             var agents = await db.Agents
                 .AsSplitQuery()
+                .Include(a => a.Status)
                 .Include(a => a.Devices)
                 .Include(a => a.Resources)
                 .ToListAsync();
