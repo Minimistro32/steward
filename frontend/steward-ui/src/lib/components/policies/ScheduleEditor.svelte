@@ -13,7 +13,7 @@
         { value: DayOfWeek.Sunday, label: "Sun" },
     ];
 
-    function toggleDay(day: number) {
+    function toggleDay(day: DayOfWeek) {
         if (schedule.days.includes(day)) {
             schedule.days = schedule.days.filter((d) => d !== day);
         } else {

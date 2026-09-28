@@ -108,11 +108,6 @@
             {/each}
         </div>
 
-        <!-- {#if option.state === "unlocked" && option.unlockedUntil}
-        <div class="unlocked">
-            Unlocked until {scheduleEnd(option.unlockedUntil)}
-            </div>
-            {:else} -->
         {#if !(option.state === "unlocked" && option.unlockedUntil)}
             <div class="details">
                 <div class="stat">
@@ -190,13 +185,6 @@
 
         font-size: 0.85rem;
     }
-
-    /* .unlocked {
-        text-align: center;
-        margin: var(--space-4);
-        font-size: larger;
-        font-weight: bolder;
-    } */
 
     .primary-stat {
         display: flex;
