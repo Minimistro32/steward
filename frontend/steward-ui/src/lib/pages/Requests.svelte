@@ -1,6 +1,5 @@
 <script lang="ts">
     import { currentUser } from "../session";
-    import { onMount } from "svelte";
 
     import PageHeader from "../components/ui/PageHeader.svelte";
     import EmptyState from "../components/ui/EmptyState.svelte";
@@ -8,25 +7,17 @@
     import AccessOptionCard from "../components/requests/AccessOptionCard.svelte";
     import AccessRequestDialog from "../components/requests/AccessRequestDialog.svelte";
 
-    import { getAccessOptions, getUsers } from "../api";
-    import type { AccessOption, User } from "../models";
+    import { getAccessOptions } from "../api";
+    import type { AccessOption } from "../models";
 
-    let selectedUserId = $state<number | undefined>(undefined);
-    let users = $state<User[]>([]);
+    let selectedUserId = $derived($currentUser?.id);
     let options = $state<AccessOption[]>([]);
-    let loadingUsers = $state(true);
     let loadingOptions = $state(false);
 
     // The option currently being requested.
     // null means the dialog is closed.
     let selectedOption = $state<AccessOption | null>(null);
 
-
-    onMount(async () => {
-        if ($currentUser?.type === "admin") users = await getUsers();
-        else selectedUserId = $currentUser?.id;
-        loadingUsers = false;
-    });
 
     $effect(() => {
         if (!selectedUserId) {
@@ -72,36 +63,11 @@
     {#snippet subtitle()}
         Request access to your managed devices and resources.
     {/snippet}
-    {#snippet actions()}
-        {#if $currentUser?.type !== "admin"}
-            <span>{$currentUser?.name}</span>
-        {:else if loadingUsers}
-            <p>Loading users...</p>
-        {:else}
-            <select
-                bind:value={selectedUserId}
-                class:placeholder={!selectedUserId}
-            >
-                <option value={undefined} disabled hidden>Select a user</option>
-                {#each users as user}
-                    <option value={user.id}>
-                        {user.name}
-                    </option>
-                {/each}
-            </select>
-        {/if}
-    {/snippet}
 </PageHeader>
 
 <div class="requests-layout">
     <div class="request-options">
-        {#if selectedUserId === undefined}
-            <EmptyState
-                icon="user-circle.svg"
-                title="Select a User"
-                description="Select a user to view what is available to request."
-            />
-        {:else if loadingOptions}
+        {#if selectedUserId === undefined || loadingOptions}
             <p>Loading options...</p>
         {:else if options.length === 0}
             <EmptyState

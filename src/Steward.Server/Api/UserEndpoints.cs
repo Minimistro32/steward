@@ -1,3 +1,5 @@
+using System.Net.Mail;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
 using Steward.Server.Data.Entities;
@@ -37,61 +39,39 @@ public static class UserEndpoints
             return Results.Ok(UserDto.FromEntity(user));
         });
 
-        group.MapPost("/", async (
-            UserDto dto,
-            StewardDbContext db) =>
+        group.MapPost("/", async (SaveUserDto dto, StewardDbContext db) =>
         {
-            var user = new UserEntity
-            {
-                Id = dto.Id,
-                Name = dto.Name
-            };
-
-            AddDevices(user, dto);
-
-
+            var errors = Validate(dto, false);
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
+            var user = new UserEntity();
+            Apply(user, dto);
             db.Users.Add(user);
-
             await db.SaveChangesAsync();
-
-
-            return Results.Created(
-                $"/api/users/{user.Id}",
-                UserDto.FromEntity(user)
-            );
+            return Results.Created($"/api/users/{user.Id}", UserDto.FromEntity(user));
         });
 
-
-        group.MapPut("/{id}", async (
-            int id,
-            UserDto dto,
-            StewardDbContext db) =>
+        group.MapPut("/{id}", async (int id, SaveUserDto dto, StewardDbContext db) =>
         {
+            await using var transaction = await db.Database.BeginTransactionAsync();
             var user = await LoadUser(db, id);
-
-            if (user is null)
-                return Results.NotFound();
-
-
-            user.Name = dto.Name;
-
-            user.UserDevices.Clear();
-
-            AddDevices(user, dto);
-
-
+            if (user is null) return Results.NotFound();
+            var errors = Validate(dto, user.PinHash is not null);
+            if (user.Type == UserType.Admin && dto.Type != UserType.Admin
+                && !await db.Users.AnyAsync(u => u.Id != id && u.Type == UserType.Admin))
+                errors["type"] = ["The last admin must remain an admin."];
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
+            Apply(user, dto);
             await db.SaveChangesAsync();
-
-
-            return Results.Ok(
-                UserDto.FromEntity(user)
-            );
+            await transaction.CommitAsync();
+            return Results.Ok(UserDto.FromEntity(user));
         });
+
 
         group.MapDelete("/{id}", async (
             string id,
             StewardDbContext db) =>
         {
+            await using var transaction = await db.Database.BeginTransactionAsync();
             var user = await db.Users
                 .FirstOrDefaultAsync(u => u.Id.ToString() == id);
 
@@ -100,9 +80,12 @@ public static class UserEndpoints
                 return Results.NotFound();
 
 
+            if (user.Type == UserType.Admin && !await db.Users.AnyAsync(u => u.Id != user.Id && u.Type == UserType.Admin))
+                return Results.Conflict(new { message = "The last admin cannot be deleted." });
             db.Users.Remove(user);
 
             await db.SaveChangesAsync();
+            await transaction.CommitAsync();
 
 
             return Results.NoContent();
@@ -178,17 +161,29 @@ public static class UserEndpoints
     }
 
 
-    private static void AddDevices(
-        UserEntity user,
-        UserDto dto)
+    private static Dictionary<string, string[]> Validate(SaveUserDto dto, bool hasPin)
     {
-        foreach (var deviceId in dto.DeviceIds)
-        {
-            user.UserDevices.Add(new UserDeviceEntity
-            {
-                UserId = user.Id,
-                DeviceId = deviceId
-            });
-        }
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(dto.Name)) errors["name"] = ["Name is required."];
+        if (!Enum.IsDefined(dto.Type)) errors["type"] = ["Choose Admin or Member."];
+        var email = dto.Email?.Trim();
+        if (dto.Type == UserType.Admin && string.IsNullOrEmpty(email)) errors["email"] = ["Admins require an email address."];
+        else if (!string.IsNullOrEmpty(email) && (!MailAddress.TryCreate(email, out var address) || address.Address != email))
+            errors["email"] = ["Enter a valid email address."];
+        if (!string.IsNullOrEmpty(dto.Pin) && (dto.Pin.Length != 6 || dto.Pin.Any(c => c is < '0' or > '9')))
+            errors["pin"] = ["PIN must contain exactly six digits."];
+        if (dto.ClearPin && !string.IsNullOrEmpty(dto.Pin)) errors["pin"] = ["Choose a new PIN or clear it, not both."];
+        if (dto.Type == UserType.Admin && (dto.ClearPin || (!hasPin && string.IsNullOrEmpty(dto.Pin))))
+            errors["pin"] = ["Admins require a PIN."];
+        return errors;
+    }
+
+    private static void Apply(UserEntity user, SaveUserDto dto)
+    {
+        user.Name = dto.Name.Trim();
+        user.Type = dto.Type;
+        user.Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
+        if (dto.ClearPin) user.PinHash = null;
+        else if (!string.IsNullOrEmpty(dto.Pin)) user.PinHash = new PasswordHasher<UserEntity>().HashPassword(user, dto.Pin);
     }
 }

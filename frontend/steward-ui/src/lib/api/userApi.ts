@@ -1,4 +1,4 @@
-import type { AccessOption, User } from "../models";
+import type { User } from "../models";
 import { client } from "./client";
 
 export async function getUsers(): Promise<User[]> {
@@ -19,3 +19,6 @@ export async function assignUserDevice(userId: number, deviceId: number): Promis
 export async function removeUserDevice(userId: number, deviceId: number): Promise<void> {
     return client.delete<void>(`/users/${userId}/devices/${deviceId}`)
 }
+export type SaveUser = { name: string; type: "admin" | "member"; email: string | null; pin?: string; clearPin?: boolean };
+export const createUser = (user: SaveUser) => client.post<User>("/users", user);
+export const updateUser = (id: number, user: SaveUser) => client.put<User>(`/users/${id}`, user);

@@ -1,7 +1,8 @@
 # Authentication and Users: MVP Design
 
 Status: account storage, terminal setup, sign-in, sessions, and role-based page/API
-access implemented. Account credential editing and recovery remain unimplemented.
+access and admin-managed account creation/editing implemented. Email recovery
+remains unimplemented.
 
 ## Goals
 
@@ -106,9 +107,8 @@ to “Steward / Giving you room to grow.” Admins retain the full navigation.
 
 The public account picker exposes only IDs and names. All other data APIs require
 a session; management APIs require Admin. Members can request and complete access
-only for themselves and cannot approve or reject requests. Admins retain the
-existing ability to submit requests on behalf of users; approval identity always
-comes from the session. All signed-in users see the shared activity timeline.
+only for themselves and cannot approve or reject requests. The Requests page uses the signed-in user for both account types, without a user
+selector. Approval identity always comes from the session. All signed-in users see the shared activity timeline.
 
 Login allows ten attempts per minute per client IP. Cookie-authenticated mutations
 require `X-Steward-Request: 1`, with CORS restricted to configured development
@@ -129,6 +129,16 @@ Member accounts never see approve or reject buttons, including on other users'
 pending requests. Admin accounts can respond where the request rules permit it.
 Admin status does not by itself remove the existing restriction against
 approving one's own request.
+
+## User Management
+
+Admins create users at `#/users/new` and edit them at `#/users/:id`, using the
+same form. It includes name, type, email, and a six-digit PIN with confirmation.
+On edit, an empty PIN preserves the existing hash. Members have an explicit
+clear-PIN option; admins must retain a PIN and email. Device assignments are
+managed on the Users page and are preserved when account details are saved.
+The last admin cannot be demoted or deleted. Changing your own PIN or type
+returns you to sign-in. PINs and hashes are never returned by the user API.
 
 ## PIN Recovery
 

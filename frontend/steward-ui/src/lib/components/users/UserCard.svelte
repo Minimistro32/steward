@@ -49,10 +49,13 @@
                 {user.name}
             </h2>
 
-            <span>
-                {assignedDevices.length}
-                device{assignedDevices.length === 1 ? "" : "s"}
-            </span>
+            <a class="edit-user" href={`#/users/${user.id}`} aria-label={`Edit ${user.name}`} title="Edit user">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="5" cy="12" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="19" cy="12" r="2" />
+                </svg>
+            </a>
         </div>
 
         <div class="devices">
@@ -75,12 +78,17 @@
                 {/each}
             {/if}
         </div>
+        <div class="device-count">
+            {assignedDevices.length} device{assignedDevices.length === 1 ? "" : "s"}
+        </div>
     </div>
 </Card>
 
 <style>
     .card {
         min-height: 120px;
+        display: flex;
+        flex-direction: column;
     }
 
     .header {
@@ -95,7 +103,32 @@
         margin: 0;
     }
 
-    .header span {
+    .edit-user {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+        margin-left: var(--space-3);
+        border-radius: var(--radius-sm);
+        color: var(--color-text-muted);
+    }
+
+    .edit-user:hover {
+        color: var(--color-text);
+        background: var(--color-surface-raised);
+    }
+
+    .edit-user:focus-visible {
+        outline: 2px solid var(--color-brand-light);
+        outline-offset: 2px;
+    }
+
+    .device-count {
+        align-self: flex-end;
+        margin-top: auto;
+        padding-top: var(--space-3);
         color: var(--color-text-muted);
         font-size: 0.8rem;
     }

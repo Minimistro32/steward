@@ -29,6 +29,7 @@
   // Components
   import Overview from "./lib/pages/Overview.svelte";
   import Agents from "./lib/pages/Agents.svelte";
+  import UserForm from "./lib/pages/UserForm.svelte";
   import Users from "./lib/pages/Users.svelte";
   import Wards from "./lib/pages/Wards.svelte";
   import WardForm from "./lib/pages/WardForm.svelte";
@@ -40,6 +41,8 @@
     "/": Overview,
     "/agents": Agents,
     "/users": Users,
+    "/users/new": UserForm,
+    "/users/:id": UserForm,
     "/wards": Wards,
     "/wards/new": WardForm,
     "/wards/:id": WardForm,

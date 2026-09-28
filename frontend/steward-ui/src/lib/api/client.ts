@@ -1,7 +1,7 @@
 import { setSession, sessionRevision } from "../session";
 const API_URL = "/api";
 export class ApiError extends Error {
-    constructor(public status: number) { super(`API Error: ${status}`); }
+    constructor(public status: number, public errors: string[] = []) { super(`API Error: ${status}`); }
 }
 
 async function request<T>(
@@ -20,7 +20,9 @@ async function request<T>(
 
     if (!response.ok) {
         if (response.status === 401 && path !== "/auth/login" && revision === sessionRevision()) setSession(null);
-        throw new ApiError(response.status);
+        const body = await response.json().catch(() => null);
+        const errors = body?.errors ? Object.values(body.errors).flat().filter((value): value is string => typeof value === "string") : [];
+        throw new ApiError(response.status, errors);
     }
 
     if (response.status === 204) {

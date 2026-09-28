@@ -55,7 +55,7 @@
         Users are assigned the devices they use and added to wards.
     {/snippet}
     {#snippet actions()}
-        <button class="cta-button"> + Create User </button>
+        <a class="cta-button" href="#/users/new"> + Create User </a>
     {/snippet}
 </PageHeader>
 
