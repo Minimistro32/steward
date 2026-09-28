@@ -6,8 +6,10 @@ using Steward.Server.Application;
 using System.Text.Json.Serialization;
 using Steward.Server.Mqtt.Handlers;
 using System.Text.Json;
+using Steward.Server.Setup;
 
-var builder = WebApplication.CreateBuilder(args);
+var setupRequested = args.FirstOrDefault() == "setup";
+var builder = WebApplication.CreateBuilder(setupRequested ? args[1..] : args);
 
 builder.Services.AddDbContextFactory<StewardDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Steward"))
@@ -52,6 +54,26 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<StewardDbContext>();
+    await db.Database.MigrateAsync();
+    if (setupRequested)
+    {
+        Environment.ExitCode = await TerminalSetup.RunAsync(db);
+        return;
+    }
+
+    if (!await db.Users.AnyAsync(user => user.Type == Steward.Server.Data.Entities.UserType.Admin))
+    {
+        Console.Error.WriteLine(await db.SetupStates.AnyAsync()
+            ? "Steward has no admin account. Restore an admin from your database backup; initial setup cannot be repeated."
+            : "Steward needs an admin. Run: dotnet run --project src/Steward.Server -- setup");
+        Environment.ExitCode = 1;
+        return;
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -32,6 +32,30 @@ Steward is currently under active development. The core architecture is being bu
 
 It started as a personal project to solve a problem in my own home, but it is being developed openly in case it can be useful to others as well.
 
+## Local setup
+
+With the .NET 10 SDK installed, run these commands from the repository root:
+
+```sh
+dotnet run --project src/Steward.Server -- setup
+dotnet run --project src/Steward.Server
+```
+
+Setup applies database migrations and asks for your admin name, email, and a
+six-digit PIN (entered twice, hidden). It stores a salted hash and never prints
+the PIN. Setup cannot be repeated once completed or if an admin already exists.
+Normal startup applies migrations and exits with instructions if setup is needed.
+
+Use the same connection string for setup and normal startup. The default local
+database is `src/Steward.Server/steward.db` when using the commands above.
+For a published build, run `dotnet Steward.Server.dll setup` from its directory.
+Container deployments need an interactive terminal and the same persistent
+database volume for setup and startup; the current Compose file only runs MQTT.
+
+Email is collected for future recovery; setup does not verify or send email.
+Web sign-in, sessions, and email recovery are not implemented yet. See
+[the authentication design](docs/authentication.md) for account rules.
+
 ## Contributing
 
 Contributions, ideas, and discussions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.

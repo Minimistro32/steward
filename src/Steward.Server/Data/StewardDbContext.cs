@@ -11,6 +11,8 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
     public DbSet<DeviceEntity> Devices => Set<DeviceEntity>();
     public DbSet<ResourceEntity> Resources => Set<ResourceEntity>();
 
+    public DbSet<SetupStateEntity> SetupStates => Set<SetupStateEntity>();
+
     // User
     public DbSet<UserEntity> Users => Set<UserEntity>();
     public DbSet<UserDeviceEntity> UserDevices => Set<UserDeviceEntity>();

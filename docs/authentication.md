@@ -1,7 +1,8 @@
 # Authentication and Users: MVP Design
 
-Status: account storage and database constraints implemented. Terminal setup,
-sign-in, sessions, account credential editing, and recovery are not yet implemented.
+Status: account storage, database constraints, terminal setup, and startup checks
+implemented. Sign-in, sessions, account credential editing, and recovery remain
+unimplemented.
 
 ## Goals
 
@@ -34,10 +35,10 @@ Names identify accounts in the UI. Avatars are out of scope.
 Admin accounts require both an email address and a PIN. Member accounts are
 managed by admins and may have neither an email address nor a PIN.
 
-## First Installation (Planned)
+## First Installation
 
-There is no automatically seeded admin or default credential. The intended
-first-installation flow is an explicit terminal setup command:
+There is no automatically seeded admin or default credential. The
+first-installation flow uses `dotnet run --project src/Steward.Server -- setup`:
 
 1. Create the database and apply migrations.
 2. Prompt for the first admin’s name, email, and numeric PIN. Hide PIN entry and
@@ -47,11 +48,14 @@ first-installation flow is an explicit terminal setup command:
 
 For Docker, setup should run interactively against the same database volume as
 the application. Normal startup should remain noninteractive; before setup is
-complete, it should print setup instructions and exit. These startup checks and
-the setup command are future work, not current application behavior.
+complete, it should print setup instructions and exit. Startup applies pending migrations before checking for an admin. Setup does not
+start the HTTP server or MQTT services. Redirected input is refused to keep PIN
+entry interactive.
 
-Setup must not overwrite existing accounts or recreate an admin simply because
-no admin remains. After installation, admins manage accounts in the frontend.
+Setup never overwrites existing accounts. A persistent setup-completed marker
+is saved in the same transaction as the admin; removing admins does not reopen
+setup. If no admin remains afterward, startup requires restoring an admin from
+a database backup. After installation, admins manage accounts in the frontend.
 
 ## PIN Storage and Database Rules
 
@@ -64,16 +68,17 @@ PIN cannot be cleared while the account remains an admin.
 
 The database checks admin email and hash presence, as well as valid account
 types. Email format, numeric PIN validation, and creation of a valid hash belong
-in the future setup and account-management code. A member can be promoted only
+in terminal setup and future account-management code. A member can be promoted only
 when both required admin fields are present.
 
-When PIN editing is implemented, use ASP.NET Core’s `PasswordHasher<UserEntity>`.
+Terminal setup uses ASP.NET Core’s `PasswordHasher<UserEntity>`; future PIN
+editing should use the same hasher.
 It generates a fresh random salt for each PIN update and stores the salt, hash,
 and hashing parameters together in `PinHash`; no separate salt column is needed.
 A configured PIN must be verified by the hasher, including its rehash-needed result.
 
 The initial migration creates the current schema without seeded users. Terminal
-setup will create the first admin explicitly.
+setup creates the first admin explicitly.
 
 ## Sign-In and Sessions
 
@@ -93,8 +98,7 @@ Use a mobile-friendly numeric input/keypad. Show the current user's name and an
 accessible sign-out action so shared-device users can switch accounts.
 
 The exact session duration and whether expiry is based on inactivity, elapsed
-time since sign-in, or both remain to be decided. Six-digit PINs are the proposed
-starting point; finalize PIN length before implementation.
+time since sign-in, or both remain to be decided. Terminal setup currently requires a six-digit PIN.
 
 ## Requests and Activity
 
@@ -144,6 +148,5 @@ use standard session and credential handling when implementing it.
 ## Remaining Decisions
 
 - Session timeout duration and expiry behavior.
-- Final PIN length.
 - Email delivery configuration.
 - Whether admins can submit requests on behalf of other users.
