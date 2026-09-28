@@ -12,6 +12,12 @@
     } from "../../api";
     import type { RequestActivity as RequestActivityModel } from "../../models";
 
+    let {
+        showMakeRequest = true,
+    }: {
+        showMakeRequest?: boolean;
+    } = $props();
+
     let requests = $state<RequestActivityModel[]>([]);
 
     // TODO: Temporary until Steward has actual authentication/current-user context.
@@ -50,9 +56,11 @@
 
 <Card title="Request Activity">
     {#snippet actions()}
-        <a use:link href="/requests">
-            <button class="cta-button">Make Request</button>
-        </a>
+        {#if showMakeRequest}
+            <a use:link href="/requests">
+                <button class="cta-button">Make Request</button>
+            </a>
+        {/if}
     {/snippet}
 
     {#if pendingRequests.length || historyRequests.length}
@@ -113,7 +121,7 @@
 
     .scrolling-container {
         position: relative;
-        max-height: 60vh;
+        max-height: var(--request-activity-height, 60vh);
         overflow-y: auto;
 
         padding-left: var(--space-4);
@@ -138,9 +146,9 @@
     }
 
     .empty-state {
-        height: 60vh;
+        height: var(--request-activity-height, 60vh);
 
-        min-height: 220px;
+        min-height: var(--request-activity-empty-min-height, 220px);
 
         display: flex;
         flex-direction: column;

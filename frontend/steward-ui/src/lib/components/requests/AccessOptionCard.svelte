@@ -160,7 +160,8 @@
 
 <style>
     .access-option-card {
-        min-width: 405px;
+        width: 100%;
+        min-width: 0;
         max-width: 550px;
     }
 
