@@ -1,6 +1,7 @@
 <script lang="ts">
   import AppShell from "./lib/components/AppShell.svelte";
-  import Router from "svelte-spa-router";
+  import Router, { router } from "svelte-spa-router";
+  import Login from "./lib/pages/Login.svelte";
 
   // Components
   import Overview from "./lib/pages/Overview.svelte";
@@ -26,6 +27,10 @@
   };
 </script>
 
-<AppShell>
-  <Router {routes} />
-</AppShell>
+{#if router.location === "/login"}
+  <Login />
+{:else}
+  <AppShell>
+    <Router {routes} />
+  </AppShell>
+{/if}

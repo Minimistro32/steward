@@ -10,7 +10,8 @@
     /* Bundler mode */
     "module": "nodenext",
     "allowImportingTsExtensions": true,
-    "noEmit": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./node_modules/.tmp/tsconfig.node",
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
 
