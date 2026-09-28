@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using System.Threading.RateLimiting;
+using Steward.Server.Authentication;
 using Steward.Server.Mqtt;
 using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
@@ -14,6 +18,35 @@ var builder = WebApplication.CreateBuilder(setupRequested ? args[1..] : args);
 builder.Services.AddDbContextFactory<StewardDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Steward"))
 );
+
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<SessionStore>();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
+{
+    options.Cookie.Name = "steward.session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = false;
+    options.Events.OnRedirectToLogin = context => { context.Response.StatusCode = 401; return Task.CompletedTask; };
+    options.Events.OnRedirectToAccessDenied = context => { context.Response.StatusCode = 403; return Task.CompletedTask; };
+    options.Events.OnValidatePrincipal = SessionAuthentication.ValidateAsync;
+});
+builder.Services.AddOptions<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme)
+    .Configure<SessionStore>((options, store) => options.SessionStore = store);
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+    options.AddPolicy("login", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
 
 builder.Services.Configure<MqttOptions>(
     builder.Configuration.GetSection(MqttOptions.SectionName)
@@ -49,7 +82,8 @@ builder.Services.AddCors(options =>
                 "https://localhost:5173"
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -82,7 +116,25 @@ if (app.Environment.IsDevelopment())
     // app.MapOpenApi();
 }
 
-// app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
+// A custom header makes cookie-authenticated mutations require a same-origin
+// request or a successful CORS preflight from an explicitly allowed origin.
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    if (context.Request.Path.StartsWithSegments("/api")
+        && !HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method)
+        && !HttpMethods.IsOptions(context.Request.Method)
+        && context.Request.Headers["X-Steward-Request"] != "1")
+    {
+        context.Response.StatusCode = 403;
+        return;
+    }
+    await next(context);
+});
+app.MapAuthEndpoints();
 
 app.MapAccessEndpoints();
 app.MapAgentEndpoints();

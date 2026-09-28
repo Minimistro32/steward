@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { currentUser } from "../../session";
     import { link } from "svelte-spa-router";
     import { onMount } from "svelte";
 
@@ -20,8 +21,7 @@
 
     let requests = $state<RequestActivityModel[]>([]);
 
-    // TODO: Temporary until Steward has actual authentication/current-user context.
-    let currentUserId = 2;
+    let currentUserId = $derived($currentUser?.id);
 
     let pendingRequests = $derived(
         requests.filter((request) => request.status === "pending"),
@@ -36,16 +36,18 @@
     }
 
     async function approveRequest(request: RequestActivityModel) {
+        if (!$currentUser || $currentUser.type !== "admin") return;
         await approveOverrideRequest(request.id, {
-            userId: currentUserId,
+            userId: $currentUser.id,
         });
 
         await loadRequests();
     }
 
     async function rejectRequest(request: RequestActivityModel) {
+        if (!$currentUser || $currentUser.type !== "admin") return;
         await rejectOverrideRequest(request.id, {
-            userId: currentUserId,
+            userId: $currentUser.id,
         });
 
         await loadRequests();
@@ -74,6 +76,7 @@
                             <RequestTimelineElement
                                 {request}
                                 {currentUserId}
+                                canManage={$currentUser?.type === "admin"}
                                 onapprove={approveRequest}
                                 onreject={rejectRequest}
                             />

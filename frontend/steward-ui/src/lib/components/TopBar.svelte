@@ -1,6 +1,7 @@
 <script lang="ts">
-    // Placeholder identity until authentication is connected.
-    const currentUser = { name: "Alex", role: "Admin" };
+    import { currentUser } from "../session";
+    import { signOut as endSession } from "../api/authApi";
+    let logoutError = $state(false);
     let accountMenu: HTMLDetailsElement;
     let accountTrigger: HTMLElement;
 
@@ -21,26 +22,30 @@
         }
     }
 
-    function signOut() {
-        // Mock only: connect this to session sign-out when auth is implemented.
-        closeMenu();
-        accountTrigger?.focus();
+    async function signOut() {
+        logoutError = false;
+        try { await endSession(); closeMenu(); }
+        catch { logoutError = true; }
     }
+
 </script>
 
 <svelte:window onclick={handleOutsideClick} onkeydown={handleKeydown} />
 
 <div class="topbar">
-    <div class="brand">
-        <div class="brand-name">Steward</div>
-        <div class="brand-tagline">Giving you room to grow.</div>
+    <div class="brand-with-logo">
+        {#if $currentUser?.type === "member"}<img src="/steward-logo.svg" alt="" width="44" height="48" />{/if}
+        <div class="brand">
+            <div class="brand-name">Steward</div>
+            <div class="brand-tagline">Giving you room to grow.</div>
+        </div>
     </div>
 
     <details class="account-menu" bind:this={accountMenu}>
         <summary class="account-trigger" bind:this={accountTrigger}>
             <span class="account-identity">
-                <span class="account-name">{currentUser.name}</span>
-                {#if currentUser.role === "Admin"}
+                <span class="account-name">{$currentUser?.name}</span>
+                {#if $currentUser?.type === "admin"}
                     <span class="account-role">Admin</span>
                 {/if}
             </span>
@@ -65,11 +70,14 @@
                 </svg>
                 Log out
             </button>
+            {#if logoutError}<p role="alert">Couldn’t log out. Try again.</p>{/if}
         </div>
     </details>
 </div>
 
 <style>
+    .brand-with-logo { display: flex; align-items: center; gap: var(--space-3); }
+    .brand-with-logo img { object-fit: contain; }
     .topbar {
         height: 75px;
         display: flex;

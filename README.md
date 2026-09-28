@@ -53,8 +53,18 @@ Container deployments need an interactive terminal and the same persistent
 database volume for setup and startup; the current Compose file only runs MQTT.
 
 Email is collected for future recovery; setup does not verify or send email.
-Web sign-in, sessions, and email recovery are not implemented yet. See
+Web sign-in and role-based sessions are implemented; email recovery is not yet available. See
 [the authentication design](docs/authentication.md) for account rules.
+
+### Authentication checks
+
+```sh
+dotnet build src/Steward.Server
+python3 tests/auth_smoke.py
+```
+
+The checks use a temporary database and MQTT test peer, leaving local data alone.
+Frontend checks: run `npm run check` and `npm run build` in `frontend/steward-ui`.
 
 ## Contributing
 

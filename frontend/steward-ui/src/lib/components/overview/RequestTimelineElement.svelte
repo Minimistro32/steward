@@ -4,16 +4,19 @@
     let {
         request,
         currentUserId,
+        canManage = false,
         onapprove,
         onreject,
     }: {
         request: RequestActivity;
         currentUserId?: number;
+        canManage?: boolean;
         onapprove?: (request: RequestActivity) => void;
         onreject?: (request: RequestActivity) => void;
     } = $props();
 
     let canRespond = $derived(
+        canManage && currentUserId !== undefined &&
         request.status === "pending" &&
             request.requirement === "userApproval" &&
             request.userId !== currentUserId,

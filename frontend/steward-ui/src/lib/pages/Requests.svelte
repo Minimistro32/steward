@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { currentUser } from "../session";
     import { onMount } from "svelte";
 
     import PageHeader from "../components/ui/PageHeader.svelte";
@@ -22,7 +23,8 @@
 
 
     onMount(async () => {
-        users = await getUsers();
+        if ($currentUser?.type === "admin") users = await getUsers();
+        else selectedUserId = $currentUser?.id;
         loadingUsers = false;
     });
 
@@ -71,7 +73,9 @@
         Request access to your managed devices and resources.
     {/snippet}
     {#snippet actions()}
-        {#if loadingUsers}
+        {#if $currentUser?.type !== "admin"}
+            <span>{$currentUser?.name}</span>
+        {:else if loadingUsers}
             <p>Loading users...</p>
         {:else}
             <select

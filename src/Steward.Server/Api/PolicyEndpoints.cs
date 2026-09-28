@@ -10,7 +10,7 @@ public static class PolicyEndpoints
 {
     public static void MapPolicyEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/policies");
+        var group = app.MapGroup("/api/policies").RequireAuthorization("Admin");
 
         //
         // Get all policies

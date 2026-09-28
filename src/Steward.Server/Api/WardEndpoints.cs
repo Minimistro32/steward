@@ -9,7 +9,7 @@ public static class WardEndpoints
 {
     public static void MapWardEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/wards");
+        var group = app.MapGroup("/api/wards").RequireAuthorization("Admin");
 
         // GET
         group.MapGet("/", async (StewardDbContext db) =>

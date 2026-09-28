@@ -1,8 +1,7 @@
 # Authentication and Users: MVP Design
 
-Status: account storage, database constraints, terminal setup, and startup checks
-implemented. Sign-in, sessions, account credential editing, and recovery remain
-unimplemented.
+Status: account storage, terminal setup, sign-in, sessions, and role-based page/API
+access implemented. Account credential editing and recovery remain unimplemented.
 
 ## Goals
 
@@ -97,8 +96,25 @@ user's description of Pi-hole sign-in, with a PIN and account selection.
 Use a mobile-friendly numeric input/keypad. Show the current user's name and an
 accessible sign-out action so shared-device users can switch accounts.
 
-The exact session duration and whether expiry is based on inactivity, elapsed
-time since sign-in, or both remain to be decided. Terminal setup currently requires a six-digit PIN.
+Sessions expire eight hours after sign-in without sliding renewal. Cookies are
+HTTP-only, SameSite Strict, and secure when served over HTTPS. Tickets live in
+server memory: logout revokes them, and restarting Steward signs everyone out.
+Changes to account type or PIN, and account deletion, invalidate existing sessions.
+The frontend checks the session at launch and every minute, and clears it on API
+401 responses. Members always land on Requests, with no sidebar and the logo next
+to “Steward / Giving you room to grow.” Admins retain the full navigation.
+
+The public account picker exposes only IDs and names. All other data APIs require
+a session; management APIs require Admin. Members can request and complete access
+only for themselves and cannot approve or reject requests. Admins retain the
+existing ability to submit requests on behalf of users; approval identity always
+comes from the session. All signed-in users see the shared activity timeline.
+
+Login allows ten attempts per minute per client IP. Cookie-authenticated mutations
+require `X-Steward-Request: 1`, with CORS restricted to configured development
+origins. The frontend uses `/api`; Vite proxies it to the local backend during
+development. Production hosting must route `/api` to Steward on the same origin.
+Terminal setup currently requires a six-digit PIN.
 
 ## Requests and Activity
 
@@ -147,6 +163,4 @@ use standard session and credential handling when implementing it.
 
 ## Remaining Decisions
 
-- Session timeout duration and expiry behavior.
 - Email delivery configuration.
-- Whether admins can submit requests on behalf of other users.

@@ -1,18 +1,26 @@
-const API_URL = "http://localhost:5042/api";
+import { setSession, sessionRevision } from "../session";
+const API_URL = "/api";
+export class ApiError extends Error {
+    constructor(public status: number) { super(`API Error: ${status}`); }
+}
 
 async function request<T>(
     path: string,
     options?: RequestInit,
 ): Promise<T> {
+    const revision = sessionRevision();
     const response = await fetch(`${API_URL}${path}`, {
+        credentials: "include",
         headers: {
+            "X-Steward-Request": "1",
             "Content-Type": "application/json",
         },
         ...options,
     });
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        if (response.status === 401 && path !== "/auth/login" && revision === sessionRevision()) setSession(null);
+        throw new ApiError(response.status);
     }
 
     if (response.status === 204) {

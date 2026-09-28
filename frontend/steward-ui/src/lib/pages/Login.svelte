@@ -1,21 +1,23 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { getUsers } from "../api/userApi";
-    import type { User } from "../models";
+    import { getLoginUsers, signIn } from "../api/authApi";
+    import { ApiError } from "../api/client";
 
-    let users = $state<User[]>([]);
+
+    let users = $state<{ id: number; name: string }[]>([]);
     let userId = $state("");
     let pin = $state("");
     let showPin = $state(false);
     let loading = $state(true);
     let loadError = $state(false);
     let message = $state("");
+    let submitting = $state(false);
 
     async function loadUsers() {
         loading = true;
         loadError = false;
         try {
-            users = await getUsers();
+            users = await getLoginUsers();
         } catch {
             loadError = true;
         } finally {
@@ -26,16 +28,25 @@
     onMount(() => { void loadUsers(); });
 
     function enterDigit(digit: number) {
-        pin += String(digit);
+        if (pin.length < 128) pin += String(digit);
         message = "";
     }
 
-    function submit(event: SubmitEvent) {
+    async function submit(event: SubmitEvent) {
         event.preventDefault();
-        // Replace with session creation once the server supports authentication.
-        pin = "";
-        message = "Sign-in is not available yet. Please try again once Steward’s sign-in setup is complete.";
+        if (submitting) return;
+        submitting = true;
+        message = "";
+        try { await signIn(Number(userId), pin); }
+        catch (error) {
+            message = error instanceof ApiError && error.status === 401
+                ? "That PIN isn’t correct. Try again."
+                : error instanceof ApiError && error.status === 429
+                  ? "Too many attempts. Please wait a minute and try again."
+                  : "Couldn’t sign in. Check your connection and try again.";
+        } finally { pin = ""; submitting = false; }
     }
+
 </script>
 
 <svelte:head>
@@ -73,14 +84,15 @@
                     <label for="login-pin">Your PIN</label>
                     <div class="pin-input">
                         <input id="login-pin" type={showPin ? "text" : "password"} inputmode="numeric"
-                            pattern="[0-9]+" autocomplete="current-password" required
-                            placeholder="Enter your PIN" value={pin}
+                            pattern="[0-9]+" autocomplete="current-password"
+                            placeholder="Enter your PIN" maxlength="128" value={pin}
                             oninput={(event) => { pin = event.currentTarget.value.replace(/[^0-9]/g, ""); message = ""; }} />
                         <button class="visibility" type="button" aria-label={showPin ? "Hide PIN" : "Show PIN"}
                             aria-pressed={showPin} onclick={() => showPin = !showPin}>
                             {#if showPin}Hide{:else}Show{/if}
                         </button>
                     </div>
+                    <p class="field-help">No PIN set? Leave it empty.</p>
                 </div>
 
                 <div class="keypad" role="group" aria-label="PIN keypad">
@@ -97,7 +109,7 @@
                     </button>
                 </div>
 
-                <button class="sign-in" type="submit" disabled={!userId || !pin || loading || loadError}>Sign in <span aria-hidden="true">→</span></button>
+                <button class="sign-in" type="submit" disabled={!userId || submitting || loading || loadError}>{submitting ? "Signing in…" : "Sign in"} <span aria-hidden="true">→</span></button>
                 {#if message}<p class="message" role="status">{message}</p>{/if}
             </form>
 

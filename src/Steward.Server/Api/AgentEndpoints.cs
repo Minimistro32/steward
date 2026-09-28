@@ -10,7 +10,7 @@ public static class AgentEndpoints
 {
     public static void MapAgentEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/agents");
+        var group = app.MapGroup("/api/agents").RequireAuthorization("Admin");
 
         group.MapGet("/", async (StewardDbContext db) =>
         {

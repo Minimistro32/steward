@@ -9,7 +9,7 @@ public static class UserEndpoints
 {
     public static void MapUserEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/users");
+        var group = app.MapGroup("/api/users").RequireAuthorization("Admin");
 
         group.MapGet("/", async (StewardDbContext db) =>
         {
