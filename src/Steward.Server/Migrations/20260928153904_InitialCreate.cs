@@ -31,11 +31,17 @@ namespace Steward.Server.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: false)
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    PinHash = table.Column<string>(type: "TEXT", nullable: true),
+                    Email = table.Column<string>(type: "TEXT", nullable: true),
+                    Type = table.Column<string>(type: "TEXT", nullable: false, defaultValue: "Member")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.CheckConstraint("CK_Users_AdminEmail", "Type <> 'Admin' OR (Email IS NOT NULL AND length(trim(Email)) > 0)");
+                    table.CheckConstraint("CK_Users_AdminPinHash", "Type <> 'Admin' OR (PinHash IS NOT NULL AND length(trim(PinHash)) > 0)");
+                    table.CheckConstraint("CK_Users_Type", "Type IN ('Member', 'Admin')");
                 });
 
             migrationBuilder.CreateTable(
@@ -255,8 +261,8 @@ namespace Steward.Server.Migrations
                     RequestedMinutes = table.Column<int>(type: "INTEGER", nullable: false),
                     Requirement = table.Column<int>(type: "INTEGER", nullable: true),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    AvailableAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    AvailableAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     ChallengeText = table.Column<string>(type: "TEXT", nullable: true),
                     ApprovedByUserId = table.Column<int>(type: "INTEGER", nullable: true)
                 },
@@ -288,7 +294,8 @@ namespace Steward.Server.Migrations
                 {
                     PolicyId = table.Column<int>(type: "INTEGER", nullable: false),
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
-                    LastAccessed = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    UsageDate = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    UnlockedUntil = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     MinutesUsed = table.Column<int>(type: "INTEGER", nullable: false),
                     UnlocksUsed = table.Column<int>(type: "INTEGER", nullable: false),
                     OverrideMinutesUsed = table.Column<int>(type: "INTEGER", nullable: false),

@@ -46,6 +46,22 @@ public class StewardDbContext(DbContextOptions<StewardDbContext> options) : DbCo
             .Property(x => x.State)
             .HasConversion<string>();
 
+        modelBuilder.Entity<UserEntity>()
+            .Property(x => x.Type)
+            .HasConversion<string>()
+            .HasDefaultValue(UserType.Member);
+
+        modelBuilder.Entity<UserEntity>()
+            .ToTable("Users", table =>
+            {
+                table.HasCheckConstraint("CK_Users_Type",
+                    "Type IN ('Member', 'Admin')");
+                table.HasCheckConstraint("CK_Users_AdminEmail",
+                    "Type <> 'Admin' OR (Email IS NOT NULL AND length(trim(Email)) > 0)");
+                table.HasCheckConstraint("CK_Users_AdminPinHash",
+                    "Type <> 'Admin' OR (PinHash IS NOT NULL AND length(trim(PinHash)) > 0)");
+            });
+
         modelBuilder.Entity<UserDeviceEntity>()
             .HasKey(x => new
             {

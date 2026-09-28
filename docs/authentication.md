@@ -1,6 +1,7 @@
 # Authentication and Users: MVP Design
 
-Status: agreed product direction; not yet implemented.
+Status: account storage and database constraints implemented. Terminal setup,
+sign-in, sessions, account credential editing, and recovery are not yet implemented.
 
 ## Goals
 
@@ -9,6 +10,9 @@ mobile-friendly sign-in flow that children ages 6–8 and older can use.
 Keep the MVP small: names, numeric PINs, and two account types.
 Transparency is intentional: every signed-in user can see everyone's request
 activity.
+
+Steward is intended for local networks, not public internet exposure. Agents
+are decentralized and enforce policy independently.
 
 ## Account Types
 
@@ -27,17 +31,59 @@ The account types are **Admin** and **Member**.
 | Recover own forgotten PIN | Email reset flow | Ask an admin |
 
 Names identify accounts in the UI. Avatars are out of scope.
-Admin accounts require an email address for PIN recovery; member accounts do
-not need an email address.
+Admin accounts require both an email address and a PIN. Member accounts are
+managed by admins and may have neither an email address nor a PIN.
+
+## First Installation (Planned)
+
+There is no automatically seeded admin or default credential. The intended
+first-installation flow is an explicit terminal setup command:
+
+1. Create the database and apply migrations.
+2. Prompt for the first admin’s name, email, and numeric PIN. Hide PIN entry and
+   ask for confirmation.
+3. Validate the input, hash the PIN, and save the admin account.
+4. Start Steward and sign in through the frontend using that account.
+
+For Docker, setup should run interactively against the same database volume as
+the application. Normal startup should remain noninteractive; before setup is
+complete, it should print setup instructions and exit. These startup checks and
+the setup command are future work, not current application behavior.
+
+Setup must not overwrite existing accounts or recreate an admin simply because
+no admin remains. After installation, admins manage accounts in the frontend.
+
+## PIN Storage and Database Rules
+
+An admin must have a nonblank email and PIN hash. Members may leave their PIN
+unset, represented by a null `PinHash`, not a hash of an empty string. For a
+member with an unset PIN, only an empty PIN submission should succeed. For any
+account with a configured PIN, the correct PIN is required; an empty submission
+must fail. Admins can manage member PINs, including clearing them. An admin’s
+PIN cannot be cleared while the account remains an admin.
+
+The database checks admin email and hash presence, as well as valid account
+types. Email format, numeric PIN validation, and creation of a valid hash belong
+in the future setup and account-management code. A member can be promoted only
+when both required admin fields are present.
+
+When PIN editing is implemented, use ASP.NET Core’s `PasswordHasher<UserEntity>`.
+It generates a fresh random salt for each PIN update and stores the salt, hash,
+and hashing parameters together in `PinHash`; no separate salt column is needed.
+A configured PIN must be verified by the hasher, including its rehash-needed result.
+
+The initial migration creates the current schema without seeded users. Terminal
+setup will create the first admin explicitly.
 
 ## Sign-In and Sessions
 
-1. The user selects their name and enters their numeric PIN.
+1. The user selects their name and enters their numeric PIN (or leaves it empty
+   for a member whose PIN is unset).
 2. Steward starts a signed-in session.
 3. The user can perform permitted actions without entering their PIN for each
    action. Member accounts land on the Requests page.
 4. The user can sign out explicitly. Sessions also expire, after which the user
-   must enter their PIN again before continuing.
+   must sign in again before continuing, using an empty PIN if theirs is unset.
 
 This is a temporary signed-in session, not an indefinitely remembered login or
 a permanently paired browser. The intended interaction is similar to the
@@ -99,5 +145,5 @@ use standard session and credential handling when implementing it.
 
 - Session timeout duration and expiry behavior.
 - Final PIN length.
-- Initial admin creation and email configuration.
+- Email delivery configuration.
 - Whether admins can submit requests on behalf of other users.

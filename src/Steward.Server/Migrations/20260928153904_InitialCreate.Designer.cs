@@ -11,8 +11,8 @@ using Steward.Server.Data;
 namespace Steward.Server.Migrations
 {
     [DbContext(typeof(StewardDbContext))]
-    [Migration("20260927015146_AddActivePolicyAccess")]
-    partial class AddActivePolicyAccess
+    [Migration("20260928153904_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -102,7 +102,7 @@ namespace Steward.Server.Migrations
                     b.Property<string>("ChallengeText")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("PolicyId")
@@ -245,13 +245,32 @@ namespace Steward.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Email")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("PinHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Member");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Users_AdminEmail", "Type <> 'Admin' OR (Email IS NOT NULL AND length(trim(Email)) > 0)");
+
+                            t.HasCheckConstraint("CK_Users_AdminPinHash", "Type <> 'Admin' OR (PinHash IS NOT NULL AND length(trim(PinHash)) > 0)");
+
+                            t.HasCheckConstraint("CK_Users_Type", "Type IN ('Member', 'Admin')");
+                        });
                 });
 
             modelBuilder.Entity("Steward.Server.Data.Entities.WardDeviceEntity", b =>
