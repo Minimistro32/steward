@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { getLoginUsers, signIn } from "../api/authApi";
+    import { getLoginUsers, getLastSignedInUserId, signIn } from "../api/authApi";
     import { ApiError } from "../api/client";
 
 
@@ -18,6 +18,10 @@
         loadError = false;
         try {
             users = await getLoginUsers();
+            const lastUserId = getLastSignedInUserId();
+            if (!userId && users.some(user => String(user.id) === lastUserId)) {
+                userId = lastUserId!;
+            }
         } catch {
             loadError = true;
         } finally {
