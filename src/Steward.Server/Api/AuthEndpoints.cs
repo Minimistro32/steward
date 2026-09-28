@@ -18,10 +18,11 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth");
         group.MapGet("/users", async (StewardDbContext db) =>
-            Results.Ok(await db.Users.OrderBy(user => user.Name).Select(user => new { user.Id, user.Name }).ToListAsync())).AllowAnonymous();
+            Results.Ok(await db.Users.OrderBy(user => user.Name).Select(user => new { user.Id, user.Name, user.Type }).ToListAsync())).AllowAnonymous();
 
         group.MapPost("/login", async (SignInRequest input, StewardDbContext db, HttpContext context) =>
         {
+            await using var transaction = await db.Database.BeginTransactionAsync();
             var user = await db.Users.FindAsync(input.UserId);
             var pin = input.Pin ?? "";
             if (user is null || pin.Length > 128 || pin.Any(c => c is < '0' or > '9')) return Results.Unauthorized();
@@ -36,12 +37,25 @@ public static class AuthEndpoints
                 try { result = hasher.VerifyHashedPassword(user, user.PinHash, pin); }
                 catch (FormatException) { return Results.Unauthorized(); }
             }
+            if (result == PasswordVerificationResult.Failed && user.Type == UserType.Admin
+                && user.RecoveryPinHash is not null && user.RecoveryPinExpiresAt > DateTimeOffset.UtcNow)
+            {
+                result = hasher.VerifyHashedPassword(user, user.RecoveryPinHash, pin);
+                if (result != PasswordVerificationResult.Failed)
+                {
+                    user.PinHash = hasher.HashPassword(user, pin);
+                    user.RecoveryPinHash = null;
+                    user.RecoveryPinExpiresAt = null;
+                    await db.SaveChangesAsync();
+                }
+            }
             if (result == PasswordVerificationResult.Failed) return Results.Unauthorized();
             if (result == PasswordVerificationResult.SuccessRehashNeeded)
             {
                 user.PinHash = hasher.HashPassword(user, pin);
                 await db.SaveChangesAsync();
             }
+            await transaction.CommitAsync();
             await context.SignOutAsync();
             var identity = new ClaimsIdentity(new[] {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),

@@ -30,13 +30,22 @@
             if (params?.id) {
                 const user = await getUser(params.id);
                 if (!user) { loadError = "User not found."; return; }
+                if (user.type === "admin" && user.id !== $currentUser?.id) {
+                    loadError = "You can only edit your own account or member accounts.";
+                    return;
+                }
+                if (typeof user.hasPin !== "boolean") {
+                    loadError = "The server is running an older user API. Restart the Steward server before editing PINs.";
+                    return;
+                }
                 name = user.name;
                 email = user.email ?? "";
                 type = originalType = user.type;
                 hasPin = user.hasPin;
             }
         } catch (error) {
-            loadError = error instanceof ApiError && error.status === 404 ? "User not found." : "Couldn’t load this user. Try again.";
+            loadError = error instanceof ApiError && error.status === 403 ? "You can only edit your own account or member accounts."
+                : error instanceof ApiError && error.status === 404 ? "User not found." : "Couldn’t load this user. Try again.";
         } finally { loading = false; }
     }
     onMount(() => { void load(); });
@@ -44,19 +53,28 @@
     async function save(event: SubmitEvent) {
         event.preventDefault();
         if (saving) return;
+        // Read the actual input values at submission, including browser autofill.
+        // Do this before disabling the fieldset, which removes inputs from FormData.
+        const fields = new FormData(event.currentTarget as HTMLFormElement);
+        pin = String(fields.get("pin") ?? "");
+        confirmation = String(fields.get("pinConfirmation") ?? "");
         errors = [];
         if (!name.trim()) errors.push("Name is required.");
         if (type === "admin" && !email.trim()) errors.push("Admins require an email address.");
         else if (email.trim() && (event.currentTarget as HTMLFormElement).querySelector<HTMLInputElement>("#user-email")?.validity.typeMismatch)
             errors.push("Enter a valid email address.");
         if (type === "admin" && !hasPin && !pin) errors.push("Admins require a PIN.");
-        if (pin && !/^[0-9]{6}$/.test(pin)) errors.push("PIN must contain exactly six digits.");
+        if (pin && !/^[0-9]{4,128}$/.test(pin)) errors.push("PIN must contain at least four digits (maximum 128).");
         if (pin !== confirmation) errors.push("PINs do not match.");
         if (errors.length) return;
         saving = true;
         try {
             const body = { name: name.trim(), email: email.trim() || null, type, pin: pin || undefined, clearPin: type === "member" && clearPin };
             const user = isNew ? await createUser(body) : await updateUser(Number(params!.id), body);
+            if (typeof user.hasPin !== "boolean" || (pin && !user.hasPin) || (body.clearPin && user.hasPin)) {
+                errors = ["The server did not confirm the PIN change. Restart the Steward server and try again."];
+                return;
+            }
             if (user.id === $currentUser?.id) {
                 if (pin || clearPin || type !== originalType) setSession(null);
                 else await restoreSession();
@@ -64,7 +82,8 @@
             pin = confirmation = "";
             await push($currentUser ? "/users" : "/login");
         } catch (error) {
-            errors = error instanceof ApiError && error.errors.length ? error.errors : ["Couldn’t save this user. Please try again."];
+            errors = error instanceof ApiError && error.status === 403 ? ["You can only edit your own account or member accounts."]
+                : error instanceof ApiError && error.errors.length ? error.errors : ["Couldn’t save this user. Please try again."];
         } finally { saving = false; }
     }
 </script>
@@ -97,14 +116,14 @@
                 </Card>
                 <Card>
                     <h2>Sign-in PIN</h2>
-                    <p class="hint">{isNew ? (type === "admin" ? "Set a six-digit PIN for this admin." : "A PIN is optional. Without one, this member can sign in with an empty PIN.") : (hasPin ? "A PIN is set. Leave the fields empty to keep it unchanged." : "No PIN is currently set.")}</p>
+                    <p class="hint">{isNew ? (type === "admin" ? "Set a PIN with at least four digits for this admin." : "A PIN is optional. Without one, this member can sign in with an empty PIN.") : (hasPin ? "A PIN is set. Leave the fields empty to keep it unchanged." : "No PIN is currently set.")}</p>
                     {#if !isNew && hasPin && type === "member"}
                         <label class="clear"><input type="checkbox" bind:checked={clearPin} onchange={() => { pin = confirmation = ""; }} />Clear this member’s PIN</label>
                     {/if}
                     <label for="user-pin">{isNew ? "PIN" : "New PIN"}</label>
-                    <input id="user-pin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" bind:value={pin} disabled={clearPin} required={type === "admin" && !hasPin} />
+                    <input id="user-pin" name="pin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="128" bind:value={pin} disabled={clearPin} required={type === "admin" && !hasPin} />
                     <label for="user-pin-confirm">Confirm PIN</label>
-                    <input id="user-pin-confirm" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" bind:value={confirmation} disabled={clearPin} required={!!pin} />
+                    <input id="user-pin-confirm" name="pinConfirmation" type="password" inputmode="numeric" autocomplete="new-password" maxlength="128" bind:value={confirmation} disabled={clearPin} required={!!pin} />
                     {#if !isNew && Number(params?.id) === $currentUser?.id}<p class="hint">Changing your PIN or account type will require you to sign in again.</p>{/if}
                 </Card>
                 {#if errors.length}<div class="errors" role="alert">{#each errors as error}<p>{error}</p>{/each}</div>{/if}

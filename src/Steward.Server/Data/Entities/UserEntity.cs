@@ -10,6 +10,10 @@ public class UserEntity
     // Members may leave their PIN unset (null); admins must have a PIN hash.
     public string? PinHash { get; set; }
 
+    public string? RecoveryPinHash { get; set; }
+    public DateTimeOffset? RecoveryPinExpiresAt { get; set; }
+    public DateTimeOffset? LastRecoveryEmailAt { get; set; }
+
     public string? Email { get; set; }
 
     public UserType Type { get; set; } = UserType.Member;

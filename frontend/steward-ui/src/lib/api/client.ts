@@ -25,7 +25,7 @@ async function request<T>(
         throw new ApiError(response.status, errors);
     }
 
-    if (response.status === 204) {
+    if (response.status === 204 || response.status === 202) {
         return undefined as T;
     }
 

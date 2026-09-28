@@ -42,7 +42,7 @@ dotnet run --project src/Steward.Server
 ```
 
 Setup applies database migrations and asks for your admin name, email, and a
-six-digit PIN (entered twice, hidden). It stores a salted hash and never prints
+PIN with at least four digits (entered twice, hidden). It stores a salted hash and never prints
 the PIN. Setup cannot be repeated once completed or if an admin already exists.
 Normal startup applies migrations and exits with instructions if setup is needed.
 
@@ -52,8 +52,9 @@ For a published build, run `dotnet Steward.Server.dll setup` from its directory.
 Container deployments need an interactive terminal and the same persistent
 database volume for setup and startup; the current Compose file only runs MQTT.
 
-Email is collected for future recovery; setup does not verify or send email.
-Web sign-in and role-based sessions are implemented; email recovery is not yet available. See
+Admin PIN recovery sends a new random PIN through your SMTP mailbox or relay.
+See [email setup](docs/email.md) for configuration and no-cost provider options.
+Terminal setup collects the account email but does not verify it. See
 [the authentication design](docs/authentication.md) for account rules.
 
 ### Authentication checks
@@ -61,6 +62,7 @@ Web sign-in and role-based sessions are implemented; email recovery is not yet a
 ```sh
 dotnet build src/Steward.Server
 python3 tests/auth_smoke.py
+python3 tests/recovery_smoke.py
 ```
 
 The checks use a temporary database and MQTT test peer, leaving local data alone.

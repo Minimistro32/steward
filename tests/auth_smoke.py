@@ -59,117 +59,148 @@ def mqtt_peer(listener):
             pass
 
 
-with tempfile.TemporaryDirectory(prefix='steward-auth-') as folder:
-    database = str(Path(folder) / 'test.db')
-    subprocess.run(['dotnet', 'ef', 'database', 'update', '--no-build', '--project',
-                    str(ROOT / 'src/Steward.Server'), '--connection', f'Data Source={database}'],
-                   check=True, stdout=subprocess.DEVNULL)
-    with sqlite3.connect(database) as db:
-        db.execute("INSERT INTO Users (Id, Name, Type, Email, PinHash) VALUES (1, 'Admin', 'Admin', 'admin@example.com', ?)", (password_hash('123456'),))
-        db.execute("INSERT INTO Users (Id, Name, Type) VALUES (2, 'Member', 'Member')")
-        db.execute("INSERT INTO Users (Id, Name, Type, PinHash) VALUES (3, 'PIN member', 'Member', ?)", (password_hash('654321'),))
-    with socket.socket() as broker, socket.socket() as port:
-        broker.bind(('127.0.0.1', 0)); broker.listen()
-        port.bind(('127.0.0.1', 0)); http_port = port.getsockname()[1]; port.close()
-        threading.Thread(target=mqtt_peer, args=(broker,), daemon=True).start()
-        env = dict(os.environ, ConnectionStrings__Steward=f'Data Source={database}',
-                   ASPNETCORE_URLS=f'http://127.0.0.1:{http_port}',
-                   Mqtt__Host='127.0.0.1', Mqtt__Port=str(broker.getsockname()[1]),
-                   Logging__LogLevel__Default='Warning')
-        with open(Path(folder) / 'server.log', 'w+') as log:
-            server = subprocess.Popen(['dotnet', str(ASSEMBLY)], cwd=folder, env=env, stdout=log, stderr=log)
-            try:
-                def request(path, body=None, cookie=None, header=True, method=None):
-                    headers = {'Content-Type': 'application/json'}
-                    if header:
-                        headers['X-Steward-Request'] = '1'
-                    if cookie:
-                        headers['Cookie'] = cookie
-                    req = urllib.request.Request(f'http://127.0.0.1:{http_port}/api{path}',
-                                                 data=None if body is None else json.dumps(body).encode(), headers=headers, method=method)
-                    try:
-                        response = urllib.request.urlopen(req, timeout=5)
-                    except urllib.error.HTTPError as error:
-                        response = error
-                    return response.status, response.read(), response.headers
-                for _ in range(100):
-                    try:
-                        if request('/auth/users')[0] == 200:
-                            break
-                    except (OSError, urllib.error.URLError):
-                        time.sleep(.1)
-                else:
-                    log.seek(0); raise AssertionError(log.read())
-                for path in ['/users', '/agents', '/wards', '/policies', '/access/requests', '/auth/session']:
-                    assert request(path)[0] == 401, path
-                picker = json.loads(request('/auth/users')[1])
-                assert all(set(user) == {'id', 'name'} for user in picker)
-                assert request('/auth/login', {'userId': 1, 'pin': ''})[0] == 401
-                assert request('/auth/login', {'userId': 3, 'pin': ''})[0] == 401
-                assert request('/auth/login', {'userId': 2, 'pin': '1'})[0] == 401
-                status, body, headers = request('/auth/login', {'userId': 2, 'pin': ''})
-                assert status == 200 and json.loads(body)['type'] == 'member'
-                member_cookie = headers.get_all('Set-Cookie')[-1].split(';')[0]
-                assert 'httponly' in headers.get_all('Set-Cookie')[-1].lower()
-                assert 'samesite=strict' in headers.get_all('Set-Cookie')[-1].lower()
-                assert request('/auth/session', cookie=member_cookie)[0] == 200
-                for path in ['/users', '/agents', '/wards', '/policies', '/access/1']:
-                    assert request(path, cookie=member_cookie)[0] == 403, path
-                for path, body in [('/access/requests/99/approve', {'userId': 1}),
-                                   ('/access/requests/99/reject', {'userId': 1}),
-                                   ('/users', {'name': 'Injected', 'deviceIds': []})]:
-                    assert request(path, body, member_cookie)[0] == 403, path
-                assert request('/access/2', cookie=member_cookie)[0] == 200
-                assert request('/access/requests', cookie=member_cookie)[0] == 200
-                assert request('/auth/logout', {}, member_cookie, header=False)[0] == 403
-                assert request('/auth/logout', {}, member_cookie)[0] == 204
-                assert request('/auth/session', cookie=member_cookie)[0] == 401
-                status, _, headers = request('/auth/login', {'userId': 1, 'pin': '123456'})
-                assert status == 200
-                admin_cookie = headers.get_all('Set-Cookie')[-1].split(';')[0]
-                assert request('/users', cookie=admin_cookie)[0] == 200
-                assert request('/access/2', cookie=admin_cookie)[0] == 200
-                # Account creation/editing: validation, credential preservation, and device assignments.
-                for body in [{'name': ' '}, {'name': 'Bad admin', 'type': 'admin'},
-                             {'name': 'Bad email', 'email': 'invalid'}, {'name': 'Bad PIN', 'pin': '123'}]:
-                    assert request('/users', body, admin_cookie)[0] == 400
-                assert request('/users/1', {'name': 'Admin', 'type': 'member'}, admin_cookie, method='PUT')[0] == 400
-                assert request('/users/1', cookie=admin_cookie, method='DELETE')[0] == 409
-                status, body, _ = request('/users', {'name': ' New member ', 'type': 'member'}, admin_cookie)
-                created = json.loads(body)
-                assert status == 201 and created['name'] == 'New member' and not created['hasPin']
-                user_path = f"/users/{created['id']}"
-                assert 'pinHash' not in created and 'pin' not in created
-                with sqlite3.connect(database) as db:
-                    db.execute("INSERT INTO Agents (Id, InstanceId, Version, Name) VALUES ('test', 'test', '1', 'Test')")
-                    db.execute("INSERT INTO Devices (Id, DeviceId, Name, AgentId) VALUES (1, 'test', 'Device', 'test')")
-                    db.execute("INSERT INTO UserDevices (UserId, DeviceId) VALUES (?, 1)", (created['id'],))
-                status, body, _ = request(user_path, {'name': 'Renamed', 'type': 'member', 'pin': '112233'}, admin_cookie, method='PUT')
-                assert status == 200 and json.loads(body)['deviceIds'] == [1] and json.loads(body)['hasPin']
-                with sqlite3.connect(database) as db:
-                    saved_hash = db.execute('SELECT PinHash FROM Users WHERE Id = ?', (created['id'],)).fetchone()[0]
-                    assert saved_hash != '112233'
-                assert request(user_path, {'name': 'Again', 'type': 'member', 'pin': ''}, admin_cookie, method='PUT')[0] == 200
-                with sqlite3.connect(database) as db:
-                    assert db.execute('SELECT PinHash FROM Users WHERE Id = ?', (created['id'],)).fetchone()[0] == saved_hash
-                assert request(user_path, {'name': 'Again', 'type': 'member', 'clearPin': True}, admin_cookie, method='PUT')[0] == 200
-                assert not json.loads(request(user_path, cookie=admin_cookie)[1])['hasPin']
-                status, body, _ = request('/users', {'name': 'Second admin', 'type': 'admin', 'email': 'second@example.com', 'pin': '445566'}, admin_cookie)
-                assert status == 201 and json.loads(body)['hasPin']
-                assert request('/users/99999', {'name': 'Missing'}, admin_cookie, method='PUT')[0] == 404
+def main():
+    with tempfile.TemporaryDirectory(prefix='steward-auth-') as folder:
+        database = str(Path(folder) / 'test.db')
+        subprocess.run(['dotnet', 'ef', 'database', 'update', '--no-build', '--project',
+                        str(ROOT / 'src/Steward.Server'), '--connection', f'Data Source={database}'],
+                       check=True, stdout=subprocess.DEVNULL)
+        with sqlite3.connect(database) as db:
+            db.execute("INSERT INTO Users (Id, Name, Type, Email, PinHash) VALUES (1, 'Admin', 'Admin', 'admin@example.com', ?)", (password_hash('123456'),))
+            db.execute("INSERT INTO Users (Id, Name, Type) VALUES (2, 'Member', 'Member')")
+            db.execute("INSERT INTO Users (Id, Name, Type, PinHash) VALUES (3, 'PIN member', 'Member', ?)", (password_hash('654321'),))
+        with socket.socket() as broker, socket.socket() as port:
+            broker.bind(('127.0.0.1', 0)); broker.listen()
+            port.bind(('127.0.0.1', 0)); http_port = port.getsockname()[1]; port.close()
+            threading.Thread(target=mqtt_peer, args=(broker,), daemon=True).start()
+            env = dict(os.environ, ConnectionStrings__Steward=f'Data Source={database}',
+                       ASPNETCORE_URLS=f'http://127.0.0.1:{http_port}',
+                       Mqtt__Host='127.0.0.1', Mqtt__Port=str(broker.getsockname()[1]),
+                       Logging__LogLevel__Default='Warning')
+            with open(Path(folder) / 'server.log', 'w+') as log:
+                server = subprocess.Popen(['dotnet', str(ASSEMBLY)], cwd=folder, env=env, stdout=log, stderr=log)
+                try:
+                    def request(path, body=None, cookie=None, header=True, method=None):
+                        headers = {'Content-Type': 'application/json'}
+                        if header:
+                            headers['X-Steward-Request'] = '1'
+                        if cookie:
+                            headers['Cookie'] = cookie
+                        req = urllib.request.Request(f'http://127.0.0.1:{http_port}/api{path}',
+                                                     data=None if body is None else json.dumps(body).encode(), headers=headers, method=method)
+                        try:
+                            response = urllib.request.urlopen(req, timeout=5)
+                        except urllib.error.HTTPError as error:
+                            response = error
+                        return response.status, response.read(), response.headers
+                    for _ in range(100):
+                        try:
+                            if request('/auth/users')[0] == 200:
+                                break
+                        except (OSError, urllib.error.URLError):
+                            time.sleep(.1)
+                    else:
+                        log.seek(0); raise AssertionError(log.read())
+                    for path in ['/users', '/agents', '/wards', '/policies', '/access/requests', '/auth/session']:
+                        assert request(path)[0] == 401, path
+                    picker = json.loads(request('/auth/users')[1])
+                    assert all(set(user) == {'id', 'name', 'type'} for user in picker)
+                    assert {user['id']: user['type'] for user in picker} == {1: 'admin', 2: 'member', 3: 'member'}
+                    assert request('/auth/login', {'userId': 1, 'pin': ''})[0] == 401
+                    assert request('/auth/login', {'userId': 3, 'pin': ''})[0] == 401
+                    assert request('/auth/login', {'userId': 2, 'pin': '1'})[0] == 401
+                    status, body, headers = request('/auth/login', {'userId': 2, 'pin': ''})
+                    assert status == 200 and json.loads(body)['type'] == 'member'
+                    member_cookie = headers.get_all('Set-Cookie')[-1].split(';')[0]
+                    assert 'httponly' in headers.get_all('Set-Cookie')[-1].lower()
+                    assert 'samesite=strict' in headers.get_all('Set-Cookie')[-1].lower()
+                    assert request('/auth/session', cookie=member_cookie)[0] == 200
+                    for path in ['/users', '/agents', '/wards', '/policies', '/access/1']:
+                        assert request(path, cookie=member_cookie)[0] == 403, path
+                    for path, body in [('/access/requests/99/approve', {'userId': 1}),
+                                       ('/access/requests/99/reject', {'userId': 1}),
+                                       ('/users', {'name': 'Injected', 'deviceIds': []})]:
+                        assert request(path, body, member_cookie)[0] == 403, path
+                    assert request('/access/2', cookie=member_cookie)[0] == 200
+                    assert request('/access/requests', cookie=member_cookie)[0] == 200
+                    assert request('/auth/logout', {}, member_cookie, header=False)[0] == 403
+                    assert request('/auth/logout', {}, member_cookie)[0] == 204
+                    assert request('/auth/session', cookie=member_cookie)[0] == 401
+                    status, _, headers = request('/auth/login', {'userId': 1, 'pin': '123456'})
+                    assert status == 200
+                    admin_cookie = headers.get_all('Set-Cookie')[-1].split(';')[0]
+                    assert request('/users', cookie=admin_cookie)[0] == 200
+                    assert request('/access/2', cookie=admin_cookie)[0] == 200
+                    # Account creation/editing: validation, credential preservation, and device assignments.
+                    for body in [{'name': ' '}, {'name': 'Bad admin', 'type': 'admin'},
+                                 {'name': 'Bad email', 'email': 'invalid'}, {'name': 'Bad PIN', 'pin': '123'}, {'name': 'Non-numeric PIN', 'pin': '12a4'},
+                                 {'name': 'Too long', 'pin': '1' * 129}]:
+                        assert request('/users', body, admin_cookie)[0] == 400
+                    assert request('/users/1', {'name': 'Admin', 'type': 'member'}, admin_cookie, method='PUT')[0] == 400
+                    assert request('/users/1', cookie=admin_cookie, method='DELETE')[0] == 409
+                    status, body, _ = request('/users', {'name': ' New member ', 'type': 'member'}, admin_cookie)
+                    created = json.loads(body)
+                    assert status == 201 and created['name'] == 'New member' and not created['hasPin']
+                    user_path = f"/users/{created['id']}"
+                    assert 'pinHash' not in created and 'pin' not in created
+                    with sqlite3.connect(database) as db:
+                        db.execute("INSERT INTO Agents (Id, InstanceId, Version, Name) VALUES ('test', 'test', '1', 'Test')")
+                        db.execute("INSERT INTO Devices (Id, DeviceId, Name, AgentId) VALUES (1, 'test', 'Device', 'test')")
+                        db.execute("INSERT INTO UserDevices (UserId, DeviceId) VALUES (?, 1)", (created['id'],))
+                    status, body, _ = request(user_path, {'name': 'Renamed', 'type': 'member', 'pin': '112233'}, admin_cookie, method='PUT')
+                    assert status == 200 and json.loads(body)['deviceIds'] == [1] and json.loads(body)['hasPin']
+                    with sqlite3.connect(database) as db:
+                        saved_hash = db.execute('SELECT PinHash FROM Users WHERE Id = ?', (created['id'],)).fetchone()[0]
+                        assert saved_hash != '112233'
+                    assert request(user_path, {'name': 'Again', 'type': 'member', 'pin': ''}, admin_cookie, method='PUT')[0] == 200
+                    with sqlite3.connect(database) as db:
+                        assert db.execute('SELECT PinHash FROM Users WHERE Id = ?', (created['id'],)).fetchone()[0] == saved_hash
+                    assert request(user_path, {'name': 'Again', 'type': 'member', 'clearPin': True}, admin_cookie, method='PUT')[0] == 200
+                    assert not json.loads(request(user_path, cookie=admin_cookie)[1])['hasPin']
+                    status, body, _ = request('/users', {'name': 'Second admin', 'type': 'admin', 'email': 'second@example.com', 'pin': '445566'}, admin_cookie)
+                    assert status == 201 and json.loads(body)['hasPin']
+                    other_admin_path = f"/users/{json.loads(body)['id']}"
+                    assert request(other_admin_path, cookie=admin_cookie)[0] == 403
+                    for update in [{'name': 'Changed', 'type': 'admin', 'email': 'other@example.com', 'pin': '1234'},
+                                   {'name': 'Demoted', 'type': 'member', 'clearPin': True}]:
+                        assert request(other_admin_path, update, admin_cookie, method='PUT')[0] == 403
+                    assert request(other_admin_path, cookie=admin_cookie, method='DELETE')[0] == 403
+                    assert request(other_admin_path + '/devices/1', {}, admin_cookie, method='PUT')[0] == 403
+                    assert request(other_admin_path + '/devices/1', cookie=admin_cookie, method='DELETE')[0] == 403
+                    assert request('/users/1', {'name': 'My edited name', 'type': 'admin', 'email': 'admin@example.com'}, admin_cookie, method='PUT')[0] == 200
+                    for pin in ['0123', '1234567']:
+                        status, body, _ = request('/users', {'name': 'PIN length test', 'type': 'member', 'pin': pin}, admin_cookie)
+                        assert status == 201
+                        assert json.loads(body)['hasPin']
+                    # A previously PIN-free member must stop accepting an empty PIN.
+                    assert request('/users/2', {'name': 'Member', 'type': 'member', 'pin': '0123'}, admin_cookie, method='PUT')[0] == 200
+                    assert request('/auth/login', {'userId': 2, 'pin': ''})[0] == 401
+                    assert request('/auth/login', {'userId': 2, 'pin': '0123'})[0] == 200
+                    assert request('/users/99999', {'name': 'Missing'}, admin_cookie, method='PUT')[0] == 404
 
-                status, _, headers = request('/auth/login', {'userId': 3, 'pin': '654321'})
-                assert status == 200
-                pin_cookie = headers.get_all('Set-Cookie')[-1].split(';')[0]
-                with sqlite3.connect(database) as db:
-                    db.execute("UPDATE Users SET PinHash = NULL WHERE Id = 3")
-                    db.execute("UPDATE Users SET Type = 'Member' WHERE Id = 1")
-                assert request('/auth/session', cookie=pin_cookie)[0] == 401
-                assert request('/users', cookie=admin_cookie)[0] == 401
-                print('PASS: anonymous isolation, minimal picker, admin/member PINs, roles, own access, shared activity, CSRF header, logout replay, PIN/type invalidation, user create/edit validation, PIN preservation/clearing, devices, and last-admin protection.')
-            except Exception:
-                log.flush(); log.seek(0); print(log.read())
-                raise
-            finally:
-                server.terminate()
-                server.wait(timeout=10)
+                    status, _, headers = request('/auth/login', {'userId': 3, 'pin': '654321'})
+                    assert status == 200
+                    pin_cookie = headers.get_all('Set-Cookie')[-1].split(';')[0]
+                    # Reset another member's existing PIN through the API, then prove
+                    # their old session and PIN fail while the new PIN succeeds.
+                    assert request('/users/3', {'name': 'PIN member', 'type': 'member', 'pin': '0123'}, admin_cookie, method='PUT')[0] == 200
+                    assert request('/auth/session', cookie=pin_cookie)[0] == 401
+                    assert request('/auth/login', {'userId': 3, 'pin': '654321'})[0] == 401
+                    assert request('/auth/login', {'userId': 3, 'pin': '0123'})[0] == 200
+                    assert request('/auth/session', cookie=admin_cookie)[0] == 200
+                    with sqlite3.connect(database) as db:
+                        db.execute("UPDATE Users SET PinHash = NULL WHERE Id = 3")
+                        db.execute("UPDATE Users SET Type = 'Member' WHERE Id = 1")
+                    assert request('/auth/session', cookie=pin_cookie)[0] == 401
+                    assert request('/users', cookie=admin_cookie)[0] == 401
+                    print('PASS: anonymous isolation, minimal picker, admin/member PINs, roles, own access, shared activity, CSRF header, logout replay, PIN/type invalidation, user create/edit validation, PIN preservation/clearing, devices, and last-admin protection.')
+                except Exception:
+                    log.flush(); log.seek(0); print(log.read())
+                    raise
+                finally:
+                    server.terminate()
+                    server.wait(timeout=10)
+
+
+if __name__ == "__main__":
+    main()

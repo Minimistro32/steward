@@ -34,10 +34,10 @@ public static class TerminalSetup
             string pin;
             while (true)
             {
-                pin = ReadSecret("PIN (6 digits): ");
-                if (pin.Length != 6 || pin.Any(character => character is < '0' or > '9'))
+                pin = ReadSecret("PIN (at least 4 digits): ");
+                if (pin.Length < 4 || pin.Length > 128 || pin.Any(character => character is < '0' or > '9'))
                 {
-                    Console.WriteLine("Enter exactly six digits.");
+                    Console.WriteLine("Enter at least four digits (maximum 128).");
                     continue;
                 }
                 if (pin == ReadSecret("Confirm PIN: ")) break;

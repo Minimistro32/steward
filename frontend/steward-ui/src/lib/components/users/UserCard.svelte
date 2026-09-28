@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { currentUser } from "../../session";
     import Card from "../ui/Card.svelte";
 
     import type { User, Device } from "../../models";
@@ -12,6 +13,8 @@
 
     const { user, devices, onAssign, onRemove }: Props = $props();
 
+    const canEdit = $derived($currentUser?.type === "admin" && (user.type !== "admin" || user.id === $currentUser.id));
+
     const assignedDevices = $derived.by(() =>
         user.deviceIds
             .map((id) => devices.find((d) => d.id === id))
@@ -20,6 +23,7 @@
 
     function drop(event: DragEvent) {
         event.preventDefault();
+        if (!canEdit) return;
 
         const deviceId = Number(event.dataTransfer?.getData("deviceId"));
         if (deviceId) {
@@ -31,7 +35,7 @@
         event.preventDefault();
 
         if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = "copy";
+            event.dataTransfer.dropEffect = canEdit ? "copy" : "none";
         }
     }
 </script>
@@ -49,6 +53,7 @@
                 {user.name}
             </h2>
 
+            {#if canEdit}
             <a class="edit-user" href={`#/users/${user.id}`} aria-label={`Edit ${user.name}`} title="Edit user">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <circle cx="5" cy="12" r="2" />
@@ -56,11 +61,12 @@
                     <circle cx="19" cy="12" r="2" />
                 </svg>
             </a>
+            {/if}
         </div>
 
         <div class="devices">
             {#if assignedDevices.length === 0}
-                <p class="empty">Drop devices here</p>
+                <p class="empty">{canEdit ? "Drop devices here" : "No devices assigned"}</p>
             {:else}
                 {#each assignedDevices as device}
                     <div class="device-chip">
@@ -68,12 +74,14 @@
                             {device.name}
                         </span>
 
+                        {#if canEdit}
                         <button
                             onclick={() => onRemove(user, device.id)}
                             aria-label="Remove device"
                         >
                             &#215;
                         </button>
+                        {/if}
                     </div>
                 {/each}
             {/if}

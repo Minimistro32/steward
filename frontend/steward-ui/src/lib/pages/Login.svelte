@@ -1,17 +1,47 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { getLoginUsers, getLastSignedInUserId, signIn } from "../api/authApi";
+    import { getLoginUsers, getLastSignedInUserId, signIn, getRecoveryStatus, requestPinRecovery } from "../api/authApi";
+    import type { SessionUser } from "../session";
     import { ApiError } from "../api/client";
 
 
-    let users = $state<{ id: number; name: string }[]>([]);
+    let users = $state<SessionUser[]>([]);
     let userId = $state("");
+    const selectedUser = $derived(users.find(user => String(user.id) === userId));
     let pin = $state("");
     let showPin = $state(false);
     let loading = $state(true);
     let loadError = $state(false);
     let message = $state("");
     let submitting = $state(false);
+    let recoveryEmail = $state("");
+    let recoveryMessage = $state("");
+    let recovering = $state(false);
+    let recoveryEnabled = $state<boolean | null>(null);
+    let recoveryStatusError = $state(false);
+
+    async function loadRecoveryStatus() {
+        recoveryStatusError = false;
+        try { recoveryEnabled = (await getRecoveryStatus()).enabled; }
+        catch { recoveryStatusError = true; }
+    }
+
+    async function recoverPin(event: SubmitEvent) {
+        event.preventDefault();
+        if (recovering || selectedUser?.type !== "admin") return;
+        recovering = true;
+        recoveryMessage = "";
+        try {
+            await requestPinRecovery(Number(userId), recoveryEmail.trim());
+            recoveryMessage = "If the name and email match an admin account, a new PIN will be emailed. Check your inbox and spam folder. It expires in 30 minutes if unused. Please wait five minutes before requesting another.";
+        } catch (error) {
+            recoveryMessage = error instanceof ApiError && error.status === 429
+                ? "Too many reset requests. Please wait 15 minutes and try again."
+                : error instanceof ApiError && error.status === 503
+                  ? "Email recovery is unavailable. Your existing PIN is unchanged. Check with the server owner."
+                  : "Couldn't request a new PIN. Your existing PIN is unchanged. Please try again.";
+        } finally { recovering = false; }
+    }
 
     async function loadUsers() {
         loading = true;
@@ -29,7 +59,7 @@
         }
     }
 
-    onMount(() => { void loadUsers(); });
+    onMount(() => { void loadUsers(); void loadRecoveryStatus(); });
 
     function enterDigit(digit: number) {
         if (pin.length < 128) pin += String(digit);
@@ -44,10 +74,10 @@
         try { await signIn(Number(userId), pin); }
         catch (error) {
             message = error instanceof ApiError && error.status === 401
-                ? "That PIN isn’t correct. Try again."
+                ? "That PIN isn't correct. Try again."
                 : error instanceof ApiError && error.status === 429
                   ? "Too many attempts. Please wait a minute and try again."
-                  : "Couldn’t sign in. Check your connection and try again.";
+                  : "Couldn't sign in. Check your connection and try again.";
         } finally { pin = ""; submitting = false; }
     }
 
@@ -70,15 +100,15 @@
             <form onsubmit={submit}>
                 <div class="field">
                     <label for="login-user">Your name</label>
-                    <select id="login-user" bind:value={userId} required disabled={loading || loadError || users.length === 0}
-                        onchange={() => { pin = ""; message = ""; }}>
+                    <select id="login-user" bind:value={userId} required disabled={loading || loadError || users.length === 0 || recovering}
+                        onchange={() => { pin = ""; message = ""; recoveryEmail = ""; recoveryMessage = ""; }}>
                         <option value="" disabled>{loading ? "Loading names…" : "Choose your name"}</option>
                         {#each users as user (user.id)}
                             <option value={String(user.id)}>{user.name}</option>
                         {/each}
                     </select>
                     {#if loadError}
-                        <p class="field-help" role="alert">Couldn’t load names. <button class="text-button" type="button" onclick={loadUsers}>Try again</button></p>
+                        <p class="field-help" role="alert">Couldn't load names. <button class="text-button" type="button" onclick={loadUsers}>Try again</button></p>
                     {:else if !loading && users.length === 0}
                         <p class="field-help" role="status">No accounts are available. Ask your administrator to set up your account.</p>
                     {/if}
@@ -119,7 +149,27 @@
 
             <details>
                 <summary>Forgot your PIN?</summary>
-                <p>Ask your Steward administrator to help you reset your PIN.</p>
+                {#if !selectedUser}
+                    <p>Select your name above to see how to reset your PIN.</p>
+                {:else if selectedUser.type === "member"}
+                    <p>Contact an admin to reset your PIN.</p>
+                {:else}
+                <p>Enter your account email to receive a new PIN.</p>
+                {#if recoveryStatusError}
+                    <p>Couldn't check email recovery. <button class="text-button" type="button" onclick={loadRecoveryStatus}>Try again</button></p>
+                {:else if recoveryEnabled === null}
+                    <p>Checking email recovery…</p>
+                {:else if !recoveryEnabled}
+                    <p>Email recovery hasn't been configured. The server owner needs to configure SMTP first.</p>
+                {:else}
+                    <form class="recovery-form" onsubmit={recoverPin}>
+                        <label for="recovery-email">Admin account email</label>
+                        <input id="recovery-email" type="email" autocomplete="email" bind:value={recoveryEmail} required disabled={recovering} />
+                        <button class="cta-button" type="submit" disabled={!userId || recovering}>{recovering ? "Sending…" : "Email me a new PIN"}</button>
+                    </form>
+                {/if}
+                {#if recoveryMessage}<p role="status">{recoveryMessage}</p>{/if}
+                {/if}
             </details>
         </section>
         <footer>Giving you room to grow.</footer>
@@ -167,6 +217,7 @@
     .field-help, .message { margin: 0; }
     .text-button { color: var(--color-brand-light); background: none; border: 0; padding: 0; text-decoration: underline; }
     details { margin-top: var(--space-6); border-top: 1px solid var(--color-border); padding-top: var(--space-5); }
+    .recovery-form { margin-top: var(--space-4); }
     summary { cursor: pointer; color: var(--color-text-muted); font-size: 0.85rem; }
     details p { margin-bottom: 0; }
     footer { text-align: center; color: var(--color-text-muted); font-size: 0.75rem; padding-top: var(--space-5); }

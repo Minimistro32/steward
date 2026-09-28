@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using Steward.Server.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Steward.Server.Data;
@@ -29,12 +30,13 @@ public static class UserEndpoints
 
         group.MapGet("/{id}", async (
             int id,
-            StewardDbContext db) =>
+            StewardDbContext db, HttpContext context) =>
         {
             var user = await LoadUser(db, id);
 
             if (user is null)
                 return Results.NotFound();
+            if (!CanEdit(user, context)) return Results.Forbid();
 
             return Results.Ok(UserDto.FromEntity(user));
         });
@@ -50,11 +52,12 @@ public static class UserEndpoints
             return Results.Created($"/api/users/{user.Id}", UserDto.FromEntity(user));
         });
 
-        group.MapPut("/{id}", async (int id, SaveUserDto dto, StewardDbContext db) =>
+        group.MapPut("/{id}", async (int id, SaveUserDto dto, StewardDbContext db, HttpContext context) =>
         {
             await using var transaction = await db.Database.BeginTransactionAsync();
             var user = await LoadUser(db, id);
             if (user is null) return Results.NotFound();
+            if (!CanEdit(user, context)) return Results.Forbid();
             var errors = Validate(dto, user.PinHash is not null);
             if (user.Type == UserType.Admin && dto.Type != UserType.Admin
                 && !await db.Users.AnyAsync(u => u.Id != id && u.Type == UserType.Admin))
@@ -69,7 +72,7 @@ public static class UserEndpoints
 
         group.MapDelete("/{id}", async (
             string id,
-            StewardDbContext db) =>
+            StewardDbContext db, HttpContext context) =>
         {
             await using var transaction = await db.Database.BeginTransactionAsync();
             var user = await db.Users
@@ -78,6 +81,7 @@ public static class UserEndpoints
 
             if (user is null)
                 return Results.NotFound();
+            if (!CanEdit(user, context)) return Results.Forbid();
 
 
             if (user.Type == UserType.Admin && !await db.Users.AnyAsync(u => u.Id != user.Id && u.Type == UserType.Admin))
@@ -94,7 +98,7 @@ public static class UserEndpoints
         group.MapPut("/{id}/devices/{deviceId}", async (
             int id,
             int deviceId,
-            StewardDbContext db) =>
+            StewardDbContext db, HttpContext context) =>
         {
             var user = await db.Users
                 .Include(u => u.UserDevices)
@@ -102,6 +106,7 @@ public static class UserEndpoints
 
             if (user is null)
                 return Results.NotFound();
+            if (!CanEdit(user, context)) return Results.Forbid();
 
 
             var exists = user.UserDevices
@@ -128,8 +133,11 @@ public static class UserEndpoints
         group.MapDelete("/{id}/devices/{deviceId}", async (
             int id,
             int deviceId,
-            StewardDbContext db) =>
+            StewardDbContext db, HttpContext context) =>
         {
+            var user = await db.Users.FindAsync(id);
+            if (user is null) return Results.NotFound();
+            if (!CanEdit(user, context)) return Results.Forbid();
             var userDevice = await db.UserDevices
                 .FirstOrDefaultAsync(ud =>
                     ud.UserId == id &&
@@ -148,6 +156,9 @@ public static class UserEndpoints
         });
     }
 
+
+    private static bool CanEdit(UserEntity user, HttpContext context) =>
+        user.Type != UserType.Admin || user.Id == context.User.UserId();
 
     private static async Task<UserEntity?> LoadUser(
         StewardDbContext db,
@@ -170,8 +181,8 @@ public static class UserEndpoints
         if (dto.Type == UserType.Admin && string.IsNullOrEmpty(email)) errors["email"] = ["Admins require an email address."];
         else if (!string.IsNullOrEmpty(email) && (!MailAddress.TryCreate(email, out var address) || address.Address != email))
             errors["email"] = ["Enter a valid email address."];
-        if (!string.IsNullOrEmpty(dto.Pin) && (dto.Pin.Length != 6 || dto.Pin.Any(c => c is < '0' or > '9')))
-            errors["pin"] = ["PIN must contain exactly six digits."];
+        if (!string.IsNullOrEmpty(dto.Pin) && (dto.Pin.Length < 4 || dto.Pin.Length > 128 || dto.Pin.Any(c => c is < '0' or > '9')))
+            errors["pin"] = ["PIN must contain at least four digits (maximum 128)."];
         if (dto.ClearPin && !string.IsNullOrEmpty(dto.Pin)) errors["pin"] = ["Choose a new PIN or clear it, not both."];
         if (dto.Type == UserType.Admin && (dto.ClearPin || (!hasPin && string.IsNullOrEmpty(dto.Pin))))
             errors["pin"] = ["Admins require a PIN."];
@@ -180,6 +191,12 @@ public static class UserEndpoints
 
     private static void Apply(UserEntity user, SaveUserDto dto)
     {
+        if (dto.ClearPin || !string.IsNullOrEmpty(dto.Pin) || user.Type != dto.Type
+            || !string.Equals(user.Email, dto.Email?.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            user.RecoveryPinHash = null;
+            user.RecoveryPinExpiresAt = null;
+        }
         user.Name = dto.Name.Trim();
         user.Type = dto.Type;
         user.Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();

@@ -82,3 +82,5 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+# Python integration-test cache
+__pycache__/

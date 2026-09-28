@@ -1,8 +1,8 @@
 # Authentication and Users: MVP Design
 
 Status: account storage, terminal setup, sign-in, sessions, and role-based page/API
-access and admin-managed account creation/editing implemented. Email recovery
-remains unimplemented.
+access, admin-managed account creation/editing, and SMTP admin PIN recovery
+implemented. Email delivery requires server configuration.
 
 ## Goals
 
@@ -105,7 +105,8 @@ The frontend checks the session at launch and every minute, and clears it on API
 401 responses. Members always land on Requests, with no sidebar and the logo next
 to “Steward / Giving you room to grow.” Admins retain the full navigation.
 
-The public account picker exposes only IDs and names. All other data APIs require
+The public account picker exposes only IDs, names, and account types so recovery
+help can match the selected account. All other data APIs require
 a session; management APIs require Admin. Members can request and complete access
 only for themselves and cannot approve or reject requests. The Requests page uses the signed-in user for both account types, without a user
 selector. Approval identity always comes from the session. All signed-in users see the shared activity timeline.
@@ -114,7 +115,7 @@ Login allows ten attempts per minute per client IP. Cookie-authenticated mutatio
 require `X-Steward-Request: 1`, with CORS restricted to configured development
 origins. The frontend uses `/api`; Vite proxies it to the local backend during
 development. Production hosting must route `/api` to Steward on the same origin.
-Terminal setup currently requires a six-digit PIN.
+Terminal setup currently requires a PIN with at least four digits.
 
 ## Requests and Activity
 
@@ -132,8 +133,12 @@ approving one's own request.
 
 ## User Management
 
+Admins may edit only their own account or member accounts. Other admins’
+edit controls are hidden, and the API rejects edits, deletion, and device
+assignment changes to another admin.
+
 Admins create users at `#/users/new` and edit them at `#/users/:id`, using the
-same form. It includes name, type, email, and a six-digit PIN with confirmation.
+same form. It includes name, type, email, and a PIN with at least four digits, entered twice for confirmation.
 On edit, an empty PIN preserves the existing hash. Members have an explicit
 clear-PIN option; admins must retain a PIN and email. Device assignments are
 managed on the Users page and are preserved when account details are saved.
@@ -146,8 +151,11 @@ returns you to sign-in. PINs and hashes are never returned by the user API.
 - An admin who forgets their own PIN uses an email reset flow.
 - Member accounts do not have an email recovery flow.
 
-The email delivery setup and reset-link behavior still need implementation
-design. Browser pairing and passkeys are not prerequisites for this MVP.
+Admins request a random eight-digit PIN by supplying their selected account and
+email. It expires after 30 minutes unused. The existing PIN remains valid until
+the emailed PIN is used; then the emailed PIN becomes the regular PIN and older
+sessions are invalidated. Changing it afterward is optional. SMTP failure leaves
+the existing PIN unchanged. See [email configuration and limits](email.md).
 
 ## Implementation Boundaries
 
@@ -170,7 +178,3 @@ use standard session and credential handling when implementing it.
 - QR codes or device-pairing flows.
 - Permanently remembered child sessions.
 - Additional account roles or per-person approver assignments.
-
-## Remaining Decisions
-
-- Email delivery configuration.

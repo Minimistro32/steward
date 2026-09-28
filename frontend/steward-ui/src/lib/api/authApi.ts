@@ -5,7 +5,7 @@ export function getLastSignedInUserId(): string | null {
     try { return localStorage.getItem(LAST_USER_KEY); }
     catch { return null; } // Storage may be disabled by the browser.
 }
-export const getLoginUsers = () => client.get<{ id: number; name: string }[]>("/auth/users");
+export const getLoginUsers = () => client.get<SessionUser[]>("/auth/users");
 export async function signIn(userId: number, pin: string) {
     const revision = beginSessionChange();
     const user = await client.post<SessionUser>("/auth/login", { userId, pin });
@@ -25,3 +25,7 @@ export async function restoreSession() {
     const user = await client.get<SessionUser>("/auth/session");
     if (revision === sessionRevision()) setSession(user);
 }
+
+export const getRecoveryStatus = () => client.get<{ enabled: boolean }>("/auth/recovery");
+export const requestPinRecovery = (userId: number, email: string) =>
+    client.post<void>("/auth/recovery", { userId, email });

@@ -1,3 +1,4 @@
+using Steward.Server.Email;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.RateLimiting;
@@ -18,6 +19,9 @@ var builder = WebApplication.CreateBuilder(setupRequested ? args[1..] : args);
 builder.Services.AddDbContextFactory<StewardDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Steward"))
 );
+
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddSingleton<SmtpEmailSender>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<SessionStore>();
@@ -43,6 +47,9 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = 429;
+    options.AddPolicy("recovery", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(15), QueueLimit = 0 }));
     options.AddPolicy("login", context => RateLimitPartition.GetFixedWindowLimiter(
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
@@ -135,6 +142,7 @@ app.Use(async (context, next) =>
     await next(context);
 });
 app.MapAuthEndpoints();
+app.MapPinRecoveryEndpoints();
 
 app.MapAccessEndpoints();
 app.MapAgentEndpoints();
