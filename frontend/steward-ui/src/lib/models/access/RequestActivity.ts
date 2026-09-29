@@ -1,6 +1,7 @@
 import type { OverrideRequirement } from "../policies";
 
 export interface RequestActivity {
+    reason?: string | null;
     id: number;
     userId: number;
     userName: string;

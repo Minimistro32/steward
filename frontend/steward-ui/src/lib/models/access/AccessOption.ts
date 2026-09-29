@@ -1,7 +1,8 @@
-import type { Device, Resource } from "..";
+import type { Device, Resource, OverrideRequirement } from "..";
 
 export interface AccessOption {
     policyId: number;
+    requirement: OverrideRequirement | null;
 
     grantedResources: Resource[];
     devices: Device[];

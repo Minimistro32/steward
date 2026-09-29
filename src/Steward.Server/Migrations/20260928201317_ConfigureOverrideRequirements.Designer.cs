@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Steward.Server.Data;
 
@@ -10,9 +11,11 @@ using Steward.Server.Data;
 namespace Steward.Server.Migrations
 {
     [DbContext(typeof(StewardDbContext))]
-    partial class StewardDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260928201317_ConfigureOverrideRequirements")]
+    partial class ConfigureOverrideRequirements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");

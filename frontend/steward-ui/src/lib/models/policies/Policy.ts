@@ -36,6 +36,8 @@ export function createDefaultPolicy(): Policy {
 
         override: {
             allowed: false,
+            delayMinutes: 1,
+            randomTextLength: 30,
             allowance: {}
         }
     };

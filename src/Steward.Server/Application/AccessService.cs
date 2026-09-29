@@ -124,6 +124,7 @@ public sealed class AccessService(
                 new AccessOptionDto
                 {
                     PolicyId = policy.Id,
+                    Requirement = policy.Override.Requirement,
 
                     GrantedResources =
                         [.. policy.Ward.Resources
@@ -210,7 +211,8 @@ public sealed class AccessService(
             return AccessOperationResult.Success(
                 new AccessResponseDto
                 {
-                    State = AccessRequestStatus.OverrideRequired
+                    State = AccessRequestStatus.OverrideRequired,
+                    Requirement = policy.Override.Requirement
                 });
         }
 
@@ -271,6 +273,10 @@ public sealed class AccessService(
 
         var policy = context.Value.Policy;
         var access = context.Value.Access;
+        var reason = dto.Reason?.Trim();
+        if (policy.Override.Requirement == OverrideRequirement.UserApproval
+            && (string.IsNullOrWhiteSpace(reason) || reason.Length > 2000))
+            return AccessOperationResult.Invalid();
 
 
         if (access?.UnlockedUntil > DateTimeOffset.UtcNow)
@@ -332,7 +338,11 @@ public sealed class AccessService(
             //
             // A repeat request updates the requested duration.
             //
+            if (existingRequest.Requirement == OverrideRequirement.UserApproval
+                && (string.IsNullOrWhiteSpace(reason) || reason.Length > 2000))
+                return AccessOperationResult.Invalid();
             existingRequest.RequestedMinutes = dto.RequestedMinutes;
+            existingRequest.Reason = existingRequest.Requirement == OverrideRequirement.UserApproval ? reason : null;
 
             switch (existingRequest.Requirement)
             {
@@ -342,9 +352,7 @@ public sealed class AccessService(
                     //
                     existingRequest.AvailableAt =
                         DateTimeOffset.UtcNow.AddMinutes(
-                            // TODO: Replace with the configured
-                            // override delay.
-                            0.25);
+                            policy.Override.DelayMinutes);
                     break;
 
                 case OverrideRequirement.RandomText:
@@ -352,7 +360,7 @@ public sealed class AccessService(
                     // Generate a new challenge.
                     //
                     existingRequest.ChallengeText =
-                        GenerateChallengeText();
+                        GenerateChallengeText(policy.Override.RandomTextLength);
                     break;
 
                 default:
@@ -371,6 +379,7 @@ public sealed class AccessService(
             PolicyId = policy.Id,
             RequestedMinutes = dto.RequestedMinutes,
             Requirement = policy.Override.Requirement,
+            Reason = policy.Override.Requirement == OverrideRequirement.UserApproval ? reason : null,
             Status = OverrideRequestStatus.Pending,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -397,14 +406,12 @@ public sealed class AccessService(
                 case OverrideRequirement.Delay:
                     request.AvailableAt =
                         DateTimeOffset.UtcNow.AddMinutes(
-                            // TODO: Replace with the configured
-                            // override delay.
-                            0.25);
+                            policy.Override.DelayMinutes);
                     break;
 
                 case OverrideRequirement.RandomText:
                     request.ChallengeText =
-                        GenerateChallengeText();
+                        GenerateChallengeText(policy.Override.RandomTextLength);
                     break;
 
                 default:
@@ -688,6 +695,7 @@ public async Task<List<RequestActivityDto>> GetRequestActivityAsync()
 
             CreatedAt = request.CreatedAt,
             RequestedMinutes = request.RequestedMinutes,
+            Reason = request.Reason,
 
             Resources = request.Policy.Ward.Resources
                 .Select(wardResource => wardResource.Resource.Name)

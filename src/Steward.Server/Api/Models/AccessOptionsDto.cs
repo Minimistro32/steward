@@ -9,6 +9,8 @@ public sealed class AccessOptionsDto
 
 public sealed class AccessOptionDto
 {
+    public Steward.Server.Data.Policies.OverrideRequirement? Requirement { get; init; }
+
     public required int PolicyId { get; init; }
     
     public required IReadOnlyCollection<ResourceDto> GrantedResources { get; init; }

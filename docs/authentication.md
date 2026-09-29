@@ -178,3 +178,17 @@ use standard session and credential handling when implementing it.
 - QR codes or device-pairing flows.
 - Permanently remembered child sessions.
 - Additional account roles or per-person approver assignments.
+
+## Override requirements
+
+Policy editors can configure Delay in minutes (0.01–1440) or Random Text as a
+minimum character count (3–2000). Text ends at a whole word, so the generated
+challenge can be slightly longer. Existing policies retain a 0.25-minute delay
+and 30-character minimum; new policies default to one minute and 30 characters.
+Changing the selected requirement or its settings rejects pending requests so
+new requests use the revised settings. Repeated delay/text requests restart the
+delay or generate a new challenge using the configured value.
+
+Approval overrides require a nonblank reason of up to 2000 characters. Reasons
+are saved with the request and shown in shared pending and historical activity.
+Other override types do not require or store a reason.

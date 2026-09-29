@@ -11,6 +11,7 @@
     import type { AccessOption } from "../models";
 
     let selectedUserId = $derived($currentUser?.id);
+    let activity = $state<{ refresh: () => Promise<void> }>();
     let options = $state<AccessOption[]>([]);
     let loadingOptions = $state(false);
 
@@ -55,7 +56,7 @@
             return;
         }
 
-        await loadOptions(selectedUserId);
+        await Promise.all([loadOptions(selectedUserId), activity?.refresh()]);
     }
 </script>
 
@@ -89,7 +90,7 @@
     </div>
 
     <div class="request-activity">
-        <RequestActivity showMakeRequest={false} />
+        <RequestActivity bind:this={activity} showMakeRequest={false} />
     </div>
 </div>
 

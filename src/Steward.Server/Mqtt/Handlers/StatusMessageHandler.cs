@@ -19,6 +19,15 @@ public sealed class StatusMessageHandler(
     {
         await using var db = await dbFactory.CreateDbContextAsync();
 
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        if (!await db.Agents.AnyAsync(agent => agent.Id == agentId))
+        {
+            // Retained MQTT status messages can arrive before registration,
+            // especially after resetting the database. Status alone is not registration.
+            logger.LogDebug("Ignoring status for unregistered agent {AgentId}.", agentId);
+            return;
+        }
+
         var status = await db.AgentStatuses
             .FirstOrDefaultAsync(
                 s => s.AgentId == agentId);
@@ -45,5 +54,6 @@ public sealed class StatusMessageHandler(
         }
 
         await db.SaveChangesAsync();
+        await transaction.CommitAsync();
     }
 }

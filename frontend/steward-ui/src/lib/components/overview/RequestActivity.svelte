@@ -31,6 +31,8 @@
         requests.filter((request) => request.status !== "pending"),
     );
 
+    export async function refresh() { await loadRequests(); }
+
     async function loadRequests() {
         requests = await getRequestActivity();
     }

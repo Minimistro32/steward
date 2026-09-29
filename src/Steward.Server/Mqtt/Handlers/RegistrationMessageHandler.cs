@@ -46,7 +46,9 @@ public sealed class RegistrationMessageHandler(
         await using var db =
             await dbFactory.CreateDbContextAsync();
 
+        await using var transaction = await db.Database.BeginTransactionAsync();
         var agent = await db.Agents
+            .Include(a => a.Status)
             .Include(a => a.Devices)
             .Include(a => a.Resources)
             .SingleOrDefaultAsync(a =>
@@ -77,6 +79,13 @@ public sealed class RegistrationMessageHandler(
             db.Agents.Add(agent);
         }
 
+        // Receiving a registration establishes that the agent is online,
+        // even when its earlier retained status had to be ignored.
+        agent.Status ??= new AgentStatusEntity { AgentId = agent.Id };
+        if (agent.Status.State != AgentStatus.Disabled)
+            agent.Status.State = AgentStatus.Online;
+        agent.Status.LastContact = DateTime.UtcNow;
+
         agent.Name = registration.Name;
         agent.Version = registration.Version;
 
@@ -85,6 +94,7 @@ public sealed class RegistrationMessageHandler(
         SynchronizeResources(agent, registration);
 
         await db.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         logger.LogInformation(
             "Saved agent {AgentId} to database.",

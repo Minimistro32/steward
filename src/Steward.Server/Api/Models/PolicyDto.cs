@@ -68,6 +68,8 @@ public class PolicyDto
             Allowed = policy.Override.Allowed,
 
             Requirement = policy.Override.Requirement,
+            DelayMinutes = policy.Override.DelayMinutes,
+            RandomTextLength = policy.Override.RandomTextLength,
 
             Allowance = AllowanceDto.FromEntity(policy.Override.Allowance)
         }
@@ -152,6 +154,9 @@ public class OverridePolicyDto
     public bool Allowed { get; set; }
 
     public OverrideRequirement? Requirement { get; set; }
+
+    public double DelayMinutes { get; set; } = 0.25;
+    public int RandomTextLength { get; set; } = 30;
 
     public AllowanceDto Allowance { get; set; } = new();
 }

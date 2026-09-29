@@ -7,6 +7,8 @@ import type { Allowance } from "..";
 export interface OverridePolicy {
     allowed: boolean;
     requirement?: OverrideRequirement;
+    delayMinutes: number;
+    randomTextLength: number;
     allowance: Allowance;
 }
 

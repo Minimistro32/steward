@@ -4,6 +4,7 @@
         AccessRequest,
         AccessResponse,
         OverrideAction,
+        OverrideRequirement,
     } from "../../models";
     import {
         postAccessRequest,
@@ -29,6 +30,7 @@
     let response = $state<AccessResponse | null>(null);
     let error = $state<string | null>(null);
 
+    let reason = $state("");
     let challengeInput = $state("");
     let challengeMismatch = $state(false);
     let submittedChallengeInput = $state<string | null>(null);
@@ -36,7 +38,10 @@
     let remainingSeconds = $state(0);
     let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
-    const isOverride = $derived(option.state === "overrideAvailable");
+    let overrideRequested = $state(false);
+    let updatedRequirement = $state<OverrideRequirement | null | undefined>(undefined);
+    const isOverride = $derived(overrideRequested || option.state === "overrideAvailable");
+    const requirement = $derived(updatedRequirement === undefined ? option.requirement : updatedRequirement);
 
     $effect(() => {
         if (dialogElement && !dialogElement.open) {
@@ -79,6 +84,10 @@
             return;
         }
 
+        if (isOverride && requirement === "userApproval" && (!reason.trim() || reason.trim().length > 2000)) {
+            error = "Enter a reason for your request (up to 2000 characters).";
+            return;
+        }
         submitRequest();
     }
 
@@ -90,6 +99,7 @@
             let body: AccessRequest = {
                 policyId: option.policyId,
                 requestedMinutes: requestedMinutes,
+                reason: isOverride && requirement === "userApproval" ? reason.trim() : undefined,
             };
 
             response = isOverride
@@ -185,6 +195,7 @@
     }
 
     function close() {
+        if (response) oncomplete?.();
         response = null;
         error = null;
         challengeInput = "";
@@ -262,8 +273,13 @@
                     </p>
                 {/if}
 
+                {#if isOverride && requirement === "userApproval"}
+                    <label for="request-reason">Why do you need more time?</label>
+                    <textarea id="request-reason" bind:value={reason} maxlength="2000" rows="3" placeholder="Tell an admin why you’re requesting access." aria-required="true"></textarea>
+                    <p class="hint">Your reason will be visible in the shared request activity.</p>
+                {/if}
                 {#if error}
-                    <p class="error">{error}</p>
+                    <p class="error" role="alert">{error}</p>
                 {/if}
 
                 <button
@@ -293,7 +309,6 @@
                         type="button"
                         class="cta-button"
                         onclick={() => {
-                            oncomplete?.();
                             close();
                         }}
                     >
@@ -416,6 +431,8 @@
                         type="button"
                         class="cta-button"
                         onclick={() => {
+                            overrideRequested = true;
+                            updatedRequirement = response?.requirement;
                             response = null;
                         }}
                     >

@@ -5,6 +5,8 @@ using Steward.Server.Data.Policies;
 
 public class OverrideRequestEntity
 {
+    public string? Reason { get; set; }
+
     public int Id { get; set; }
 
     public int UserId { get; set; }

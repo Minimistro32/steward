@@ -131,6 +131,53 @@ def main():
                     admin_cookie = headers.get_all('Set-Cookie')[-1].split(';')[0]
                     assert request('/users', cookie=admin_cookie)[0] == 200
                     assert request('/access/2', cookie=admin_cookie)[0] == 200
+                    # Configurable override requirements and approval reasons.
+                    with sqlite3.connect(database) as db:
+                        db.execute("INSERT INTO Wards (Id, Name, Tags) VALUES (1, 'Test ward', '[]')")
+                        db.execute("INSERT INTO WardUsers (WardId, UserId) VALUES (1, 2)")
+                    policy_body = {'name': 'Override test', 'wardId': 1, 'tags': [],
+                        'schedule': {'days': list(range(7)), 'startTime': '', 'endTime': ''},
+                        'access': {'dailyTimeMinutes': 0},
+                        'override': {'allowed': True, 'requirement': 'delay', 'delayMinutes': 2, 'randomTextLength': 75, 'allowance': {}}}
+                    status, body, _ = request('/policies', policy_body, admin_cookie)
+                    assert status == 201
+                    policy_id = json.loads(body)['id']
+                    policy_path = f'/policies/{policy_id}'
+                    assert json.loads(request(policy_path, cookie=admin_cookie)[1])['override']['delayMinutes'] == 2
+                    request_body = {'policyId': policy_id, 'requestedMinutes': 1}
+                    status, body, _ = request('/access/2/override', request_body, admin_cookie)
+                    pending = json.loads(body)
+                    assert status == 200 and pending['requirement'] == 'delay'
+                    from datetime import datetime, timezone
+                    wait = (datetime.fromisoformat(pending['availableAt']) - datetime.now(timezone.utc)).total_seconds()
+                    assert 115 < wait <= 120
+                    assert json.loads(request(f"/access/requests/{pending['overrideRequestId']}/complete", {'userId': 2}, admin_cookie)[1])['state'] == 'pending'
+                    policy_body['override']['requirement'] = 'randomText'
+                    assert request(policy_path, policy_body, admin_cookie, method='PUT')[0] == 204
+                    status, body, _ = request('/access/2/override', request_body, admin_cookie)
+                    random_request = json.loads(body)
+                    assert status == 200 and len(random_request['challengeText']) >= 75
+                    assert len(random_request['challengeText']) < 100
+                    policy_body['override']['randomTextLength'] = 0
+                    assert request(policy_path, policy_body, admin_cookie, method='PUT')[0] == 400
+                    policy_body['override']['randomTextLength'] = 75
+                    policy_body['override']['requirement'] = 'userApproval'
+                    assert request(policy_path, policy_body, admin_cookie, method='PUT')[0] == 204
+                    normal_attempt = json.loads(request('/access/2/request', request_body, admin_cookie)[1])
+                    assert normal_attempt['state'] == 'overrideRequired' and normal_attempt['requirement'] == 'userApproval'
+                    options = json.loads(request('/access/2', cookie=admin_cookie)[1])['options']
+                    assert next(option for option in options if option['policyId'] == policy_id)['requirement'] == 'userApproval'
+                    for reason in [None, '  ', 'x' * 2001]:
+                        assert request('/access/2/override', dict(request_body, reason=reason), admin_cookie)[0] == 400
+                    status, body, _ = request('/access/2/override', dict(request_body, reason='  Finish my homework  '), admin_cookie)
+                    assert status == 200
+                    approval_id = json.loads(body)['overrideRequestId']
+                    activity = json.loads(request('/access/requests', cookie=admin_cookie)[1])
+                    assert next(item for item in activity if item['id'] == approval_id)['reason'] == 'Finish my homework'
+                    assert request('/access/2/override', dict(request_body, reason='Updated reason'), admin_cookie)[0] == 200
+                    assert request(f'/access/requests/{approval_id}/reject', {'userId': 1}, admin_cookie)[0] == 200
+                    activity = json.loads(request('/access/requests', cookie=admin_cookie)[1])
+                    assert next(item for item in activity if item['id'] == approval_id)['reason'] == 'Updated reason'
                     # Account creation/editing: validation, credential preservation, and device assignments.
                     for body in [{'name': ' '}, {'name': 'Bad admin', 'type': 'admin'},
                                  {'name': 'Bad email', 'email': 'invalid'}, {'name': 'Bad PIN', 'pin': '123'}, {'name': 'Non-numeric PIN', 'pin': '12a4'},
@@ -193,7 +240,7 @@ def main():
                         db.execute("UPDATE Users SET Type = 'Member' WHERE Id = 1")
                     assert request('/auth/session', cookie=pin_cookie)[0] == 401
                     assert request('/users', cookie=admin_cookie)[0] == 401
-                    print('PASS: anonymous isolation, minimal picker, admin/member PINs, roles, own access, shared activity, CSRF header, logout replay, PIN/type invalidation, user create/edit validation, PIN preservation/clearing, devices, and last-admin protection.')
+                    print('PASS: anonymous isolation, minimal picker, admin/member PINs, roles, own access, shared activity, CSRF header, logout replay, PIN/type invalidation, user create/edit validation, PIN preservation/clearing, devices, last-admin protection, configured override requirements, and approval reasons.')
                 except Exception:
                     log.flush(); log.seek(0); print(log.read())
                     raise

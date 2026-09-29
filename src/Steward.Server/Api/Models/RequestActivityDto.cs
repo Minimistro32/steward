@@ -5,6 +5,8 @@ using Steward.Server.Data.Entities;
 
 public sealed class RequestActivityDto
 {
+    public string? Reason { get; set; }
+
     public required int Id { get; init; }
 
     public required int UserId { get; init; }

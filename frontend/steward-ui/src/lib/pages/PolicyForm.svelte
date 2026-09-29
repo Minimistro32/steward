@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { ApiError } from "../api/client";
     import { onMount } from "svelte";
 
     import PageHeader from "../components/ui/PageHeader.svelte";
@@ -51,18 +52,17 @@
         }
 
         if (!policy.override.allowed) {
-            console.log("Clear override ran");
             policy.override.requirement = undefined;
             policy.override.allowance = {};
         }
 
-        if (isNew) {
-            await createPolicy(policy);
-        } else {
-            await updatePolicy(policy);
+        try {
+            if (isNew) await createPolicy(policy);
+            else await updatePolicy(policy);
+            window.location.hash = "#/policies";
+        } catch (error) {
+            errors = error instanceof ApiError && error.errors.length ? error.errors : ["Couldn’t save the policy. Please try again."];
         }
-
-        window.location.hash = "#/policies";
     }
 
     let errors = $state<string[]>([]);
@@ -93,6 +93,10 @@
         }
 
         if (policy.override.allowed) {
+            if (policy.override.requirement === "delay" && (!Number.isFinite(policy.override.delayMinutes) || policy.override.delayMinutes < 0.01 || policy.override.delayMinutes > 1440))
+                errors.push("Delay must be between 0.01 and 1440 minutes.");
+            if (policy.override.requirement === "randomText" && (!Number.isInteger(policy.override.randomTextLength) || policy.override.randomTextLength < 3 || policy.override.randomTextLength > 2000))
+                errors.push("Random text length must be a whole number between 3 and 2000 characters.");
             if (
                 policy.override.allowance.maxSessionMinutes &&
                 policy.override.allowance.dailyTimeMinutes &&
@@ -251,6 +255,12 @@
                                 onchange={() => setRequirement("delay")}
                             />
 
+                            {#if policy.override.requirement === "delay"}
+                                <label>Delay (minutes)
+                                    <input type="number" min="0.01" max="1440" step="0.01" bind:value={policy.override.delayMinutes} />
+                                </label>
+                            {/if}
+
                             <Checkbox
                                 label="Type random text"
                                 checked={policy.override.requirement ===
@@ -258,8 +268,14 @@
                                 onchange={() => setRequirement("randomText")}
                             />
 
+                            {#if policy.override.requirement === "randomText"}
+                                <label>Minimum text length (characters)
+                                    <input type="number" min="3" max="2000" step="1" bind:value={policy.override.randomTextLength} />
+                                </label>
+                            {/if}
+
                             <Checkbox
-                                label="Another user approval"
+                                label="Admin approval"
                                 checked={policy.override.requirement ===
                                     "userApproval"}
                                 onchange={() => setRequirement("userApproval")}

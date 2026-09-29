@@ -97,13 +97,9 @@
             · {formatRelativeTime(request.createdAt)}
         </div>
 
-        <!-- future -->
-
-        <!-- {#if request.reason} -->
-        <!-- <p class="reason">This is a sample reason as to why I always want to unlock YouTube to make myself feel better.</p> -->
-        <!-- {:else} -->
-        <p class="reason"></p>
-        <!-- {/if} -->
+        {#if request.reason}
+            <p class="reason">{request.reason}</p>
+        {/if}
 
         {#if canRespond}
             <div class="actions">
@@ -194,6 +190,8 @@
         color: var(--color-text-muted);
         font-size: 0.85rem;
     }
+
+    .reason { white-space: pre-wrap; overflow-wrap: anywhere; }
 
     .actions {
         display: flex;

@@ -56,6 +56,8 @@ public static class PolicyEndpoints
             PolicyDto dto,
             StewardDbContext db) =>
         {
+            var errors = ValidateOverride(dto.Override);
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
             var now = DateTime.UtcNow;
 
             var policy = new PolicyEntity
@@ -81,6 +83,8 @@ public static class PolicyEndpoints
                     Allowed = dto.Override.Allowed,
 
                     Requirement = dto.Override.Requirement,
+                    DelayMinutes = dto.Override.DelayMinutes,
+                    RandomTextLength = dto.Override.RandomTextLength,
 
                     Allowance = dto.Override.Allowance.ToAllowance()
                 }
@@ -113,10 +117,14 @@ public static class PolicyEndpoints
                 return Results.NotFound();
             }
 
+            var errors = ValidateOverride(dto.Override);
+            if (errors.Count > 0) return Results.ValidationProblem(errors);
             var oldRequirement = policy.Override.Requirement;
             var newRequirement = dto.Override.Requirement;
 
-            if (oldRequirement != newRequirement)
+            if (oldRequirement != newRequirement || policy.Override.Allowed != dto.Override.Allowed
+                || (newRequirement == OverrideRequirement.Delay && policy.Override.DelayMinutes != dto.Override.DelayMinutes)
+                || (newRequirement == OverrideRequirement.RandomText && policy.Override.RandomTextLength != dto.Override.RandomTextLength))
             {
                 var pendingRequests = await db.OverrideRequests
                     .Where(r =>
@@ -146,6 +154,8 @@ public static class PolicyEndpoints
             {
                 Allowed = dto.Override.Allowed,
                 Requirement = newRequirement,
+                DelayMinutes = dto.Override.DelayMinutes,
+                RandomTextLength = dto.Override.RandomTextLength,
                 Allowance = dto.Override.Allowance.ToAllowance()
             };
 
@@ -180,5 +190,16 @@ public static class PolicyEndpoints
 
             return Results.NoContent();
         });
+    }
+    private static Dictionary<string, string[]> ValidateOverride(OverridePolicyDto value)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (!double.IsFinite(value.DelayMinutes) || value.DelayMinutes < 0.01 || value.DelayMinutes > 1440)
+            errors["delayMinutes"] = ["Delay must be between 0.01 and 1440 minutes."];
+        if (value.RandomTextLength < 3 || value.RandomTextLength > 2000)
+            errors["randomTextLength"] = ["Random text length must be between 3 and 2000 characters."];
+        if (value.Requirement is not null && !Enum.IsDefined(value.Requirement.Value))
+            errors["requirement"] = ["Choose a valid override requirement."];
+        return errors;
     }
 }
